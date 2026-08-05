@@ -1,0 +1,71 @@
+MIT License
+
+Copyright (c) 2026 Aki
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Portions of this suite adapt patterns and, in a small number of clearly-noted
+cases, verbatim phrasing from third-party sources studied during synthesis
+(see README.md "Lineage" table for what was taken from each). Those projects
+carry their own licenses; nothing here asserts ownership over their original
+text. Grouped below by license class, kept compact:
+
+MIT: ponytail, taste-skill, designer-skills, awesome-design-md,
+kepano/obsidian-skills, tpitsunov/obsidian-skills, adriangrant/Obsidian-SKILLS,
+ayghri/i-have-adhd, plannotator/effective-html, caveman (JuliusBrussee/caveman,
+installed plugin), React Native docs, Expo docs, pmndrs/zustand,
+obra/superpowers, wshobson/agents, davila7/claude-code-templates,
+ibelick/ui-skills, mattpocock/skills, addyosmani/agent-skills,
+redis/agent-skills (Redis Inc.), phuryn/pm-skills, emilkowalski/skills,
+robzilla1738/supergoal, riverpod.dev (underlying repo rrousselGit/riverpod —
+no CC BY grant found for the docs site itself, so the repo license governs).
+
+Apache-2.0: pbakaus/impeccable; Android Developers docs (Google: the
+documentation content specifically is Apache-2.0 — developer.android.com/
+license — distinct from the CC BY 2.5 that covers only non-doc site content);
+Anthropic html-effectiveness sample gallery; alibaba/open-code-review;
+openai/skills; qdrant/skills; s3onghyun/otelcol-doctor; zuoyebang/aiweave;
+yetone/kill-ai-slop; nexu-io/open-design.
+
+Mixed, not MIT (Apache-2.0-licensed skills plus source-available components;
+mechanisms re-expressed here, no files copied): anthropics/skills.
+
+CC BY 4.0 (documentation, re-expressed not reproduced verbatim): Flutter docs
+(docs.flutter.dev — the docs are what was actually harvested; the
+flutter/flutter code repo is BSD-3 but was not the source used), dart.dev
+linter-rules docs, agentskills/agentskills spec/schema doc.
+
+CC BY-SA 4.0 (mechanisms re-expressed, no text copied — ShareAlike scope
+limited to the re-expressed passages, not this suite as a whole):
+trailofbits/skills.
+
+CC BY-NC 4.0 (patterns re-expressed, no verbatim; NC restriction disclosed):
+HackTricks.
+
+CC0-1.0: PatrickJS/awesome-cursorrules, Solido/awesome-flutter.
+
+Own material, not third-party: humanizer sources, the author's own prior PM skill.
+
+impulse-devops cites public security advisories. Where a rule in this suite is a
+close paraphrase or short verbatim line from one of the above, treat it as
+inspired-by, not copied wholesale — the surrounding structure, the
+ladder/baseline/register mechanisms, and the Go/Python/Vue-specific content
+are original to this suite.

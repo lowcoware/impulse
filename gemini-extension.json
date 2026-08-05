@@ -1,0 +1,5 @@
+{
+  "name": "impulse",
+  "version": "1.0.6",
+  "description": "Anti-overengineering engineering suite: Go-first microservice backends + Vue/Nuxt frontends, plus review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point."
+}

@@ -1,0 +1,65 @@
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node
+node_modules/
+.npm/
+.yarn/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Archives (accidental drag-in from a download)
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Claude Code local state — worktrees/session artifacts, never shared config
+.claude/worktrees/
+.claude/settings.local.json
+.claude/*.session
+.claude/tmp/
+
+# Scratch / temp working dirs
+tmp/
+.tmp/
+scratch/

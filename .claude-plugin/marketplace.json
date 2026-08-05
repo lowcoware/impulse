@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "impulse",
+  "description": "Anti-overengineering microservice backend (Go-first) + Vue/Nuxt frontend engineering suite. Ladder + day-one baseline for services, register split + AI-tells kill list for UI.",
+  "owner": {
+    "name": "Aki"
+  },
+  "plugins": [
+    {
+      "name": "impulse",
+      "description": "impulse (router), impulse-backend, impulse-frontend, impulse-review, impulse-debt, impulse-humanizer, impulse-md-generator, impulse-project-management, impulse-legacy, impulse-ai, impulse-security, impulse-devops, impulse-mobile, impulse-brainstorm, impulse-systematic-debug, impulse-dependency-audit, impulse-shrink, impulse-clone, impulse-goal, impulse-artifact, impulse-wiki, impulse-help.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

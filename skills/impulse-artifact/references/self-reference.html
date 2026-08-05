@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>impulse</title>
+  <script>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', dark);
+    })();
+  </script>
+  <style>
+    /* Blend: Apple's restraint (thin borders, one purposeful accent, calm
+       typographic hierarchy) + lowcoware-website's own DNA (warm near-black
+       canvas, single red accent, blurred glow-blob card detail, bold
+       display headlines with an italic accent word). Dark is the canonical
+       mode here (matches the site it's blended from); light is derived,
+       same direction Apple's own doc runs it the other way. */
+    :root {
+      --bg:      #FAF9F7;
+      --surface: #FFFFFF;
+      --border:  rgba(28,25,23,0.12);
+      --ink:     #1C1917;
+      --ink-2:   #57534E;
+      --ink-3:   #A8A29E;
+      --accent:  #DC2626;
+      --glow:    rgba(220,38,38,0.10);
+
+      --font-display: -apple-system, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      --font-text: Inter, -apple-system, sans-serif;
+
+      --r-control: 8px;
+      --r-card: 10px;
+      --r-pill: 980px;
+    }
+    html.dark {
+      --bg:      #1C1917;
+      --surface: rgba(41,37,36,0.6);
+      --border:  rgba(255,255,255,0.1);
+      --ink:     #FAFAF9;
+      --ink-2:   rgba(250,250,249,0.6);
+      --ink-3:   rgba(250,250,249,0.35);
+      --accent:  #EF4444;
+      --glow:    rgba(239,68,68,0.16);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-text);
+      font-size: 15px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 860px; margin: 0 auto; padding: 72px 24px 110px; position: relative; }
+
+    header { position: relative; margin-bottom: 8px; }
+    .header-glow {
+      position: absolute; top: -60px; left: -80px; width: 260px; height: 260px;
+      background: radial-gradient(circle, var(--glow), transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .header-row { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin: 0 0 14px;
+    }
+    h1 .accent { color: var(--accent); font-style: italic; }
+    .subhead {
+      position: relative; z-index: 1;
+      font-size: 15px;
+      color: var(--ink-2);
+      margin: 0;
+      max-width: 58ch;
+    }
+    .term {
+      color: var(--ink);
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--ink-3);
+    }
+    #theme-toggle {
+      flex-shrink: 0;
+      font-family: var(--font-text);
+      font-size: 13px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--accent);
+      border: none;
+      padding: 8px 0;
+      cursor: pointer;
+    }
+    #theme-toggle:hover { text-decoration: underline; }
+
+    .meta-row {
+      position: relative; z-index: 1;
+      display: flex; gap: 20px;
+      font-size: 12px; color: var(--ink-3);
+      margin: 22px 0 60px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    section { margin: 56px 0; }
+    h2 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 6px;
+    }
+    h2 .accent { color: var(--accent); font-style: italic; }
+    .lede { font-size: 14px; color: var(--ink-2); margin: 0 0 24px; max-width: 58ch; }
+
+    /* Stat row */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stat {
+      position: relative; overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: 16px 18px;
+    }
+    .stat::before {
+      content: ""; position: absolute; top: -14px; left: -14px;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent); opacity: 0.16; filter: blur(20px);
+      pointer-events: none;
+    }
+    .stat-label { position: relative; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px; }
+    .stat-value { position: relative; font-family: var(--font-display); font-size: 30px; font-weight: 700; }
+
+    /* Ladder */
+    .ladder { display: flex; flex-wrap: wrap; gap: 0; align-items: baseline; row-gap: 8px; }
+    .rung { font-size: 15px; font-weight: 700; display: inline-flex; align-items: baseline; gap: 6px; }
+    .rung .n {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 17px; height: 17px; flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--accent); color: var(--surface);
+      font-weight: 700; font-size: 10px;
+    }
+    html.dark .rung .n { color: var(--bg); }
+    .rung-sep { color: var(--ink-3); margin: 0 12px; font-weight: 400; }
+
+    /* Mode cards — replaces the flat table row with actual cards (glow detail applies) */
+    .mode-grid { display: flex; flex-direction: column; gap: 10px; }
+    .mode-card {
+      position: relative; overflow: hidden;
+      display: grid; grid-template-columns: 110px 1fr 1fr; gap: 20px; align-items: start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-card); padding: 16px 18px;
+    }
+    .mode-card.hardcore::before {
+      content: ""; position: absolute; top: -20px; right: -20px;
+      width: 70px; height: 70px; border-radius: 50%;
+      background: var(--accent); opacity: 0.14; filter: blur(24px);
+    }
+    .mode-name { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+    .mode-col { font-size: 13px; color: var(--ink-2); }
+    .mode-col .k { color: var(--ink); font-weight: 600; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+
+    /* Domain grid — real per-cell border, no shared-background gutter trick,
+       so an incomplete final row just has fewer cards, never a filled blank box. */
+    .domain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .domain-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-card); padding: 14px 16px;
+    }
+    .domain-name { font-weight: 700; font-size: 14px; margin: 0 0 3px; }
+    .domain-desc { font-size: 12px; color: var(--ink-3); margin: 0; }
+    @media (max-width: 640px) { .domain-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Diagram genre demo */
+    .diagram-frame {
+      position: relative; height: 260px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-card); overflow: hidden; cursor: grab;
+    }
+    .diagram-frame.dragging { cursor: grabbing; }
+    .diagram-frame svg { width: 100%; height: 100%; display: block; }
+    .diagram-controls { position: absolute; top: 14px; right: 14px; z-index: 2; }
+    .diagram-controls button {
+      background: var(--bg); border: 1px solid var(--border); color: var(--ink);
+      border-radius: var(--r-control); font-size: 11px; font-weight: 600; padding: 6px 12px; cursor: pointer;
+    }
+    .diagram-zoom-level { position: absolute; bottom: 14px; right: 14px; z-index: 2; font-size: 11px; color: var(--ink-3); }
+    .diagram-node rect { fill: var(--surface); stroke: var(--border); stroke-width: 1; }
+    .diagram-node.hot rect { stroke: var(--accent); stroke-width: 1.5; }
+    .diagram-node text { fill: var(--ink); font-family: var(--font-text); font-size: 12px; font-weight: 600; }
+    .diagram-node.hot text { fill: var(--accent); }
+    .diagram-edge { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+    .diagram-panel {
+      position: absolute; bottom: 14px; left: 14px; z-index: 3; max-width: 230px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-control);
+      padding: 12px 14px; font-size: 12px; display: none;
+    }
+    .diagram-panel.open { display: block; }
+    .diagram-panel button { position: absolute; top: 4px; right: 8px; background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: 14px; line-height: 1; }
+
+    /* Plan genre demo */
+    .phase-list { display: flex; flex-direction: column; gap: 8px; }
+    .phase-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-control); padding: 10px 14px;
+    }
+    .phase-pill { flex-shrink: 0; font-size: 11px; font-weight: 700; background: var(--glow); color: var(--accent); border-radius: var(--r-pill); padding: 3px 10px; }
+    .phase-name { font-size: 14px; font-weight: 600; }
+    .phase-note { font-size: 12px; color: var(--ink-3); }
+
+    footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-3); }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="header-glow"></div>
+    <div class="header-row">
+      <div>
+        <h1>impulse<span class="accent">.</span></h1>
+        <p class="subhead">Anti-overengineering suite: the <span class="term">ladder</span>, a non-negotiable day-one baseline, and three operating modes — applied across every domain below.</p>
+      </div>
+      <button id="theme-toggle" aria-label="Toggle theme">Theme</button>
+    </div>
+    <div class="meta-row">
+      <span>Owner Aki</span>
+      <span>lowcoware/impulse</span>
+      <span>Version 1.0.4</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>At a <span class="accent">glance</span></h2>
+    <div class="stat-row">
+      <div class="stat"><p class="stat-label">Skills</p><div class="stat-value">22</div></div>
+      <div class="stat"><p class="stat-label">Ladder rungs</p><div class="stat-value">6</div></div>
+      <div class="stat"><p class="stat-label">Modes</p><div class="stat-value">3</div></div>
+      <div class="stat"><p class="stat-label">Shared refs</p><div class="stat-value">7</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The <span class="accent">ladder</span></h2>
+    <p class="lede">Every rung is a check before reaching for the next — skip a cheap one and the diff carries an unearned dependency.</p>
+    <div class="ladder">
+      <span class="rung"><span class="n">1</span>YAGNI</span><span class="rung-sep">&rarr;</span>
+      <span class="rung"><span class="n">2</span>Reuse</span><span class="rung-sep">&rarr;</span>
+      <span class="rung"><span class="n">3</span>Stdlib</span><span class="rung-sep">&rarr;</span>
+      <span class="rung"><span class="n">4</span>Platform primitive</span><span class="rung-sep">&rarr;</span>
+      <span class="rung"><span class="n">5</span>Dependency</span><span class="rung-sep">&rarr;</span>
+      <span class="rung"><span class="n">6</span>Shrink</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Operating <span class="accent">modes</span></h2>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <p class="mode-name">Blitz</p>
+        <div class="mode-col"><span class="k">Trades off</span>Drops plan prose, keeps baseline + tests</div>
+        <div class="mode-col"><span class="k">Fits</span>Small, well-scoped, low-blast-radius work</div>
+      </div>
+      <div class="mode-card">
+        <p class="mode-name">Medium</p>
+        <div class="mode-col"><span class="k">Trades off</span>Default balance of speed and rigor</div>
+        <div class="mode-col"><span class="k">Fits</span>Most day-to-day feature work</div>
+      </div>
+      <div class="mode-card hardcore">
+        <p class="mode-name">Hardcore</p>
+        <div class="mode-col"><span class="k">Trades off</span>Front-loads architecture, full Polish &amp; Harden pass</div>
+        <div class="mode-col"><span class="k">Fits</span>High-stakes, long-horizon, or public-contract changes</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Request <span class="accent">flow</span></h2>
+    <p class="lede">Where an artifact request comes from before this skill renders it. Drag to pan, wheel to zoom, click a node for detail.</p>
+    <div class="diagram-frame" id="diagram-frame">
+      <div class="diagram-controls"><button id="dg-reset">Reset</button></div>
+      <svg id="dg-svg" viewBox="0 0 600 300">
+        <g id="dg-content">
+          <path class="diagram-edge" d="M 140 60 L 260 92" marker-end="url(#arrow)"/>
+          <path class="diagram-edge" d="M 140 150 L 260 105" marker-end="url(#arrow)"/>
+          <path class="diagram-edge" d="M 140 240 L 260 118" marker-end="url(#arrow)"/>
+          <path class="diagram-edge" d="M 360 105 L 460 105" marker-end="url(#arrow)"/>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)"/>
+            </marker>
+          </defs>
+          <g class="diagram-node" data-detail="impulse-project-management: specs, retros, status reports">
+            <rect x="20" y="35" width="120" height="50" rx="8"/>
+            <text x="80" y="65" text-anchor="middle">impulse-pm</text>
+          </g>
+          <g class="diagram-node" data-detail="impulse-review: diff findings rendered as a PR summary">
+            <rect x="20" y="125" width="120" height="50" rx="8"/>
+            <text x="80" y="155" text-anchor="middle">impulse-review</text>
+          </g>
+          <g class="diagram-node" data-detail="impulse-goal: phase specs rendered as an implementation plan">
+            <rect x="20" y="215" width="120" height="50" rx="8"/>
+            <text x="80" y="245" text-anchor="middle">impulse-goal</text>
+          </g>
+          <g class="diagram-node hot" data-detail="This skill: picks genre, applies palette + dark-mode + pan-zoom rules">
+            <rect x="260" y="80" width="100" height="50" rx="8"/>
+            <text x="310" y="110" text-anchor="middle">artifact</text>
+          </g>
+          <g class="diagram-node" data-detail="One self-contained .html file — no build step, no external deps">
+            <rect x="460" y="80" width="110" height="50" rx="8"/>
+            <text x="515" y="110" text-anchor="middle">.html file</text>
+          </g>
+        </g>
+      </svg>
+      <div class="diagram-zoom-level" id="dg-zoom">100%</div>
+      <div class="diagram-panel" id="dg-panel">
+        <button id="dg-panel-close" aria-label="Close">&times;</button>
+        <span id="dg-panel-text"></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Self-reference <span class="accent">rollout</span></h2>
+    <p class="lede">The reference-artifact directive, applied to the candidates it named.</p>
+    <div class="phase-list">
+      <div class="phase-row"><span class="phase-pill">01</span><span class="phase-name">impulse-artifact</span><span class="phase-note">this file — done</span></div>
+      <div class="phase-row"><span class="phase-pill">02</span><span class="phase-name">impulse-wiki</span><span class="phase-note">md-vault reference — not started</span></div>
+      <div class="phase-row"><span class="phase-pill">03</span><span class="phase-name">impulse-md-generator</span><span class="phase-note">Obsidian-format reference — not started</span></div>
+      <div class="phase-row"><span class="phase-pill">04</span><span class="phase-name">impulse-project-management</span><span class="phase-note">spec/ADR/changelog reference — not started</span></div>
+      <div class="phase-row"><span class="phase-pill">05</span><span class="phase-name">impulse-goal</span><span class="phase-note">templates/ reference — not started</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Domains</h2>
+    <div class="domain-grid">
+      <div class="domain-card"><p class="domain-name">backend</p><p class="domain-desc">Go-first microservices, day-one baseline</p></div>
+      <div class="domain-card"><p class="domain-name">frontend</p><p class="domain-desc">Vue 3 / Nuxt 4 / Tailwind v4</p></div>
+      <div class="domain-card"><p class="domain-name">security</p><p class="domain-desc">JWT, IDOR, rate limiting, secrets</p></div>
+      <div class="domain-card"><p class="domain-name">mobile</p><p class="domain-desc">Flutter-first, RN, native</p></div>
+      <div class="domain-card"><p class="domain-name">ai</p><p class="domain-desc">RAG, Qdrant, MCP, LLM gateway</p></div>
+      <div class="domain-card"><p class="domain-name">review</p><p class="domain-desc">Agent-code review, ai-bug catalog</p></div>
+      <div class="domain-card"><p class="domain-name">project-management</p><p class="domain-desc">Spec-driven, ADR lifecycle</p></div>
+      <div class="domain-card"><p class="domain-name">goal</p><p class="domain-desc">Phased autonomous execution</p></div>
+      <div class="domain-card"><p class="domain-name">devops</p><p class="domain-desc">Compose, Traefik, CI, backups</p></div>
+      <div class="domain-card"><p class="domain-name">dependency-audit</p><p class="domain-desc">Supply-chain, slopsquatting</p></div>
+      <div class="domain-card"><p class="domain-name">legacy</p><p class="domain-desc">Characterization tests, strangler fig</p></div>
+      <div class="domain-card"><p class="domain-name">humanizer</p><p class="domain-desc">Voice calibration, AI-tell removal</p></div>
+      <div class="domain-card"><p class="domain-name">wiki</p><p class="domain-desc">MOC, Bases, Canvas, vault health</p></div>
+      <div class="domain-card"><p class="domain-name">clone</p><p class="domain-desc">Web-clone assessment, legal framework</p></div>
+      <div class="domain-card"><p class="domain-name">artifact</p><p class="domain-desc">This skill — one-file HTML documents</p></div>
+      <div class="domain-card"><p class="domain-name">brainstorm</p><p class="domain-desc">Panel decisions, anchoring mitigation</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Self-generated reference artifact — impulse-artifact's own baseline. Design blends Apple (impulse-frontend/references/design-systems/apple) with lowcoware-website's own DNA. Regenerate and diff here when the skill's rules change.
+  </footer>
+</div>
+
+<script>
+  const btn = document.getElementById('theme-toggle');
+  btn.addEventListener('click', () => {
+    const dark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  });
+
+  const frame = document.getElementById('diagram-frame');
+  const content = document.getElementById('dg-content');
+  const zoomLabel = document.getElementById('dg-zoom');
+  const panel = document.getElementById('dg-panel');
+  const panelText = document.getElementById('dg-panel-text');
+  // Content bounding box spans x:20-570, y:35-265 in the 600x300 viewBox.
+  // Center it in the frame on load instead of defaulting to (0,0) in the corner.
+  const VIEWBOX_W = 600, VIEWBOX_H = 300;
+  let scale = 1, tx = 0, ty = 0;
+  let dragging = false, dragStart = null, moved = false;
+
+  function centerContent() {
+    const rect = frame.getBoundingClientRect();
+    tx = (rect.width - VIEWBOX_W * scale) / 2;
+    ty = (rect.height - VIEWBOX_H * scale) / 2;
+    applyTransform();
+  }
+
+  function applyTransform() {
+    content.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+    zoomLabel.textContent = Math.round(scale * 100) + '%';
+  }
+
+  frame.addEventListener('pointerdown', (e) => {
+    dragging = true; moved = false;
+    dragStart = { x: e.clientX - tx, y: e.clientY - ty };
+    frame.classList.add('dragging');
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragStart.x - tx;
+    const dy = e.clientY - dragStart.y - ty;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    tx = e.clientX - dragStart.x;
+    ty = e.clientY - dragStart.y;
+    applyTransform();
+  });
+  window.addEventListener('pointerup', () => {
+    dragging = false;
+    frame.classList.remove('dragging');
+  });
+
+  frame.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = frame.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const svgX = (cx - tx) / scale, svgY = (cy - ty) / scale;
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    scale = Math.min(3, Math.max(0.5, scale * factor));
+    tx = cx - svgX * scale;
+    ty = cy - svgY * scale;
+    applyTransform();
+  }, { passive: false });
+
+  document.getElementById('dg-reset').addEventListener('click', () => {
+    scale = 1; centerContent();
+  });
+
+  document.querySelectorAll('.diagram-node').forEach((node) => {
+    node.addEventListener('click', () => {
+      if (moved) return;
+      panelText.textContent = node.getAttribute('data-detail');
+      panel.classList.add('open');
+    });
+  });
+  document.getElementById('dg-panel-close').addEventListener('click', () => {
+    panel.classList.remove('open');
+  });
+
+  function fitAndCenter() {
+    const rect = frame.getBoundingClientRect();
+    scale = Math.min(1, (rect.width || VIEWBOX_W) / VIEWBOX_W);
+    centerContent();
+  }
+
+  // Recompute on load AND on resize — a scale/offset fit to one viewport
+  // width goes stale (content drifts out of frame) if the window resizes
+  // and nothing recalculates it. Debounced: resize can fire in a burst.
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(fitAndCenter, 100);
+  });
+
+  fitAndCenter();
+</script>
+</body>
+</html>

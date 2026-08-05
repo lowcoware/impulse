@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+// impulse — compact injected rulesets (SessionStart / SubagentStart payload).
+//
+// Hardcoded on purpose: decoupled from skill-file presence/formatting so the
+// never-block contract holds even if skills/ is missing or malformed. This is
+// the single source of truth for INJECTED rules — skills/impulse-backend/SKILL.md
+// and skills/impulse-frontend/SKILL.md are the single source of truth for the
+// FULL rules the model reads on demand. Keep the two in sync manually;
+// scripts/check-sync.js verifies a small set of anchor phrases exist in both.
+
+const MODES = ['blitz', 'medium', 'hardcore'];
+
+const BACKEND_MODE_BLOCK = {
+  blitz: 'Mode blitz: fastest correct attempt, first try. No plan prose, no alternatives discussion, no ceremony. Baseline + carve-outs + tests still mandatory.',
+  medium: 'Mode medium: full ruleset as written, no shortcuts beyond the ladder.',
+  hardcore: 'Mode hardcore: before code, enumerate service boundaries, contracts, and failure modes of every seam (idempotency, ordering, backpressure, partial failure), plus data ownership. Think long, then implement. Still zero ceremony docs — analysis lives in thinking + short chat summary.',
+};
+
+const FRONTEND_MODE_BLOCK = {
+  blitz: 'Mode blitz: clean static, minimal motion, ship.',
+  medium: 'Mode medium: register defaults apply as written.',
+  hardcore: 'Mode hardcore: full choreography (brand) / full harden pass (product) — exercise 0/1/1000 items, long strings, emoji input, RTL, 400-500 API errors, offline, +40% German text expansion.',
+};
+
+function backendRuleset(mode) {
+  const m = MODES.includes(mode) ? mode : 'medium';
+  return [
+    '## impulse-backend active — mode: ' + m,
+    '',
+    'Persistence: ACTIVE EVERY RESPONSE. No drift back to over-building. Off only: "stop impulse" / "normal mode".',
+    '',
+    'Ladder — stop at the first rung that holds:',
+    '1. YAGNI-skip — unless baseline or carve-out.',
+    '2. Reuse within this service. Cross-service reuse = contracts/schemas only, never internals.',
+    '3. Stdlib.',
+    '4. Platform primitive (Postgres constraint, Redis primitive, Traefik middleware, Kafka semantics).',
+    '5. Blessed dep — new dep outside the list needs a one-line justification.',
+    '6. One line.',
+    '7. Minimum code that works.',
+    '',
+    'Carve-outs — never simplified away: trust-boundary input validation, error handling that prevents data loss, security, the day-one baseline, anything explicitly requested.',
+    '',
+    'Day-one baseline — every service ships with: /health/live + /health/ready, graceful SIGTERM shutdown (drain in-flight, close consumers/pools), structured JSON logs with correlation_id/trace_id, /metrics, versioned migrations from #1, config validation at boot (invalid config = refuse to start), timeout on every network call, idempotent Kafka consumers (dedup by event_id), .env.example + multi-stage non-root Dockerfile, retries with exp backoff+jitter on idempotent ops only, outbox+DLQ when events cross a service boundary with money/state at stake (else a `impulse:` marker), backups automated + restore-drilled with a named owner, money-moving code behind staged rollout + kill-switch + second reviewer.',
+    '',
+    'Mark every deliberate simplification: `// impulse: <ceiling>, <upgrade trigger>` (`#` in Python). No trigger = rot, flagged by impulse-debt.',
+    '',
+    BACKEND_MODE_BLOCK[m],
+  ].join('\n');
+}
+
+function frontendRuleset(mode) {
+  const m = MODES.includes(mode) ? mode : 'medium';
+  return [
+    '## impulse-frontend active — mode: ' + m,
+    '',
+    'Persistence: ACTIVE EVERY RESPONSE. No drift back to AI-tell defaults. Off only: "stop impulse" / "normal mode".',
+    '',
+    'Declare one line before building: `<page kind> for <audience>, <vibe>, register: <brand|product>[, source: external-authority (<origin>)]`.',
+    '- brand: design IS the product — distinctiveness bar. GSAP/Lenis/Three.js live here. Fluid clamp type, committed color, imagery mandatory on image-led briefs.',
+    '- product: design SERVES the task — earned-familiarity bar. One font family, fixed rem scale, 150-250ms motion, no page-load choreography, restrained color.',
+    '- external-authority (customer Figma/mockups named as the spec): reproduce, do not improve. Aesthetic bans yield to the authored design; hard floors (a11y, reduced motion, perf, security) do not — but every floor-vs-mockup conflict is a named question to the user BEFORE the change, ledgered in design-contract.md, never applied silently.',
+    'Ambiguous brief: exactly one clarifying question, never a dump.',
+    '',
+    'Hard rules: `min-h-[100dvh]` never `h-screen`. transform/opacity animations only — no window scroll listeners (ScrollTrigger/Lenis exist). `prefers-reduced-motion` mandatory. ease-out family, no bounce. Reveals enhance an already-visible default. Contrast >=4.5:1 body, >=3:1 large, never gray-on-colored. OKLCH for color work. Semantic z-index, never 999. `min-width:0` on flex/grid children. Motion must be motivated in one sentence or dropped to static; motion claimed = motion shown. Grid over flex-percentage math (`w-[calc(...)]` banned). New dependency: check package.json first, output the install command before importing. Container width from one token, never ad-hoc per page.',
+    '',
+    'Zero em-dash in UI copy. One accent, one radius system (cap 12-16px), one theme, one icon family (Phosphor). Max 2 consecutive zigzags, >=4 layout families per 8 sections, max 1 eyebrow per 3 sections, max 1 marquee/page.',
+    '',
+    'States (product register): default/hover/focus/active/disabled/loading/error/success. Skeletons not spinners. Never `outline:none` without a `:focus-visible` replacement.',
+    '',
+    FRONTEND_MODE_BLOCK[m],
+  ].join('\n');
+}
+
+function communicationRuleset() {
+  return [
+    '## Communication — impulse suite active',
+    '',
+    'Chat with user: живая русская речь. No AI-tells (no «в мире современных технологий», no bullet walls where a sentence works, no fake enthusiasm). Понятные термины, объясняй как сеньор коллеге. Terse but human.',
+    '',
+    'Thinking/reasoning: caveman-compressed, maximally dense — nobody reads it.',
+    '',
+    'Code, commits, docs, identifiers: normal, full quality, English.',
+    '',
+    'No emoji anywhere: code, logs, commits, chat.',
+    '',
+    'Pairs with /caveman plugin if the user runs it: these rules govern tone, caveman governs compression — both ban filler, no conflict.',
+  ].join('\n');
+}
+
+// Build the full injection payload for the given flag ({backend, frontend, mode}).
+// Returns '' when neither domain is active — caller must skip emitting.
+function getImpulseInstructions(flag) {
+  if (!flag || (!flag.backend && !flag.frontend)) return '';
+  const mode = MODES.includes(flag.mode) ? flag.mode : 'medium';
+  const domains = [];
+  if (flag.backend) domains.push('backend');
+  if (flag.frontend) domains.push('frontend');
+
+  const parts = ['IMPULSE MODE ACTIVE — ' + domains.join('+') + ' — mode: ' + mode];
+  if (flag.backend) parts.push(backendRuleset(mode));
+  if (flag.frontend) parts.push(frontendRuleset(mode));
+  parts.push(communicationRuleset());
+  return parts.join('\n\n');
+}
+
+module.exports = {
+  MODES,
+  backendRuleset,
+  frontendRuleset,
+  communicationRuleset,
+  getImpulseInstructions,
+};

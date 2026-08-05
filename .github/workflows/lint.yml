@@ -1,0 +1,92 @@
+name: Lint
+
+# Deterministic schema/consistency gate only.
+# Dogfoods skills/impulse-devops/references/ci.md:
+#   - least-privilege token (contents: read, explicit, top level)
+#   - pinned action SHAs (not floating tags)
+#   - gate on push + pull_request only, never pull_request_target
+#   - no secrets referenced anywhere in this workflow
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: lts/*
+
+      - name: check-skills (skill frontmatter + size + cross-reference schema)
+        run: node scripts/check-skills.js
+
+      - name: check-sync (instructions anchor drift + builder-rule/review-tag spine coverage)
+        run: node scripts/check-sync.js
+
+      - name: check-versions (manifest version consistency)
+        run: node scripts/check-versions.js
+
+      - name: impulse-debt (impulse: ceiling marker report)
+        run: node scripts/impulse-debt.js
+
+      - name: preflight scanner tests
+        run: node --test skills/impulse-frontend/scripts/*.test.mjs
+
+      - name: Pictographic emoji check
+        run: |
+          node - <<'EOF'
+          'use strict';
+          // Scan tracked .md/.js/.mjs/.json/.ps1/.sh/.py files for pictographic emoji.
+          // Excludes .git.
+          //
+          // Uses \p{Emoji_Presentation} (chars that render as emoji by
+          // default) OR \p{Extended_Pictographic} immediately followed by
+          // U+FE0F (the emoji-presentation variation selector), rather than
+          // bare \p{Extended_Pictographic}. That broader property also
+          // matches plain-text typographic symbols this suite uses
+          // legitimately in prose (e.g. U+2194 <-> "left-right arrow",
+          // used throughout as an ASCII-adjacent arrow, and (c)/(r)/(tm)
+          // marks) - bare Extended_Pictographic would false-positive on
+          // those and block unrelated PRs. This still catches real emoji
+          // (e.g. the party-popper / check-mark-emoji / cross-mark-emoji
+          // glyphs), which is the actual no-emoji rule this enforces.
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          const files = execSync('git ls-files', { encoding: 'utf8' })
+            .split('\n')
+            .filter(Boolean)
+            .filter((f) => /\.(md|js|mjs|json|ps1|sh|py)$/i.test(f))
+            .filter((f) => !f.startsWith('.git/'));
+
+          const emojiRe = /\p{Emoji_Presentation}|\p{Extended_Pictographic}️/u;
+
+          const hits = [];
+          for (const f of files) {
+            let text;
+            try {
+              text = fs.readFileSync(f, 'utf8');
+            } catch (e) {
+              continue;
+            }
+            const lines = text.split(/\r?\n/);
+            lines.forEach((line, i) => {
+              if (emojiRe.test(line)) hits.push(f + ':' + (i + 1) + ': ' + line.trim());
+            });
+          }
+
+          if (hits.length) {
+            console.error('Pictographic emoji found (' + hits.length + '):');
+            for (const h of hits) console.error('  ' + h);
+            process.exit(1);
+          }
+          console.log('emoji-check: clean (' + files.length + ' tracked files scanned).');
+          EOF
