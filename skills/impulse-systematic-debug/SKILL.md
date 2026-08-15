@@ -22,7 +22,10 @@ have named the cause. Output is a fix + a proof it fixed the named cause, not
    comment-halve for "which line". Turn N suspects into log₂N checks.
 4. **Hypothesize explicitly.** Write the hypothesis before testing it: "I
    think X because Y; if true, changing Z shows W." Keep a running log — a
-   killed hypothesis is progress, not waste.
+   killed hypothesis is progress, not waste. A hunt that outlives the
+   session (heisenbug, flaky test, spans days): persist the log to
+   `.impulse/memory/sessions/` (shared/memory.md) — re-deriving killed
+   hypotheses is the expensive part of resuming.
 5. **Smallest fix at the root.** Fix the cause, not the symptom. No drive-by
    refactor, no "while I'm here." One bug, one minimal change.
 6. **Prove it.** Re-run the repro → gone. Add a regression test that FAILS

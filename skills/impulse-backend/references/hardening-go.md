@@ -137,6 +137,18 @@ from `zuoyebang/aiweave`'s concurrency-design methodology (Apache-2.0).
 3. A migration and the code that structurally depends on it landing in the
    *same* deploy is the review-time tell — they must be separable across at
    least one deploy cycle for a rolling rollout to be safe.
+4. **Rollback path defined BEFORE running forward.** Every migration states
+   how to undo it (down migration, or an explicit "irreversible — restore
+   from backup" note) before the up runs — deciding rollback mid-incident
+   is how a bad migration becomes a long outage. Backfill retries must be
+   idempotent; partial failure must be observable (progress table or
+   logged watermark), not silent.
+5. **Contract is separately authorized, never implicit.** The destructive
+   step (drop column/constraint/table) is its own change with its own
+   review — finishing the expand+backfill never auto-triggers it. Stop
+   after the requested stage passes. (Language-neutral rule — applies to
+   Python/Alembic identically; lives here because the Go file owns the
+   zero-downtime section.)
 
 ## gRPC
 

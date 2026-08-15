@@ -31,13 +31,19 @@ function parseSkillFrontmatter(text) {
   const fm = fmMatch[1];
   const name = (fm.match(/^name:\s*(.+)$/m) || [])[1];
   let desc = '';
-  const descLine = fm.match(/^description:\s*(?:>-?\s*)?(.*)$/m);
+  const descLine = fm.match(/^description:[ \t]*(?:>-?[ \t]*)?(.*)$/m);
   if (descLine) {
     desc = descLine[1];
     if (desc === '' || /^>-?$/.test(descLine[0].split(':')[1]?.trim() || '')) {
       const after = fm.slice(fm.indexOf(descLine[0]) + descLine[0].length);
-      desc = after.split(/\r?\n/).filter(l => /^\s+\S/.test(l)).map(l => l.trim()).join(' ');
-      desc = desc.split(/\s(?=[a-z-]+:)/)[0] || desc;
+      const buf = [];
+      for (const l of after.split(/\r?\n/)) {
+        if (l.trim() === '') continue;
+        if (/^\S/.test(l)) break; // next top-level key — folded block over
+        buf.push(l.trim());
+      }
+      desc = buf.join(' ');
+
     }
   }
   desc = desc.replace(/^["']|["']$/g, '').trim();
@@ -192,7 +198,15 @@ const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 function validateSkill(skillName) {
   const violations = [];
   const skillPath = path.join(SKILLS_SRC, skillName, 'SKILL.md');
-  const text = fs.readFileSync(skillPath, 'utf8');
+  let text;
+  try {
+    text = fs.readFileSync(skillPath, 'utf8');
+  } catch (e) {
+    // A stray dir without SKILL.md is a per-skill validation failure, not a
+    // reason to abort the whole install run.
+    violations.push('SKILL.md missing or unreadable');
+    return violations;
+  }
   const fm = parseSkillFrontmatter(text);
   if (!fm) { violations.push('frontmatter unparseable (missing name/description)'); return violations; }
   if (fm.name.length > NAME_MAX) violations.push(`name '${fm.name}' is ${fm.name.length} chars (cap ${NAME_MAX})`);

@@ -19,7 +19,9 @@ const SCAN_EXT = new Set([
 ]);
 // `//` or `#` must actually start a comment: not preceded by `:` (blocks http://, https://),
 // and either at line start or preceded by whitespace/punctuation.
-const MARKER_RE = /(?:^|[\s;{}()])(?:(?<!:)\/\/|#)\s*impulse:\s*(.+?)\s*$/;
+// `--` covers SQL comments (SCAN_EXT includes .sql — without it that
+// extension scanned nothing).
+const MARKER_RE = /(?:^|[\s;{}()])(?:(?<!:)\/\/|#|--)\s*impulse:\s*(.+?)\s*$/;
 // Empirical grounding, not a guess: SATD (self-admitted technical debt)
 // median lifespan is 18-172 days across studied open-source projects
 // (Potdar & Shihab; Maldonado et al., 5,733 SATD removals across 5 projects
@@ -42,7 +44,7 @@ function walk(dir, out) {
     if (entry.isDirectory()) {
       if (SKIP_DIRS.has(entry.name)) continue;
       walk(full, out);
-    } else if (entry.isFile() && SCAN_EXT.has(path.extname(entry.name))) {
+    } else if (entry.isFile() && SCAN_EXT.has(path.extname(entry.name).toLowerCase())) {
       out.push(full);
     }
   }

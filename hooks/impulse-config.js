@@ -42,13 +42,14 @@ function readJson(file) {
 }
 
 function getConfig() {
-  const defaults = { defaultMode: DEFAULT_MODE, docstringLang: 'ru', coverageTarget: 80 };
+  const defaults = { defaultMode: DEFAULT_MODE, docstringLang: 'ru', coverageTarget: 80, core: true };
   try {
     const cfg = readJson(getConfigPath());
     return {
       defaultMode: normalizeMode(cfg.defaultMode) || defaults.defaultMode,
       docstringLang: cfg.docstringLang === 'en' ? 'en' : 'ru',
       coverageTarget: Number.isFinite(cfg.coverageTarget) ? cfg.coverageTarget : defaults.coverageTarget,
+      core: cfg.core !== false, // only an explicit false disables the core layer
     };
   } catch (e) {
     return defaults; // missing/invalid config = defaults, never an error
@@ -57,6 +58,32 @@ function getConfig() {
 
 function getDefaultMode() {
   return normalizeMode(process.env.IMPULSE_DEFAULT_MODE) || getConfig().defaultMode;
+}
+
+// The always-on core layer (engineering spine + token economy). On by
+// default with no flag file needed — that's the point: it holds even before
+// any /impulse-backend|frontend activation. Two off-switches, both explicit:
+//   env  IMPULSE_CORE=0            session/environment scope
+//   cfg  { "core": false }         durable, written by `/impulse-core off`
+function isCoreEnabled() {
+  if (process.env.IMPULSE_CORE === '0') return false;
+  return getConfig().core;
+}
+
+// Persist the core on/off choice into the config file, preserving whatever
+// else is there. Best-effort: false on any failure, never a throw.
+function writeCoreConfig(enabled) {
+  try {
+    const cfgPath = getConfigPath();
+    let cfg = {};
+    try { cfg = readJson(cfgPath); } catch (e) { /* absent/invalid = start fresh */ }
+    cfg.core = enabled === true;
+    fs.mkdirSync(path.dirname(cfgPath), { recursive: true });
+    atomicWrite(cfgPath, JSON.stringify(cfg, null, 2));
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // Absent flag, invalid JSON, or no active domain = impulse off (null).
@@ -72,11 +99,20 @@ function readFlag() {
   }
 }
 
+// tmp + rename: a concurrent reader (statusline render, second session's
+// hook) must never see a half-written JSON — partial reads parsed as null
+// and silently dropped an active mode.
+function atomicWrite(file, data) {
+  const tmp = file + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, data);
+  fs.renameSync(tmp, file);
+}
+
 function writeFlag(flag) {
   try {
     const flagPath = getFlagPath();
     fs.mkdirSync(path.dirname(flagPath), { recursive: true });
-    fs.writeFileSync(flagPath, JSON.stringify({
+    atomicWrite(flagPath, JSON.stringify({
       backend: flag.backend === true,
       frontend: flag.frontend === true,
       mode: normalizeMode(flag.mode) || getDefaultMode(),
@@ -150,6 +186,8 @@ module.exports = {
   readFlag,
   writeFlag,
   clearFlag,
+  isCoreEnabled,
+  writeCoreConfig,
   isDeactivationCommand,
   isShellSafe,
   emit,

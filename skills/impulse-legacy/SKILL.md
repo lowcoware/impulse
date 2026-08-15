@@ -1,12 +1,15 @@
 ---
 name: impulse-legacy
 description: >
-  Mirror of impulse-backend/impulse-frontend for existing/unfamiliar code:
+  Use when TOUCHING existing code you didn't write this session — mirror
+  of impulse-backend/impulse-frontend for existing/unfamiliar code:
   characterization tests, blast-radius assessment, seams, Strangler Fig
   for migration, read-before-write agent protocol. Go/Python + Vue/Nuxt.
-  Triggers: "/impulse-legacy", "рефактор без тестов", "легаси код", "не
+  Triggers: "/impulse-legacy", "рефакторинг без тестов", "легаси код", "не
   понимаю этот код", "безопасно поменять", "как это отрефакторить",
-  "unfamiliar codebase", "strangler fig", "incremental migration".
+  "чужой код", "старый код", "старый проект", "нет тестов",
+  "unfamiliar codebase", "inherited codebase", "old code", "refactor
+  safely", "strangler fig", "incremental migration".
 ---
 
 # impulse-legacy

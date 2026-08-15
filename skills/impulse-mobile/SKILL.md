@@ -6,7 +6,7 @@ description: >
   choice, day-one mobile baseline (crash reporting, release signing, dispose
   discipline, network timeouts), and the mobile-specific bug catalog.
   Triggers: "/impulse-mobile", "flutter", "react native", "swiftui", "kotlin
-  android", "мобилка", "мобильное приложение", "widget", "riverpod", "flatlist",
+  android", "мобилка", "мобильное приложение", "флаттер", "андроид", "widget", "riverpod", "flatlist",
   "push notifications", "deep link", "webview", "app store", "offline-first".
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: impulse-shrink
-description: "Repo-wide over-engineering audit: scan the WHOLE tree (not a diff) for what to delete, inline, or replace with stdlib/platform primitives, ranked biggest cut first. Complexity only — correctness/security/perf stay /code-review, CVE/supply-chain stays impulse-dependency-audit, a single diff stays impulse-review. Triggers: \"/impulse-shrink\", \"shrink the repo\", \"repo-wide audit\", \"audit the whole repo for over-engineering\", \"усохни репо\", \"почисти репозиторий\", \"что можно удалить во всём репо\", \"аудит оверинжиниринга\", \"сколько можно выкинуть\"."
+description: "Repo-wide over-engineering audit: scan the WHOLE tree (not a diff) for what to delete, inline, or replace with stdlib/platform primitives, ranked biggest cut first. Complexity only — correctness/security/perf stay /code-review, CVE/supply-chain stays impulse-dependency-audit, a single diff stays impulse-review. Triggers: \"/impulse-shrink\", \"shrink the repo\", \"repo-wide audit\", \"audit the whole repo for over-engineering\", \"усохни репо\", \"почисти репозиторий\", \"что можно удалить во всём репо\", \"аудит оверинжиниринга\", \"сколько можно выкинуть\", \"упрости проект\", \"слишком сложный код\", \"убери лишние абстракции\", \"simplify the codebase\", \"too many abstractions\", \"declutter\"."
 ---
 
 impulse-review's `over:` sweep, repo-wide. Scan the whole tree instead of a
@@ -10,7 +10,7 @@ of findings. The repo's best outcome is getting smaller.
 ## Tags
 
 The `over:` rung sub-labels from impulse-review, same meanings
-(`impulse-review/SKILL.md` owns the definitions):
+(`impulse-review/references/tags.md` owns the definitions):
 
 `over:yagni` `over:delete` `over:reuse` `over:stdlib` `over:native`
 `over:dep` `over:shrink`
@@ -36,7 +36,8 @@ they accrete across many PRs):
 
 Default `standard`. `quick` = hot paths and the dependency manifests only,
 ~5 biggest cuts. `deep` = whole repo including tests/scripts/docs, LOW-value
-polish items included. Scale agent fan-out accordingly; name the level used
+polish items included. Scale agent fan-out accordingly (dispatch contract
+and separability rules: `../../shared/subagents.md`); name the level used
 in the output so coverage is honest.
 
 ## Output

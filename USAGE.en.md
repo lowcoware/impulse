@@ -36,7 +36,7 @@ badge, a stateful mode switch.
 - The statusline shows state: `[IMPULSE:BE:BLITZ]`, `[IMPULSE:FE]`,
   `[IMPULSE:BE+FE:HARDCORE]`.
 - Defaults — `~/.config/impulse/config.json` (`defaultMode`, `docstringLang`,
-  `coverageTarget`).
+  `coverageTarget`, `core`).
 
 Bare copy (no plugin, installed via `scripts/install.js`): only
 description auto-attach works. No commands, no hooks, no mode flag — name

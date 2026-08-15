@@ -1,7 +1,7 @@
 {
   "name": "impulse",
-  "version": "1.0.6",
-  "description": "Anti-overengineering engineering suite: 22 skills for Go-first microservice backends, Vue/Nuxt frontends, review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point. /impulse-help lists all.",
+  "version": "1.1.0",
+  "description": "Anti-overengineering engineering suite: always-on impulse-core layer (engineering spine + token economy) plus Go-first microservice backends, Vue/Nuxt frontends, review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point. /impulse-help lists all.",
   "author": {
     "name": "Aki"
   },

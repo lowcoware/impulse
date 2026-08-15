@@ -113,6 +113,76 @@ prefix, and the moment it diverges, everything after stops being cached.
 This is already this suite's own architecture (`hooks/impulse-instructions.js`
 emits static ruleset text) — the finding confirms the shape, not a change.
 
+## Search and read discipline — escalate, never start broad
+
+A concrete ladder, not a principle to interpret per task: known file → read
+just that file (offset/limit range if large) → the specific neighbor
+(caller/callee/sibling actually needed) → targeted `grep` with a
+constrained path/pattern and a result cap → repo-wide search, last resort,
+still pattern-constrained. Never run a command with genuinely unbounded
+output (recursive listing, `git log` with no `-n`, full verbose test logs)
+without a limit already attached — add the cap before running it, not
+after reading a flood.
+
+Two measured waste patterns worth naming because they're easy to miss in
+the moment:
+
+- **Re-reading a file that hasn't changed.** An edit's result already
+  confirms the file's new state — re-reading it afterward pays for content
+  already known. Read again only if an external process (formatter,
+  linter, generator) touched it after the edit. Read-then-edit-then-read
+  on one file is the most common shape of this waste.
+- **Path-spelling drift defeats your own "already read this" tracking.**
+  `C:\Dev\x`, `C:\dev\x`, and `/c/dev/x` name the same file with different
+  strings — any recall or dedup keyed on the string misses the match.
+  Normalize to the one spelling the repo/tooling already uses and keep it
+  byte-identical for the rest of the session.
+
+## Session hygiene — batch, don't repeat, don't re-poll unchanged state
+
+- Batch independent tool calls into one round instead of issuing them
+  serially — round-trips cost turns, not just tokens.
+- Reference an earlier conclusion instead of re-deriving it.
+- Capture a value that won't change within the session (an auth token, a
+  config lookup, a build ID) once, reuse it — re-issuing an identical call
+  re-pays for its whole output every time.
+- Observe once after acting, not repeatedly on unchanged state — polling a
+  surface (a log tail, a page, a status) that hasn't moved since the last
+  check is pure waste, not diligence.
+- A long output worth keeping goes to a scratch file, read back
+  selectively — write or append once; rewriting the same scratch file
+  every few turns re-pays for it each time.
+- A task that has genuinely outgrown the session (a second repo, a third
+  unrelated ticket) gets split, not trimmed harder — no amount of
+  in-session compaction beats not carrying an oversized prefix in the
+  first place.
+
+## Prompt-cache TTL — verify which one is live before pacing around it
+
+Two TTLs exist across providers and a session runs on whichever is
+configured — a short one (cache write costs more, expires fast) or a long
+one (cache write costs less per read, stays warm longer). Don't assume the
+short one and schedule extra work to "beat" an expiry that isn't actually
+close — on a long-TTL session, pacing wakeups to protect the cache is
+wasted effort; the context is still warm regardless. Match any scheduled
+follow-up to what's actually being waited on, not a guessed cache clock.
+Keep stable content (instructions, references) early in every prompt,
+volatile content late — this is the general form of the caching rule
+above, restated as a session-hygiene habit, not just a hook-authoring one.
+
+**Where the cost concentrates, when measured.** One real multi-day audit
+attributed spend roughly 54% cache-read (driven by turn count × context
+size in a single long session), 36% cache-write (driven by cold-starting
+subagents/workflows — each pays for its own prefix from zero), 10% output
+generation. The fix for each is different and doesn't transfer: a long
+solo session that's cache-read-heavy needs splitting (§ session hygiene
+above); a wide subagent fan-out that's cache-write-heavy needs fewer,
+warmer agents or passing findings in rather than re-deriving them per
+agent (`subagents.md`'s handoff discipline). Diagnose which shape a
+session actually has before reaching for either fix — cache *hit rate*
+alone is a poor signal, since a session can sit at 90%+ hit rate and still
+be dominated by read volume.
+
 ## Model routing — real savings, with an unpriced tail risk
 
 Organizations report 30-70% cost cuts from routing cheap tasks to cheap

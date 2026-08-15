@@ -36,7 +36,7 @@ statusline, стейтфул-переключатель режима.
 - Statusline показывает состояние: `[IMPULSE:BE:BLITZ]`, `[IMPULSE:FE]`,
   `[IMPULSE:BE+FE:HARDCORE]`.
 - Дефолты — `~/.config/impulse/config.json` (`defaultMode`, `docstringLang`,
-  `coverageTarget`).
+  `coverageTarget`, `core`).
 
 Голая копия (без плагина, установка через `scripts/install.js`): работает
 только автоподключение по description. Ни команд, ни hooks, ни флага

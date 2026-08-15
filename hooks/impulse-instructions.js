@@ -71,6 +71,37 @@ function frontendRuleset(mode) {
   ].join('\n');
 }
 
+// The always-on master layer. Injected on every session and every subagent
+// regardless of domain flags — engineering spine + token economy, the two
+// disciplines that must not depend on the user remembering to activate a
+// mode. Deliberately compact: this is always-paid context, so it obeys the
+// same token-hygiene it preaches. Full versions live in the skill files
+// (impulse-core/SKILL.md is the readable owner; ladder detail in
+// impulse-backend, token detail in shared/velocity.md + token-hygiene.md).
+function coreRuleset() {
+  return [
+    '## impulse-core active — always-on engineering + token discipline',
+    '',
+    'Persistence: ACTIVE EVERY RESPONSE, with or without a domain mode. Off only: `/impulse-core off` (durable) or env IMPULSE_CORE=0 — "stop impulse" turns off domain modes, never this layer.',
+    '',
+    'Engineering spine (full ladder: impulse-backend; register system: impulse-frontend):',
+    '- Stop at the first rung that holds: YAGNI-skip -> reuse in-service -> stdlib -> platform primitive -> blessed dep -> one line -> minimum code that works.',
+    '- Carve-outs never simplified away: trust-boundary input validation, error handling that prevents data loss, security, anything explicitly requested (with a domain mode active: + its day-one baseline).',
+    '- Mark every deliberate ceiling: `// impulse: <ceiling>, <upgrade trigger>` (`#` in Python). No trigger = rot.',
+    '- No unrequested abstraction, no speculative config, no framework where a function does.',
+    '- Stop at done: acceptance criteria pass -> stop. No polish, cleanup, or extra tests after the pass unless asked.',
+    '- No drive-by edits: change only what the task owns; preserve unrelated behavior and the user\'s own edits.',
+    '',
+    'Token economy (details: shared/velocity.md, shared/token-hygiene.md):',
+    '- Search escalation: known file -> its neighbor -> scoped grep (path + pattern + result cap) -> repo-wide last. Never a command with unbounded output (git log without -n, recursive listing, full verbose logs) — cap first.',
+    '- Read narrow: offset/limit on large files; structure scan (tree/signatures/grep) before a full read; never re-read a file after your own edit unless an external process (formatter/linter/generator) touched it since.',
+    '- Batch independent tool calls into one round. Never re-poll unchanged state. Fetch a stable value (token, config, build ID) once per session and reuse it.',
+    '- Long output worth keeping -> scratch file, read back selectively.',
+    '- Delegate a many-file sweep when tokens-to-explore far exceeds tokens-of-answer; the subagent returns a summary, never a raw transcript.',
+    '- Project memory, when present (.impulse/memory/): index first, full text on demand — protocol in shared/memory.md.',
+  ].join('\n');
+}
+
 function communicationRuleset() {
   return [
     '## Communication — impulse suite active',
@@ -88,23 +119,35 @@ function communicationRuleset() {
 }
 
 // Build the full injection payload for the given flag ({backend, frontend, mode}).
-// Returns '' when neither domain is active — caller must skip emitting.
-function getImpulseInstructions(flag) {
-  if (!flag || (!flag.backend && !flag.frontend)) return '';
-  const mode = MODES.includes(flag.mode) ? flag.mode : 'medium';
-  const domains = [];
-  if (flag.backend) domains.push('backend');
-  if (flag.frontend) domains.push('frontend');
+// `coreEnabled` prepends the always-on layer. With no domain active the payload
+// is core+communication alone (the master-skill baseline); with neither core
+// nor a domain, returns '' — caller must skip emitting.
+function getImpulseInstructions(flag, coreEnabled) {
+  const hasDomain = !!(flag && (flag.backend || flag.frontend));
+  if (!hasDomain && !coreEnabled) return '';
 
-  const parts = ['IMPULSE MODE ACTIVE — ' + domains.join('+') + ' — mode: ' + mode];
-  if (flag.backend) parts.push(backendRuleset(mode));
-  if (flag.frontend) parts.push(frontendRuleset(mode));
+  const parts = [];
+  if (hasDomain) {
+    const mode = MODES.includes(flag.mode) ? flag.mode : 'medium';
+    const domains = [];
+    if (flag.backend) domains.push('backend');
+    if (flag.frontend) domains.push('frontend');
+    parts.push('IMPULSE MODE ACTIVE — ' + domains.join('+') + ' — mode: ' + mode +
+      (coreEnabled ? ' — core: on' : ''));
+    if (coreEnabled) parts.push(coreRuleset());
+    if (flag.backend) parts.push(backendRuleset(mode));
+    if (flag.frontend) parts.push(frontendRuleset(mode));
+  } else {
+    parts.push('IMPULSE CORE ACTIVE — no domain mode on (activate with /impulse-backend | /impulse-frontend)');
+    parts.push(coreRuleset());
+  }
   parts.push(communicationRuleset());
   return parts.join('\n\n');
 }
 
 module.exports = {
   MODES,
+  coreRuleset,
   backendRuleset,
   frontendRuleset,
   communicationRuleset,

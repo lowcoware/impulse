@@ -63,3 +63,10 @@ out/
 tmp/
 .tmp/
 scratch/
+
+# Vendored research clones (203MB, mixed third-party licenses incl. BSL) —
+# research material for Lineage-cited borrowings, never shipped or pushed
+/references/
+
+# install.js dry-run/apply output when pointed at the repo itself
+/.agents/

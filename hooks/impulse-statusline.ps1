@@ -9,22 +9,44 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ClaudeDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $HOME ".claude" }
 $Flag = Join-Path $ClaudeDir ".impulse-active"
-if (-not (Test-Path $Flag)) { exit 0 }
+
+# Core layer state: on unless config/env explicitly disables it.
+$CoreOn = $true
+if ($env:IMPULSE_CORE -eq "0") { $CoreOn = $false }
+if ($CoreOn) {
+    $Cfg = Join-Path $HOME ".config/impulse/config.json"
+    if (Test-Path $Cfg) {
+        try {
+            $CfgData = (Get-Content -LiteralPath $Cfg -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
+            # Strict boolean check: PS coerces "false" (string) -eq $false to true,
+            # which would disagree with the node hooks' cfg.core !== false.
+            if (($CfgData.core -is [bool]) -and (-not $CfgData.core)) { $CoreOn = $false }
+        } catch { }
+    }
+}
 
 $Data = $null
-try {
-    $Raw = Get-Content -LiteralPath $Flag -Raw -ErrorAction Stop
-    $Data = $Raw | ConvertFrom-Json -ErrorAction Stop
-} catch {
-    exit 0
+if (Test-Path $Flag) {
+    try {
+        $Raw = Get-Content -LiteralPath $Flag -Raw -ErrorAction Stop
+        $Data = $Raw | ConvertFrom-Json -ErrorAction Stop
+    } catch { }
 }
 
 $Label = ""
-if ($Data.backend -eq $true) { $Label = "BE" }
-if ($Data.frontend -eq $true) {
+if ($Data -and $Data.backend -eq $true) { $Label = "BE" }
+if ($Data -and $Data.frontend -eq $true) {
     if ($Label) { $Label = "$Label+FE" } else { $Label = "FE" }
 }
-if (-not $Label) { exit 0 }
+
+# No domain mode: core badge alone, or nothing if core is off too.
+if (-not $Label) {
+    if ($CoreOn) {
+        $Esc = [char]27
+        [Console]::Write("${Esc}[38;5;135m[IMPULSE:CORE]${Esc}[0m")
+    }
+    exit 0
+}
 
 $Mode = [string]$Data.mode
 $Suffix = ""

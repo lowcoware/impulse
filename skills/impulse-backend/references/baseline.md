@@ -16,7 +16,7 @@ list decides what always exists.
 | Config validation | Typed config, validated at startup. Invalid = refuse to boot. | see rules below |
 | Timeouts | Timeout on EVERY network call. No timeout = bug. | see table below; zero infinite-wait calls in the diff |
 | Idempotent consumers | Events arrive twice. Dedup by `event_id` before side effects. | replaying an event produces no second side effect (details: events.md) |
-| Env + Dockerfile | `.env.example` lists every variable, empty values. Multi-stage Dockerfile, non-root final user. | image builds; `whoami` in container is not root |
+| Env + Dockerfile | `.env.example` lists every variable, empty values. Multi-stage Dockerfile, non-root final user (digest pins, cache order: impulse-devops/dockerfile.md). | image builds; `whoami` in container is not root |
 | Retries | Exp backoff + jitter, capped attempts. Idempotent operations ONLY. Formula: [AWS Builders' Library, "capped exponential backoff, then full jitter"](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) — capping alone still synchronizes every client at the cap; jitter is what actually spreads the retries, not an optional extra. | no retry wraps a non-idempotent call |
 | Outbox + DLQ | Required when events cross a service boundary with money/state at stake. Otherwise: `impulse:` marker with trigger. | outbox present, or marker like `// impulse: sync publish, add outbox when event carries money/state` (details: events.md) |
 | Backups restore-tested | Every stateful store: automated backup + a drilled restore path + a named owner (details: impulse-devops/backup.md). Untested backups = GitLab 2017: five channels, all silently dead. | restore drill run before real data reaches prod; owner named |
@@ -28,7 +28,7 @@ list decides what always exists.
 2. Validate at boot: required fields present, ports/URLs parse, numbers in range, enums match.
 3. Invalid config → log the exact failing key, exit non-zero. Never limp to the first request and die there.
 4. Defaults for dev only. Production values explicit via env.
-5. Secrets via env, never in code or committed `.env`. `.env` in `.gitignore`; `.env.example` is the documentation.
+5. Secrets never in code or committed `.env`. `.env` in `.gitignore`; `.env.example` is the documentation. Delivery mechanism per environment tier — plain env is the local-dev floor only; production delivery (Compose `secrets:` mounts, injected stores): `impulse-security/references/secrets.md` owns the tier rule, `impulse-devops/references/compose.md` the Compose wiring.
 
 ## Graceful shutdown order
 

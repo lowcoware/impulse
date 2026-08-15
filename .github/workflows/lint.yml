@@ -37,6 +37,15 @@ jobs:
       - name: impulse-debt (impulse: ceiling marker report)
         run: node scripts/impulse-debt.js
 
+      - name: check-anchors (§ cross-reference resolution)
+        run: node scripts/check-anchors.js
+
+      - name: check-token-hygiene (advisory report, never fails)
+        run: node scripts/check-token-hygiene.js
+
+      - name: hook payload tests
+        run: node --test hooks/*.test.mjs
+
       - name: preflight scanner tests
         run: node --test skills/impulse-frontend/scripts/*.test.mjs
 

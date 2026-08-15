@@ -25,12 +25,16 @@ const path = require('path');
 let config;
 let getImpulseInstructions;
 let flag;
+let coreOn;
 try {
   // Requires inside the try: a broken install must be a silent no-op, not a stack dump.
   config = require('./impulse-config');
   ({ getImpulseInstructions } = require('./impulse-instructions'));
   flag = config.readFlag();
-  if (!flag) process.exit(0); // impulse off — nothing to inject
+  coreOn = config.isCoreEnabled();
+  // Core is the always-on master layer: with it enabled there is always
+  // something to inject, flag file or not. Only fully-off installs exit here.
+  if (!flag && !coreOn) process.exit(0);
 } catch (e) {
   process.exit(0); // silent fail — never block session start
 }
@@ -76,14 +80,25 @@ function statuslineNudge() {
   }
 }
 
-// The volatile half: what mode is live right now. Everything else the ruleset
-// says is already sitting in the resumed conversation.
+// The volatile half: what mode is live right now. The DOMAIN ruleset is
+// provably in the resumed history (it can only activate via a hook that
+// injected it), so it is not re-sent. The CORE ruleset has no such proof:
+// core may have been switched on mid-previous-session via /impulse-core on,
+// after that conversation's SessionStart already ran — so when core is on,
+// re-inject it in full (it is small) rather than assert presence.
 function volatileOnly() {
   const domains = [];
-  if (flag.backend) domains.push('backend');
-  if (flag.frontend) domains.push('frontend');
-  return 'IMPULSE MODE: ' + domains.join('+') + ' — level: ' + flag.mode + '. ' +
-    'Ruleset already in this conversation (resumed) — still in force, not re-sent.';
+  if (flag && flag.backend) domains.push('backend');
+  if (flag && flag.frontend) domains.push('frontend');
+  const { coreRuleset } = require('./impulse-instructions');
+  const corePart = coreOn ? '\n\n' + coreRuleset() : '';
+  if (domains.length) {
+    return 'IMPULSE MODE: ' + domains.join('+') + ' — level: ' + flag.mode +
+      (coreOn ? ' — core: on' : '') + '. ' +
+      'Domain ruleset already in this conversation (resumed) — still in force, not re-sent.' +
+      corePart;
+  }
+  return 'IMPULSE CORE: on (no domain mode).' + corePart;
 }
 
 let input = '';
@@ -101,7 +116,7 @@ function finish() {
     }
     const output = source === 'resume'
       ? volatileOnly()
-      : getImpulseInstructions(flag) + statuslineNudge();
+      : getImpulseInstructions(flag, coreOn) + statuslineNudge();
     config.emit('SessionStart', output);
   } catch (e) {
     // Silent fail — never block session start

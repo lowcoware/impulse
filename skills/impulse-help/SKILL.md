@@ -17,6 +17,7 @@ files, or persist anything.
 | Skill | Trigger | Does |
 |---|---|---|
 | impulse | `/impulse` | Router: describe a situation, it recommends which skill(s) to plug in and splits the overlapping pairs |
+| impulse-core | always on (`/impulse-core on\|off`) | Master layer: engineering spine + token economy, hook-injected every session and subagent |
 | impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go-first: ladder + day-one baseline + ceiling markers |
 | impulse-frontend | `/impulse-frontend [mode]` | Vue 3 / Nuxt 4 / Tailwind v4: register split, AI-tells bans, GSAP/Lenis canon, DESIGN.md protocol |
 | impulse-review | `/impulse-review` | Diff review: overengineering + baseline + seams + AI-typical bugs + architecture-decay + AI-tells. One line per finding |
@@ -47,8 +48,9 @@ files, or persist anything.
 | medium | Default. Full ruleset as written |
 | hardcore | Architecture mode: boundaries, contracts, failure modes of every seam BEFORE code. Analysis in thinking + short chat summary, never documents |
 
-Switch: `/impulse-backend blitz`, `/impulse-frontend hardcore`. Off: `stop impulse` / `normal mode`.
-Statusline badge: `[IMPULSE:BE:BLITZ]`, `[IMPULSE:FE]`, `[IMPULSE:BE+FE:HARDCORE]`.
+Switch: `/impulse-backend blitz`, `/impulse-frontend hardcore`, or `/impulse <mode>` on whichever domain is active.
+Off: `stop impulse` / `normal mode` — domain modes only; the core layer stays on (`/impulse-core off` or `IMPULSE_CORE=0` disables it).
+Statusline badge: `[IMPULSE:BE:BLITZ]`, `[IMPULSE:FE]`, `[IMPULSE:BE+FE:HARDCORE]`, `[IMPULSE:CORE]` when no domain mode is on.
 
 ## Ceiling marker
 
@@ -70,6 +72,7 @@ Severity: BLOCK / WARN / INFO. Clean verdict: `Lean. Ship.`
 | defaultMode | `~/.config/impulse/config.json` | blitz / medium (default) / hardcore |
 | docstringLang | same | ru / en — default owned by impulse-backend docs.md |
 | coverageTarget | same | number — default owned by impulse-backend testing.md |
+| core | same | true (default) / false — always-on core layer; also env `IMPULSE_CORE=0` |
 
 Resolution: `IMPULSE_DEFAULT_MODE` env > config file > medium.
 Flag file: `~/.claude/.impulse-active` — `{"backend":true,"frontend":false,"mode":"medium"}`.

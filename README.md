@@ -2,7 +2,7 @@
 
 # impulse
 
-Мой скилл-сьют для Claude Code против оверинжиниринга: 22 скилла на бэкенд
+Мой скилл-сьют для Claude Code против оверинжиниринга: скиллы на бэкенд
 (микросервисы на Go, Python — там, где он реально оправдан), фронтенд
 (Vue 3 / Nuxt 4), ревью диффов, технический долг, очеловеченный текст,
 документацию, управление проектом, легаси-код, AI/RAG-инфраструктуру,
@@ -46,13 +46,14 @@ Code: остальные CLI (и голая копия) подхватывают
 
 ## Скиллы
 
-Все 22 скилла и как их позвать. Команды `/impulse-*` — это Claude Code; на
+Все скиллы и как их позвать. Команды `/impulse-*` — это Claude Code; на
 других CLI те же скиллы подхватываются по description. Живая справка одним
 экраном — `/impulse-help`.
 
 | Скилл | Команда | Для чего |
 |---|---|---|
 | impulse | `/impulse` | Универсальный роутер: опиши ситуацию — подскажет, какой impulse-скилл подключить, разведёт пересекающиеся пары |
+| impulse-core | всегда включён (`/impulse-core on\|off`) | Мастер-слой: инженерный стержень + экономия токенов, хуки инжектят его в каждую сессию и каждого сабагента |
 | impulse-backend | `/impulse-backend [mode]` | Бэкенды микросервисов с нуля, Go-first: лестница, бейзлайн первого дня, маркеры-потолки |
 | impulse-frontend | `/impulse-frontend [mode]` | Vue 3 / Nuxt 4 / Tailwind v4: разделение регистров, баны AI-tells, канон GSAP/Lenis, протокол DESIGN.md |
 | impulse-review | `/impulse-review` | Ревью диффа: оверинжиниринг, бейзлайн, seams, AI-типичные баги, гниль архитектуры, AI-tells — одна строка на находку |
@@ -84,9 +85,11 @@ medium — полный набор правил (по умолчанию); hardc
 архитектура: границы, контракты, режимы отказа каждого seam до кода.
 
 Включить: `/impulse-backend [blitz|medium|hardcore]`, `/impulse-frontend [blitz|medium|hardcore]`.
-Выключить: `stop impulse` (или `normal mode`). Конфиг —
+Выключить: `stop impulse` (или `normal mode`) — это гасит только доменные
+режимы; всегда-включённый слой impulse-core остаётся (`/impulse-core off`
+или `IMPULSE_CORE=0`, если нужно выключить и его). Конфиг —
 `~/.config/impulse/config.json` (`defaultMode`, `docstringLang`,
-`coverageTarget`); полная справка — `/impulse-help`.
+`coverageTarget`, `core`); полная справка — `/impulse-help`.
 
 ## Использование в разных CLI
 
@@ -157,6 +160,15 @@ impulse отвечает за инженерию под анти-оверинж�
   Ставь, когда проект на GitLab и работа многократно трогает MR/issues/
   пайплайны за сессию — разовый `git push` в этом не нуждался.
 
+- **cavemem** — [JuliusBrussee/cavemem](https://github.com/JuliusBrussee/cavemem).
+  Полноценная кросс-агентная память: SQLite + FTS5, MCP-сервер с
+  progressive-disclosure чтением (search/timeline/get_observations), фоновый
+  индексирующий воркер. impulse взял из него форму (тир-индекс, redact-
+  before-write, cheap-index-then-full-read) в лёгкий файловый протокол —
+  `shared/memory.md`, без БД и демона. Ставь cavemem, когда нужен реальный
+  полнотекстовый/семантический поиск по истории; `shared/memory.md` — когда
+  достаточно дисциплины поверх Read/Write.
+
 ## Ещё
 
 - Как пользоваться в Claude Code / Cursor / Codex / Antigravity — `USAGE.md`
@@ -206,6 +218,22 @@ impulse отвечает за инженерию под анти-оверинж�
 | openai/skills (Apache-2.0) | impulse-backend's security-checklist.md (Go net/http + FastAPI hardening rules), impulse-ai's mcp-server.md pagination/response-format conventions |
 | trailofbits/skills (CC BY-SA 4.0, mechanisms re-expressed, no text copied) | impulse-review's api-misuse-resistance.md (sharp-edges pit-of-success doctrine) + differential-review adaptive-depth framing in SKILL.md, impulse-backend's testing.md property catalog + deps.md modern-python tooling table, impulse-dependency-audit's supply-chain.md dependency-health-risk section |
 | qdrant/skills (Apache-2.0) | impulse-ai's qdrant.md multitenancy + memory-optimization + embedding-model-migration sections |
+| JuliusBrussee/cavemem (MIT) | `shared/memory.md`'s tiered (index/session/notes) memory shape, write-before-read redaction rule, progressive index→detail read order |
+| tsilly07/ironclad-v3 (MIT) | `shared/memory.md`'s 50-line index cap and append-only session log; `playbooks.md`'s ship-gate evidence-table playbook |
+| sharenq/skill-architect (no LICENSE file — mechanism re-expressed, no text copied) | `authoring.md`'s filler-file ban, gating-language phrase bank |
+| alexgreensh/token-optimizer (custom license — mechanism re-expressed, no text copied) | `token-hygiene.md`'s named anti-pattern format (N-Skill Trap, Rule-File Novel, Unscoped Rule) |
+| HKUDS/CLI-Anything (Apache-2.0) | `token-hygiene.md`'s cheap-default/expensive-opt-in convention |
+| vibeeval/vibecosystem (MIT) | `shared/subagents.md`'s no-raw-transcript rule and structure-before-content read ordering |
+| edxeth/superlight-context7-skill (MIT) | `shared/context7.md`'s REST-transport alternative section |
+| MichaelYochpaz/agent-skills (MIT) | `authoring.md`'s reference-link load-condition annotation convention |
+| Vix0007/vixero-skills (MIT) | `authoring.md`'s self-audit-before-shipping convention |
+| ashritkvs/prompt-compression-agent (no LICENSE file — mechanism re-expressed, no text copied) | `token-hygiene.md`'s compress-then-verify checklist gate |
+| majiayu000/claude-skill-registry-data (archive — individual skill entries carry their own terms, mechanism re-expressed) | `token-hygiene.md`'s never-load-raw-bulk-data rule |
+| chrdrk/claude-focus (MIT) | `memory.md`'s native-`MEMORY.md` platform-cap citation (200 lines/25KB), orphan-link check |
+| indulgeback/claude-code-memory-skill (MIT) | `memory.md`'s recall-discipline step (verify a Tier 3 fact against current repo state before acting on it) |
+| FavorPan/hermes-skill-cleaner (MIT) | `scripts/check-token-hygiene.js`'s Jaccard word-overlap duplication check, byte/4 token-estimate formula, description-bloat watch mark |
+| SOtham/claude-config (no LICENSE file — mechanism re-expressed, no text copied) | `velocity.md`'s search-escalation ladder, re-read/path-spelling waste patterns, session-hygiene batch/no-repoll rules, prompt-cache TTL + 54/36/10% cost-share breakdown; `subagents.md`'s delegate-when-explore-much-greater-than-answer test |
+| JoaoPires3642/ai-agent-kit (no LICENSE file — mechanism re-expressed, no text copied) | `memory.md`'s Tier 2 session-log fixed-field entry shape (Goal/State/Decisions/Files/Validation/Risks/Next) |
 | redis/agent-skills (MIT, Redis Inc.) | impulse-backend's new stores-redis.md |
 | s3onghyun/otelcol-doctor (Apache-2.0) | impulse-backend's new otel-collector.md |
 | zuoyebang/aiweave (Apache-2.0) | impulse-backend's hardening-go.md worker-pool-sizing section (Little's Law, pool invariants) |

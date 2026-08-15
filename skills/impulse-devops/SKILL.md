@@ -2,13 +2,17 @@
 name: impulse-devops
 description: >
   Deploy/infra for stacks WITHOUT Kubernetes: Docker Compose multi-env,
-  multi-stage Dockerfiles, GitHub Actions CI/CD with SSH auto-deploy,
-  Traefik edge/TLS cert automation, zero-downtime on a single VPS. Covers
-  env-drift, Compose secrets, cache-breaking COPY order,
-  pull_request_target secret exfiltration, ACME rate limits, blue-green,
-  volume/cert decay. Triggers: "/impulse-devops", "docker compose", "dockerfile",
-  "github actions", "ci/cd", "деплой", "докер", "traefik", "ssl/tls
-  сертификат", "zero-downtime", "откат деплоя", "пайплайн", "без кубернетеса".
+  multi-stage Dockerfiles, GitHub Actions + GitLab CI/CD with SSH
+  auto-deploy, Traefik edge/TLS cert automation, zero-downtime on a
+  single VPS, pipeline speed engineering, DORA/trunk-based shipping
+  discipline, feature-flag ladder. Covers env-drift, Compose secrets,
+  cache-breaking COPY order, pull_request_target secret exfiltration,
+  fork MR pipeline exposure, ACME rate limits, blue-green, volume/cert
+  decay. Triggers: "/impulse-devops", "docker compose", "dockerfile",
+  "github actions", "gitlab ci", "гитлаб", ".gitlab-ci.yml", "ci/cd",
+  "деплой", "докер", "traefik", "ssl/tls сертификат", "zero-downtime",
+  "откат деплоя", "пайплайн", "ускорить ci", "feature flag", "фича-флаг",
+  "без кубернетеса".
 ---
 
 # impulse-devops
@@ -30,11 +34,12 @@ and makes drift/decay visible before it bites.
 |---|---|---|
 | references/compose.md | multi-env layout, `secrets:`, healthcheck `depends_on`, env-drift trap — numbered rules are IDs `DO-CO1`–`DO-CO5` | writing/reviewing Compose files |
 | references/dockerfile.md | multi-stage Go/Python, non-root, cache-order, `.dockerignore`, digest pins — IDs `DO-DF1`–`DO-DF5` | writing a Dockerfile |
-| references/ci.md | build/test/lint gate, SSH auto-deploy, health gate, `pull_request_target` exfil footgun — IDs `DO-CI1`–`DO-CI7` | GitHub Actions workflow |
+| references/ci.md | build/test/lint gate, SSH auto-deploy, health gate, `pull_request_target` exfil, concurrency groups, SHA-pinned actions, caching stack, 10-min PR budget, runner economics — IDs `DO-CI1`–`DO-CI15` | GitHub Actions workflow |
+| references/gitlab-ci.md | `workflow:rules` dedup, `rules:`/`needs:`/`interruptible`, cache-vs-artifacts, DinD buildx (kaniko dead), protected/OIDC variables, fork MR exposure, `resource_group` + manual gates, SSH deploy — IDs `DO-GL1`–`DO-GL12` | GitLab CI pipeline (`.gitlab-ci.yml`) |
 | [../../shared/rule-spine.md](../../shared/rule-spine.md) | builder↔review crosswalk: every `DO-*` rule → its detector → the impulse-review tag (`infra:`, or `bug:` for the two security ones) | adding or renumbering a rule in the three files above |
 | ../../shared/gitlab-mcp.md | `@zereight/mcp-gitlab` setup, when to use it vs `glab`/raw API | project hosted on GitLab, no MCP tool in the available set yet |
 | references/cert-tls.md | Traefik ACME resolvers, challenge types, rate limits, renewal-failure alerting | edge TLS / cert automation |
-| references/deploy.md | rolling restart, blue-green on one VPS, migration ordering, rollback | deploying / a deploy script |
+| references/deploy.md | rolling restart, blue-green on one VPS, migration ordering, rollback, DORA benchmarks, deploy-vs-release + flag ladder, canary honesty, deploy annotations | deploying / a deploy script / shipping-process question |
 | references/decay.md | orphaned volumes, image bloat, cert-expiry blind spots, `.env` drift | periodic infra hygiene |
 | references/incident.md | prod outage: mitigate-first (rollback/flag), blast-radius, RCA handoff, blameless post-mortem | prod is down or degraded |
 | references/backup.md | RPO/RTO tiers, pg_dump vs WAL-G, restore drills, per-store methods, live-volume trap, dead-man's-switch monitoring | setting up or auditing backups |

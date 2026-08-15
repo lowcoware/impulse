@@ -63,6 +63,9 @@ Applies to every platform.
    `(duration, bounce)` rather than raw stiffness/damping — the same two
    knobs drive SwiftUI's `.spring(duration:bounce:)`, Motion (web), and CSS
    `linear()` output, so one design decision ports across platforms.
+   (`impulse-frontend`'s no-bounce-easing ban is a WEB rule and does not
+   apply here: native platforms ship springs as the system-default motion
+   language — bounce on mobile is idiomatic, not an AI-tell.)
    `stiffness = (2π/duration)²`, `damping = 4π(1-bounce)/duration` (corrects
    a formula that's circulated garbled from a WWDC23 transcript). Gesture
    rules that hold everywhere: 1:1 finger/drag response during the gesture,

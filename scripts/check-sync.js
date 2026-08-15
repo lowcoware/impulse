@@ -29,6 +29,13 @@ const ANCHORS = [
   { id: 'frontend:phosphor', phrase: 'phosphor', ruleset: instructions.frontendRuleset('medium'), skillFile: 'skills/impulse-frontend/SKILL.md' },
   { id: 'communication:caveman', phrase: 'caveman', ruleset: instructions.communicationRuleset(), skillFile: 'shared/communication.md' },
   { id: 'communication:ru-speech', phrase: 'живая', ruleset: instructions.communicationRuleset(), skillFile: 'shared/communication.md' },
+  { id: 'core:ladder', phrase: 'first rung that holds', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:marker', phrase: 'upgrade trigger', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:escalation', phrase: 'escalation', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:delegate', phrase: 'tokens-of-answer', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:memory', phrase: '.impulse/memory', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:stop-at-done', phrase: 'stop at done', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:drive-by', phrase: 'drive-by', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
 ];
 
 function has(text, phrase) {
@@ -115,6 +122,12 @@ const SPINE_PARITY = [
     id: 'DO-CI',
     owner: 'skills/impulse-devops/references/ci.md',
     what: 'GitHub Actions rules',
+    count: (t) => numbered(t),
+  },
+  {
+    id: 'DO-GL',
+    owner: 'skills/impulse-devops/references/gitlab-ci.md',
+    what: 'GitLab CI rules',
     count: (t) => numbered(t),
   },
 ];

@@ -93,6 +93,13 @@ ritual's unattended-run edge case specifically.
    writing a near-duplicate lesson). Blending them into one note makes
    the durable pattern hard to find later inside a pile of one-off
    session summaries.
+   **Where they live — one home each, never both.** If the project runs
+   the `shared/memory.md` tier convention, the handover IS the Tier 2
+   session entry and the lesson IS a Tier 3 note — do not also write them
+   as separate docs-tree files. Without the memory convention, both go in
+   the project's docs tree as this playbook's artifacts. Either way the
+   content exists ONCE; the other location at most points to it (the
+   duplication-sediment rule in `shared/token-hygiene.md`, applied here).
 
 ## triage-incoming-request
 
@@ -199,6 +206,30 @@ Pattern from emilkowalski/skills improve-animations (MIT), re-expressed.
    state; the plan must say what to look at.
 5. Finish by creating/updating `plans/README.md`: table of plans (number,
    title, severity, status), recommended execution order, dependencies.
+
+## ship-gate
+
+Trigger: a unit of work is about to be claimed "done." From
+tsilly07/ironclad (MIT), re-expressed.
+
+1. Write a sign-off artifact, one per task:
+   `docs/ironclad/sign-offs/YYYY-MM-DD-<task>-shipgate.md` (adjust the path
+   to the project's own convention if `impulse-project-management` already
+   has a status-artifact location — don't create a second one).
+2. Six evidence categories, each a checkbox with a one-line citation (file,
+   command, or test run) — not a bare checkmark:
+   - Acceptance criteria met (cite the criterion + what satisfies it)
+   - Tests run and passing (cite the command + result, not "tests pass")
+   - No new debt markers without a tracking entry (`impulse-debt` ledger)
+   - Changelog entry landed (`update-changelog`, same unit of work)
+   - Out-of-scope items from the task template stayed out
+   - Reviewer/self-review pass completed, findings resolved or triaged
+3. Any unchecked box blocks the "done" claim — the gate exists to make an
+   unverified "done" visible before it's said out loud, not to be filled
+   in after the fact from memory.
+4. A gate that can't be filled honestly (no test run happened, no reviewer
+   looked) is a signal to do that work, not to check the box anyway —
+   same never-invent discipline as `research-synthesis`'s integrity rules.
 
 ## reconcile-plans
 

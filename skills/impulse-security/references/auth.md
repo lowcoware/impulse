@@ -16,9 +16,10 @@
 3. **Lifetimes:** access token 5-15 minutes, refresh token 7-14 days with
    rotation. An access token `exp` computed more than an hour out is the
    single most common "fix it later" tech debt — flag it on sight.
-4. **Storage** (matches `impulse-frontend`'s token-storage finding): access
-   token in memory only, refresh token in `httpOnly; Secure;
-   SameSite=Strict` cookie. Never localStorage for either.
+4. **Storage:** access token in memory only, refresh token in `httpOnly;
+   Secure; SameSite=Strict` cookie. Never localStorage for either — XSS
+   reads localStorage; it cannot read an httpOnly cookie. This rule binds
+   the frontend consuming the tokens too, whichever skill built it.
 
 ## Algorithm confusion — the #1 library-level mistake
 

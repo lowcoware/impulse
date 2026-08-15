@@ -46,6 +46,7 @@ Genuine fork -> `AskUserQuestion` with the 2-3 candidates, one line each.
 | Generate a standalone HTML report/plan/diagram, one shareable file | impulse-artifact |
 | Maintain an Obsidian vault as a project wiki: structure, MOCs, vault health, Canvas/Bases | impulse-wiki |
 | Clone/reverse-engineer a website (with a legitimate basis) | impulse-clone |
+| Always-on rules, token economy, "why are rules already active", disable the core layer | impulse-core |
 | Just want the reference card of skills/modes/tags | impulse-help |
 
 ## Disambiguation — the overlapping pairs
@@ -80,11 +81,23 @@ Where two skills look plausible, the fork is the value:
   wiki places it in the vault and keeps it connected.
 - **review vs clone.** Judging code you have -> review. Rebuilding a site you
   don't have the source of -> clone.
+- **frontend vs artifact.** App UI that lives in the codebase (routing,
+  state, build step) -> frontend. One-off shareable HTML file (report, plan
+  page, diagram) -> artifact. "Сделай страницу с планом" = artifact unless
+  it's a page of the product.
+- **devops vs security.** Getting Traefik/TLS/deploy RUNNING -> devops.
+  HARDENING what runs (headers, rate limits, webhook signatures, CORS) ->
+  security. Same words ("traefik", "tls") — the fork is stand-up vs harden.
+- **backend vs legacy on "миграция".** DB/schema migration in code being
+  built -> backend. Migrating/refactoring an existing codebase -> legacy.
 
 ## Modes and companions
 
 - Modes (`blitz|medium|hardcore`) apply to backend and frontend only. `/impulse
   blitz` etc. is the mode switch (the hook handles it) — not this router.
+- The `impulse-core` layer (engineering spine + token economy) is hook-injected
+  every session independently of these modes — `stop impulse` leaves it on;
+  `/impulse-core off` disables it durably.
 - Off-charter asks route OUT of the suite, say so plainly: offensive
   security / pentest / bug bounty -> companion `claude-bughunter`;
   token-compressed chat mode -> companion `caveman`; deep general web
@@ -96,4 +109,5 @@ Where two skills look plausible, the fork is the value:
 Recommends and routes; does not itself build, review, or write. Picks the
 skill; that skill does the work. Not the static card — that's `impulse-help`.
 Nothing here changes mode or state.
-"stop impulse" / "normal mode": revert to default behavior.
+"stop impulse" / "normal mode": turn off the domain modes; the always-on
+core layer stays (disable that with `/impulse-core off`).

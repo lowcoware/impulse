@@ -125,7 +125,7 @@ bad: "This handler might benefit from reconsidering its abstraction layers." goo
 | ../impulse-backend/references/hardening-go.md · hardening-python.md · hardening-rust.md | language production traps, each with a real incident: Go context/panic/pools/gRPC, Python async-blocking/Pydantic v2/asyncio, Rust ownership/`unsafe`/numeric safety | the diff's language matches — always when Rust code touches `unsafe` |
 | ../impulse-backend/references/stores-*.md | store-specific arch-decay and AI-bug patterns: ClickHouse, Neo4j, MongoDB, Postgres, PostGIS, MinIO, Redis | the diff touches that store |
 | ../impulse-mobile/references/hardening-mobile.md | the mobile AI-typical bug catalog: leaks, main-thread blocking, list perf, lifecycle, Keychain/biometric misuse | any mobile diff producing a `bug:`/`perf:` finding |
-| ../impulse-devops/references/compose.md · dockerfile.md · ci.md | the `DO-*` rows in full, each with its incident and the exact failing config | any `infra:` finding, and always on a `pull_request_target` workflow |
+| ../impulse-devops/references/compose.md · dockerfile.md · ci.md · gitlab-ci.md | the `DO-*` rows in full, each with its incident and the exact failing config | any `infra:` finding, and always on a `pull_request_target` workflow or fork MR pipeline |
 | ../impulse-security/references/auth.md · authz.md | the code-level tell for IDOR (`SE-M1`) and for algorithm confusion / unvalidated claims (`SE-M2`) | a `bug:` finding lands on auth, authz, or token verification |
 | ../impulse-legacy/references/blast-radius.md · characterization.md | grep-every-caller discipline, the 6-step assessment, characterization-test technique | any `legacy:` finding |
 

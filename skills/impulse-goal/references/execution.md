@@ -48,6 +48,13 @@ Recovers flaky envs, typos, missed deps automatically; only real blockers escala
 
 Future runs start smarter because past runs wrote what they learned. At each phase boundary ask: would a future impulse-goal run on a similar task benefit from knowing this? Worth saving: an undocumented library API quirk, a user preference confirmed this run, a project-level fact (auth lives in `lib/auth/` not `app/api/auth/`), a failure pattern + fix. Standard impulse memory frontmatter; link from `MEMORY.md`; print `MEMORY_SAVED:`. At the final phase, always write a `project_<slug>` memory (location, stack, status, ROADMAP link) so future runs on the same project start current. Never save secrets, transient task details, ephemeral state.
 
+If the project runs `.impulse/memory/` (shared/memory.md tiers), the run's
+end-of-run record goes there instead of a parallel home: write the fixed-field
+Tier 2 session entry (Goal/State/Decisions/Files/Validation/Risks/Next) at
+`IMPULSEGOAL_RUN_COMPLETE`, promote reusable lessons to Tier 3 notes, and put
+the `project_<slug>` fact on the `index.md` pointer list — one memory system
+per project, never both.
+
 ## Transcript markers (the evaluator only sees the transcript)
 
 `IMPULSEGOAL_PHASE_START` / `IMPULSEGOAL_PHASE_VERIFY` / `IMPULSEGOAL_PHASE_DONE` · `MEMORY_SAVED` · `AUDIT_START` / `AUDIT_VERIFY` / `AUDIT_GAPS` / `AUDIT_COMPLETE` / `AUDIT_HANDOFF` · `IMPULSEGOAL_RUN_COMPLETE` · `FAILURE_PROBE` / `FAILURE_ESCALATE` / `FAILURE_HANDOFF`. The `/goal` end-state: `IMPULSEGOAL_RUN_COMPLETE` preceded by `AUDIT_COMPLETE` and one `IMPULSEGOAL_PHASE_DONE` per phase, no `FAILURE_HANDOFF` or `AUDIT_HANDOFF`. Don't rename these without reworking the end-state condition string in `goal-format.md`.

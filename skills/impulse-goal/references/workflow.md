@@ -28,7 +28,7 @@ Coexistence notice (print it when ACTIVE_RUNS is non-empty and starting fresh): 
 
 ### Memory preload (impulse memory system)
 
-Detect the memory dir (`$HOME/.claude/projects/*/memory`, `$HOME/.claude/memory`, `$PWD/.claude/memory`, `$IMPULSEGOAL_ROOT/memory`), read `MEMORY.md` index, then selectively read the individual memory files relevant to the task (user role, feedback on stack/domain, related project memories). Don't dump them all. Capture applicable hits in `$IMPULSEGOAL_ROOT/applied-memories.md` (one line each: name, why-applicable, what-it-changes); surface in Stage 1 as "Applied from memory:" so the user can correct anything stale. Same memory frontmatter impulse uses everywhere: `name` / `description` / `metadata.type`.
+Detect the memory dir (`$PWD/.impulse/memory` — the suite's own tier convention, `shared/memory.md`, checked FIRST — then `$HOME/.claude/projects/*/memory`, `$HOME/.claude/memory`, `$PWD/.claude/memory`, `$IMPULSEGOAL_ROOT/memory`), read the index (`index.md` for `.impulse/memory`, `MEMORY.md` for the others), then selectively read the individual memory files relevant to the task (user role, feedback on stack/domain, related project memories). Don't dump them all — `.impulse/memory` follows shared/memory.md's read discipline: index first, grep filenames, open only the matched file. Capture applicable hits in `$IMPULSEGOAL_ROOT/applied-memories.md` (one line each: name, why-applicable, what-it-changes); surface in Stage 1 as "Applied from memory:" so the user can correct anything stale. Same memory frontmatter impulse uses everywhere: `name` / `description` / `metadata.type`.
 
 ### Tool + skill discovery
 

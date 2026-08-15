@@ -62,7 +62,8 @@ Before writing infrastructure code, ask: which platform already does this? Then 
 | Cache with TTL | Redis SETEX / EXPIRE | map + janitor goroutine |
 | Distributed lock | Redis SET NX PX | lock table + polling |
 | Lightweight queue | Redis Streams | DB polling table (outbox is the exception) |
-| Rate limit, CORS, compression, TLS | Traefik middleware at the edge | per-service middleware copies |
+| CORS, compression, TLS | Traefik middleware at the edge | per-service middleware copies |
+| Rate limit | layered: coarse per-IP at Traefik + per-user/per-key middleware in the app on unauthenticated write endpoints (`impulse-security/references/rate-limit.md` owns) | edge-only ("Traefik handles it") or hand-rolled counters |
 | Per-key ordering | Kafka partition key | app-side sequence numbers |
 | Consumer scaling | Kafka consumer groups | custom work distribution |
 | Duplicate delivery | event_id dedup + committed offsets | bespoke dedup service |

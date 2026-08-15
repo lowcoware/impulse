@@ -1,6 +1,6 @@
 ---
 name: impulse-clone
-description: "Website cloning done as a discipline: recon-first (find the real source before scraping), L1-L6 complexity grading, evidence-graded reverse engineering, Playwright harvest/mirror scripts, visual diff + machine fidelity gates. Legitimate basis required — own property, explicit permission, or internal study; for redesign baselines, migration snapshots, design study. Triggers: \"/impulse-clone\", \"clone this site\", \"clone website\", \"reverse engineer this page\", \"mirror this site\", \"склонируй сайт\", \"сделай копию сайта\", \"повтори этот сайт\", \"скопируй лендинг\", \"разбери, как сделан этот сайт\". Redesigning your own UI from scratch = impulse-frontend; the clone's code still goes through impulse-review."
+description: "Website cloning done as a discipline: L1-L6 complexity grading, evidence-graded reverse engineering, Playwright tooling, fidelity gates. Legitimate basis required — own property, explicit permission, or internal study; for redesign baselines, migration snapshots, design study. Triggers: \"/impulse-clone\", \"clone this site\", \"clone website\", \"reverse engineer this page\", \"mirror this site\", \"склонируй сайт\", \"сделай копию сайта\", \"повтори этот сайт\", \"скопируй лендинг\", \"разбери, как сделан этот сайт\". Redesigning your own UI from scratch = impulse-frontend; the clone's code still goes through impulse-review."
 ---
 
 # impulse-clone

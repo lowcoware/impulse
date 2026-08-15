@@ -72,7 +72,7 @@ function readManifest(rel) {
   if (!fs.existsSync(abs)) return { error: 'file not found' };
   let parsed;
   try {
-    parsed = JSON.parse(fs.readFileSync(abs, 'utf8'));
+    parsed = JSON.parse(fs.readFileSync(abs, 'utf8').replace(/^﻿/, ''));
   } catch (e) {
     return { error: 'unparseable JSON: ' + e.message };
   }

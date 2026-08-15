@@ -87,6 +87,7 @@ Every deliberate simplification with a known ceiling gets one. A marker without
 an upgrade trigger is rot — impulse-debt flags it.
 
 Output pattern after shipping code: `[code] → skipped: [X], add when [Y].`
+Before "done": walk baseline.md done-when + carve-outs — one unticked = not done; same rules impulse-review sweeps, self-check beats a review round-trip.
 
 ## References — load on demand
 

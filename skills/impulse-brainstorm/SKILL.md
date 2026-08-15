@@ -58,7 +58,8 @@ for the hype-vs-nostalgia bias this exact fork shape tends to carry.
    not three agents. Spawn a subagent per approach only on a genuine one-way
    door where the inline attempts keep converging on the option you already
    wanted — each spawn copies the context and re-pays the ruleset injection.
-   See `references/panel.md`.
+   See `references/panel.md`; dispatch mechanics (brief contract, handoff):
+   `../../shared/subagents.md`.
 
 ## Boundaries
 

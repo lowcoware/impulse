@@ -23,6 +23,7 @@ const {
   readFlag,
   writeFlag,
   clearFlag,
+  writeCoreConfig,
   isDeactivationCommand,
   emit,
 } = config;
@@ -60,14 +61,37 @@ function finish() {
       ? cmdName[1] + (cmdArgs && cmdArgs[1] ? ' ' + cmdArgs[1].trim() : '')
       : raw;
 
-    if (isDeactivationCommand(prompt)) {
-      clearFlag();
-      emit('UserPromptSubmit', 'IMPULSE MODE OFF');
+    // Core layer switch — durable (config file), separate from domain flags.
+    // "stop impulse" below intentionally does NOT touch it: core is the
+    // always-on baseline, domains are the opt-in modes.
+    const coreMatch = /^\/impulse-core(?:\s+(on|off))?\s*$/i.exec(prompt);
+    if (coreMatch) {
+      const arg = (coreMatch[1] || '').toLowerCase();
+      if (arg === 'off') {
+        emit('UserPromptSubmit', writeCoreConfig(false)
+          ? 'IMPULSE CORE OFF (durable — re-enable with /impulse-core on)'
+          : 'IMPULSE CORE: config write FAILED — core still on. Check ~/.config/impulse/ permissions.', true);
+      } else if (arg === 'on') {
+        emit('UserPromptSubmit', writeCoreConfig(true)
+          ? 'IMPULSE CORE ON — active next session start (rules inject on SessionStart)'
+          : 'IMPULSE CORE: config write FAILED. Check ~/.config/impulse/ permissions.', true);
+      } else {
+        emit('UserPromptSubmit', 'IMPULSE CORE: usage /impulse-core on|off', true);
+      }
       return;
     }
 
-    const backendMatch = /^\/impulse-backend(?:\s+(\S+))?\s*$/i.exec(prompt);
-    const frontendMatch = /^\/impulse-frontend(?:\s+(\S+))?\s*$/i.exec(prompt);
+    if (isDeactivationCommand(prompt)) {
+      clearFlag();
+      emit('UserPromptSubmit', 'IMPULSE MODE OFF (domain modes — core layer unaffected, /impulse-core off to disable it)', true);
+      return;
+    }
+
+    // First token after the command is the mode candidate; trailing text is
+    // tolerated ("/impulse-backend blitz please") — a strict one-arg regex
+    // silently no-oped on it, which read as a successful switch.
+    const backendMatch = /^\/impulse-backend(?:\s+(\S+))?(?:\s|$)/i.exec(prompt);
+    const frontendMatch = /^\/impulse-frontend(?:\s+(\S+))?(?:\s|$)/i.exec(prompt);
     const bareMatch = /^\/impulse(?:\s+(\S+))?\s*$/i.exec(prompt);
 
     if (backendMatch) {
@@ -90,6 +114,13 @@ function finish() {
       const mode = normalizeMode(bareMatch[1]);
       if (mode) {
         const cur = currentOrDefault();
+        if (!cur.backend && !cur.frontend) {
+          // No domain to apply the mode to — writing {false,false,mode} would
+          // be silently discarded by readFlag(). Say so instead of eating it.
+          emit('UserPromptSubmit',
+            'IMPULSE: no domain mode active — run /impulse-backend or /impulse-frontend first, then /impulse ' + mode, true);
+          return;
+        }
         writeFlag({ backend: cur.backend, frontend: cur.frontend, mode });
         confirm();
       }

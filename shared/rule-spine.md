@@ -137,9 +137,10 @@ ones — `impulse-mobile/references/hardening-mobile.md`, no IDs.
 
 ## Infra
 
-Owner: `impulse-devops/references/compose.md`, `dockerfile.md`, `ci.md` —
-each a numbered list, in that order. Diff-visible in Compose files,
-Dockerfiles, and workflow YAML, which no builder's tag set previously reached.
+Owner: `impulse-devops/references/compose.md`, `dockerfile.md`, `ci.md`,
+`gitlab-ci.md` — each a numbered list, in that order. Diff-visible in
+Compose files, Dockerfiles, and workflow/pipeline YAML, which no builder's
+tag set previously reached.
 
 | ID | Rule | Detector | Tag |
 |---|---|---|---|
@@ -160,6 +161,26 @@ Dockerfiles, and workflow YAML, which no builder's tag set previously reached.
 | DO-CI5 | cache keyed on a lockfile hash, never `github.sha` | SHA-keyed cache — never hits | `infra:` |
 | DO-CI6 | untrusted event fields routed through `env:`, not interpolated into `run:` | `${{ github.event.* }}` inside a shell line | `bug:` |
 | DO-CI7 | a job's GH Environment has protection rules that actually exist | empty reviewer list — the job hangs forever, no error | `infra:` |
+| DO-CI8 | concurrency group with cancel-in-progress on PR workflows, never on deploy | no `concurrency:` block, or one on a deploy workflow | `infra:` |
+| DO-CI9 | `permissions: {}` at top level, per-job grants | workflow with no `permissions:` — default token is read-write | `infra:` |
+| DO-CI10 | third-party actions pinned to full commit SHA | `uses:` with a tag/branch ref on a non-org action | `bug:` |
+| DO-CI11 | `timeout-minutes` on every job | job with no timeout — 6h default | `infra:` |
+| DO-CI12 | setup-* built-in cache; GOCACHE persisted; buildx gha/registry cache; cache-mounts persisted or not relied on | hand-rolled `node_modules` cache, no Docker build cache, cache-mount assumed durable | `infra:` |
+| DO-CI13 | PR feedback under 10 min: fast-fail lint jobs, paths filters, heavy suites off PR, shard past ~5 min | one monolithic job, E2E on every PR | `infra:` |
+| DO-CI14 | ARM runners for arch-agnostic jobs; self-hosted never on public repos | self-hosted runner attached to a public repo | `bug:` |
+| DO-CI15 | rulesets over classic branch protection; merge queue only at real contention | merge queue on a two-dev repo, or no required checks at all | `infra:` |
+| DO-GL1 | `workflow:rules` suppresses duplicate branch+MR pipelines | push to an MR branch spawning two pipelines | `infra:` |
+| DO-GL2 | `rules:` only — never `only/except`, never mixed | `only:`/`except:` in any job | `infra:` |
+| DO-GL3 | `needs:` where it shortens the critical path; `interruptible: true` default | artificial stage waits, stale pipelines running to completion | `infra:` |
+| DO-GL4 | cache for dependency stores, artifacts for build outputs, lockfile-keyed | build output passed via cache, or a static cache key | `infra:` |
+| DO-GL5 | image builds via DinD buildx (registry cache) or buildah — kaniko is archived | kaniko executor anywhere in the pipeline | `infra:` |
+| DO-GL6 | FASTZIP + fastest compression + `GIT_DEPTH: "1"` on build-only jobs | default clone depth and compression on a heavy pipeline | `infra:` |
+| DO-GL7 | `extends:`/`!reference` + `default:` block; components over templates | YAML anchors across include files, new code built on legacy templates | `infra:` |
+| DO-GL8 | protected variables AND protected deploying refs, masking treated as cosmetic | deploy secret readable from an unprotected branch | `bug:` |
+| DO-GL9 | `id_tokens:` OIDC — `CI_JOB_JWT*` is removed | any `CI_JOB_JWT` reference | `bug:` |
+| DO-GL10 | fork MR pipelines never run with parent-project variables unreviewed | fork-pipelines-in-parent enabled with no diff review | `bug:` |
+| DO-GL11 | deploy jobs carry `environment:` + `resource_group:`; manual gate = `when: manual` + `allow_failure: false` | concurrent SSH deploys possible, or a skippable manual gate | `infra:` |
+| DO-GL12 | SSH deploy with pinned `known_hosts` + health gate; self-hosted docker-executor runner; `release:` on tags | blind ssh-keyscan, shell executor for untrusted code, free-tier minutes assumed infinite | `infra:` |
 
 ## Security
 

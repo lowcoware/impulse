@@ -49,21 +49,33 @@ for (const entry of entries) {
 
   // description: single line or folded block (>-)
   let desc = '';
-  const descLine = fm.match(/^description:\s*(?:>-?\s*)?(.*)$/m);
+  const descLine = fm.match(/^description:[ \t]*(?:>-?[ \t]*)?(.*)$/m);
   if (descLine) {
     desc = descLine[1];
     if (desc === '' || /^>-?$/.test(descLine[0].split(':')[1]?.trim() || '')) {
       // folded block: collect indented lines after description:
       const after = fm.slice(fm.indexOf(descLine[0]) + descLine[0].length);
-      desc = after.split(/\r?\n/).filter(l => /^\s+\S/.test(l)).map(l => l.trim()).join(' ');
-      // stop at next top-level key
-      desc = desc.split(/\s(?=[a-z-]+:)/)[0] || desc;
+      const buf = [];
+      for (const l of after.split(/\r?\n/)) {
+        if (l.trim() === '') continue;
+        if (/^\S/.test(l)) break; // next top-level key — folded block over
+        buf.push(l.trim());
+      }
+      desc = buf.join(' ');
+
     }
   }
   if (!desc) fail(dir, 'missing/empty description');
   else {
     if (desc.length > 1024) fail(dir, `description ${desc.length} chars (>1024)`);
     if (/[<>]/.test(desc)) fail(dir, 'description contains angle brackets');
+    // Description = routing surface (authoring.md): a description with no
+    // trigger vocabulary silently loses every routing decision. Two accepted
+    // shapes exist in the corpus: an explicit "Triggers:" list, or the
+    // imperative "Use when ..." form — either counts; neither present fails.
+    if (!/Triggers?\b|Use when|Fires (for|when)/i.test(desc)) {
+      fail(dir, 'description has no trigger surface ("Triggers:" list or "Use when ..." imperative)');
+    }
   }
 
   if (lines.length > ROUTER_LINE_CAP) fail(dir, `SKILL.md ${lines.length} lines (>${ROUTER_LINE_CAP} router cap)`);
@@ -127,6 +139,18 @@ const BARE_MD_ALLOWLIST = [
   'ROADMAP.md', 'STATE.md', 'PROTOCOL.md', 'THINKING.md', 'phase-N.md', 'phase-N.fix.md', 'fix.md',
   'context.md', 'repo-map.md', 'applied-memories.md', 'applied-skills.md', 'tools.md',
   'MEMORY.md', // impulse memory index — generated in the consumer's memory dir, not a suite file
+  // shared/memory.md tiered memory convention — generated in the CONSUMER
+  // project's .impulse/memory/ dir, not suite files
+  'index.md', 'YYYY-MM-DD-slug.md',
+  // impulse-project-management ship-gate playbook — generated in the
+  // consumer's docs/ironclad/sign-offs/ dir, not a suite file
+  'shipgate.md',
+  // authoring.md filler-file ban list — generic filenames named as examples
+  // of what NOT to create, not suite files
+  'QUICKSTART.md', 'INSTALL_NOTES.md',
+  // authoring.md reference-link annotation example, illustrating the convention
+  // with a filename borrowed from the lineage source, not a suite file
+  'requests.md',
   // impulse-wiki generic example/generated filenames — the consumer's vault, not suite files
   'Notes.md', 'Glossary.md', 'MOC_Project.md',
   // impulse-wiki deep-dive.md page-name convention — generic team-wiki page names,

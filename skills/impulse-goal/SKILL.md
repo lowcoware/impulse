@@ -1,6 +1,6 @@
 ---
 name: impulse-goal
-description: "Plan deeply, then autonomously drive a software task to done through a single self-continuing /goal run with per-phase verify, 3-strike recovery, and a final audit against the original plan. The execution engine for the impulse suite: after impulse-project-management writes specs, or standalone from a prompt, it recons, decomposes into phases, gets ONE confirmation, and hands off one ready-to-paste /goal. Triggers: /impulse-goal, plan and ship X, autonomous build, drive it to done, don't stop until it's done, I don't want to babysit this, доведи до конца, автономная сборка, запусти исполнение, не хочу нянчить, гони до готового. Prefer over a plain plan when the user wants depth plus autonomous follow-through (every aspect, fully, until done). Works on Claude Code and Codex. From robzilla1738/supergoal (MIT)."
+description: "Autonomous execution engine of the impulse suite: plan deeply, then drive a software task to done without babysitting — after impulse-project-management writes specs, or standalone from a prompt. Use when the user wants depth plus follow-through to completion. Triggers: /impulse-goal, plan and ship X, autonomous build, drive it to done, don't stop until it's done, I don't want to babysit this, доведи до конца, автономная сборка, запусти исполнение, не хочу нянчить, гони до готового. Works on Claude Code and Codex. From robzilla1738/supergoal (MIT)."
 ---
 
 # impulse-goal
@@ -98,7 +98,8 @@ under `$IMPULSEGOAL_DIR`; all run artifacts under `$IMPULSEGOAL_ROOT`.
 | references/goal-format.md | what `/goal` is on Claude Code + Codex, the single-`/goal` shape, transcript blocks |
 | references/repo-state-comparison.md | complete-working-tree vs baseline comparison strategy (audit + cleanliness) |
 | ../../shared/velocity.md | why the execution engine is shaped this way — rework dominates over generation speed, spec quality vs. iteration count, when parallel phases pay off |
-| references/self-reference.md | self-generated reference artifact — a real ROADMAP + STATE pair, built by this skill's own templates, documenting the reference-artifact rollout as a completed run | checking whether current ROADMAP/STATE output still matches this skill's own baseline |
+| references/self-reference.md | self-generated reference artifact — a real ROADMAP + STATE pair, built by this skill's own templates; load when checking whether current ROADMAP/STATE output still matches this skill's own baseline |
+| ../../shared/subagents.md | subagent dispatch contract, handoff discipline, durable orchestration — load when fanning out parallel recon or phase workers |
 
 ## Scripts
 

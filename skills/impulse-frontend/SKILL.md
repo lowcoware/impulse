@@ -1,6 +1,6 @@
 ---
 name: impulse-frontend
-description: "Vue 3 / Nuxt 4 / Tailwind v4 WEB frontend — UI, components, landing pages, dashboards, admin panels, forms, design tokens, animation in the browser. Triggers EN: UI, frontend, component, landing, dashboard, hero, animation, motion, design, layout, page, Nuxt, Vue, Tailwind, GSAP. Triggers RU: фронт, фронтенд, интерфейс, лендинг, дашборд, компонент, анимация, вёрстка, дизайн, страница, форма. UI in Flutter / React Native / SwiftUI / Kotlin — screens, widgets, mobile animation — routes to impulse-mobile, not here."
+description: "Vue 3 / Nuxt 4 / Tailwind v4 WEB frontend — UI, components, landing pages, dashboards, admin panels, forms, design tokens, animation in the browser. Triggers EN: UI, frontend, component, landing, dashboard, hero, web animation, motion, UI design, web page layout, Nuxt, Vue, Tailwind, GSAP. Triggers RU: фронт, фронтенд, интерфейс, лендинг, дашборд, компонент, анимация, вёрстка, дизайн интерфейса, страница сайта, форма. UI in Flutter / React Native / SwiftUI / Kotlin — routes to impulse-mobile. A one-off shareable HTML report/plan/diagram file — routes to impulse-artifact, not here."
 ---
 
 # impulse-frontend

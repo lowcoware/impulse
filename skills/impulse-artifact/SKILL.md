@@ -1,6 +1,6 @@
 ---
 name: impulse-artifact
-description: "Generate a self-contained, single-file HTML artifact — a report, plan, comparison, prototype, or full-screen interactive diagram — calibrated against a curated example gallery. Mandatory dark mode. Not a Vue/Nuxt app: a one-off shareable document. Triggers: \"/impulse-artifact\", \"make an HTML report\", \"visualize this architecture\", \"html diagram\", \"turn this into a plan page\", \"self-contained html\", \"one-file html artifact\", \"сделай html отчёт\", \"визуализируй архитектуру\", \"html диаграмма\", \"сделай план в html\", \"визуальный артефакт\", \"покажи схему архитектуры\". From plannotator/effective-html (MIT) + Anthropic's html-effectiveness example gallery (Apache-2.0)."
+description: "Generate a self-contained, single-file HTML artifact — a report, plan, comparison, prototype, or full-screen interactive diagram — calibrated against a curated example gallery. Mandatory dark mode. Not a Vue/Nuxt app: a one-off shareable document. Triggers: \"/impulse-artifact\", \"make an HTML report\", \"visualize this architecture\", \"html diagram\", \"turn this into a plan page\", \"self-contained html\", \"one-file html artifact\", \"сделай html отчёт\", \"визуализируй архитектуру\", \"html диаграмма\", \"сделай план в html\", \"визуальный артефакт\", \"покажи схему архитектуры\", \"инфографика\", \"infographic\", \"one-pager\", \"интерактивный отчёт\", \"сделай красивую страницу с результатами\", \"оформи как презентацию\". From plannotator/effective-html (MIT) + Anthropic's html-effectiveness example gallery (Apache-2.0)."
 ---
 
 # impulse-artifact
@@ -32,7 +32,9 @@ it's impulse-frontend's job, not this skill's.
    says — this skill only decides HOW it renders. `references/handoff.md`.
 4. **Dark mode, always** — CSS variables, toggle, `localStorage`,
    apply-before-paint script. Non-negotiable on every artifact, every
-   genre. `references/dark-mode.md`.
+   genre. `references/dark-mode.md`. This deliberately overrides
+   `impulse-frontend`'s theme-is-a-per-project-decision rule — for
+   standalone single-file documents only, never for product UI.
 5. **Diagram genre only** — pan/zoom technique, dismissible overlays,
    motivated interactivity. `references/pan-zoom.md`.
 6. **Ship as one file.** No build step, no external dependencies beyond

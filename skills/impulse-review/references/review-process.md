@@ -122,7 +122,8 @@ not wasting review attention on categories that can't apply to this diff:
    adds noise a scoped pass wouldn't produce. A cheap triage pass (a
    smaller/faster model, or a quick regex-shape read) deciding WHICH
    specialist lenses are worth spawning is cheaper than always fanning
-   out the full set.
+   out the full set. If lenses do get spawned as subagents, the dispatch
+   contract and handoff discipline live in `../../../shared/subagents.md`.
 2. **PR-type gates which categories apply.** A config-only PR skips
    React/complexity/naming checks; a test-only PR skips security/perf/
    a11y; a deletion-only PR (see below) skips normal correctness review

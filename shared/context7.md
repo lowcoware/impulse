@@ -44,6 +44,23 @@ Call BEFORE writing code, not after something breaks:
    (renamed option, removed API, new default), name the delta in one
    line — that's the actual value of the check, not the fetch itself.
 
+## Alternative transport — REST instead of MCP
+
+MCP tool registration carries a standing per-session token cost (the tool
+schemas sit in context for the whole conversation, whether or not context7
+gets called). If context7 is configured as a REST-based skill instead of
+an MCP server — a curl/script wrapper around Context7's public API doing
+the same resolve-then-fetch sequence — that standing cost drops to the
+skill's own frontmatter line, paid only when the skill fires. This is a
+transport swap, not a strict upgrade: the REST path loses the MCP server's
+built-in structured tool-calling semantics (library resolution becomes a
+parsed HTTP response instead of a typed tool result) and adds a
+shell/curl/jq dependency. Same call-discipline rules above apply
+regardless of transport — resolve once per library per task, query
+narrow, cite deltas. Default stays MCP where it's already configured;
+treat REST as a token-budget escape hatch for setups where the standing
+MCP schema cost matters more than the lost structure.
+
 ## Boundary
 
 - Doesn't replace `impulse-dependency-audit` (CVE/supply-chain vetting) —

@@ -4,7 +4,8 @@ description: >
   Harvest every "impulse:" ceiling marker into one debt ledger so deferrals get
   tracked instead of forgotten. Flags rot: markers without an upgrade trigger.
   One-shot report. Triggers: "/impulse-debt", "debt scan", "show debt ledger",
-  "тех долг", "покажи долг", "что мы отложили", "маркеры", "ceiling markers".
+  "тех долг", "покажи долг", "что мы отложили", "маркеры", "ceiling markers",
+  "tech debt", "technical debt", "what did we defer".
 ---
 
 Every deliberate impulse simplification carries a marker naming its ceiling and

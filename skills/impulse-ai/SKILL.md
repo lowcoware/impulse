@@ -1,8 +1,9 @@
 ---
 name: impulse-ai
 description: >
-  Anti-overengineering patterns for RAG, embedding services, Qdrant, LLM
-  gateway (Claude-primary + OpenAI-compatible fallback), MCP server/tool
+  Use when BUILDING AI infra. Anti-overengineering patterns for RAG,
+  embedding services, Qdrant, LLM
+  gateway (Claude-primary + OpenAI-compatible fallback), MCP server/tool 
   design + security, Claude Code subagent conventions — impulse-backend's
   ladder/baseline applied to AI infra. Triggers: "/impulse-ai", "RAG
   pipeline", "embedding сервис", "Qdrant", "MCP сервер", "MCP tool", "LLM

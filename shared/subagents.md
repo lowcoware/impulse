@@ -167,8 +167,8 @@ because it's a template.
 
 - **Gather-then-synthesize**: fan out parallel subagents to gather context
   BEFORE any generative/writing step starts. Used throughout
-  `impulse-project-management`'s playbooks (checkpoint, retro, sprint
-  planning) — draft-first-fact-check-after is the wrong order for the same
+  `impulse-project-management`'s playbooks (checkpoint, retro, triage) —
+  draft-first-fact-check-after is the wrong order for the same
   reason it's wrong in `impulse-legacy`'s characterize-before-refactor rule.
 - **Layer-sharded**: decompose one large review/analysis into N
   independent, non-overlapping subagent passes (by architectural layer, by
@@ -326,6 +326,40 @@ directly measures the cost/benefit of flipping that default (inject-only-
 into-code-writing-agents). Leaving the default as-is rather than guessing —
 this is exactly the kind of change that should follow a measurement, not
 precede one.
+
+## Never dump a raw transcript into the parent
+
+A subagent's full transcript (every tool call, every intermediate read)
+can run tens of thousands of tokens; pulling it into the parent's context
+defeats the isolation this file's § Context isolation section exists to
+provide, and risks forcing a mid-conversation compaction on its own. The
+worker returns a final summary message BY DESIGN (§ Context isolation
+above) — never a mechanism that surfaces its raw transcript to satisfy
+curiosity about what it did. If the summary is insufficient, dispatch a
+narrower follow-up task, don't reach for the transcript.
+
+## Delegation as context isolation — a sizing test, not just a scope call
+
+When a question requires sweeping many files but the answer itself is
+small ("where is X configured?", "which modules import Y?"), delegating
+to a subagent and keeping only its conclusion is worth it specifically
+when tokens-to-explore is much greater than tokens-of-the-answer — the
+sweep happens in the subagent's context and is discarded with it, instead
+of the parent paying for every file it took to find the answer. This is
+the same § "When a subagent is worth its cost" gate restated as a quick
+in-the-moment test for the exploratory case specifically, not a separate
+rule.
+
+## Structure before content — narrow the read before you make it
+
+Before a subagent (or the orchestrator) `Read`s a full file to answer a
+narrow question, prefer a cheaper narrowing pass first: a signature/symbol
+scan (`grep -n '^\(func\|class\|def\)'` or equivalent for the language), a
+directory tree, or a targeted `grep` with bounded context lines — then
+escalate to a full read only if the narrow pass didn't resolve the
+question. Same shape as `impulse-legacy`'s characterize-before-refactor
+gate, applied to file reads specifically: don't pay for the whole body
+when the question only needed the shape.
 
 ## Sources
 

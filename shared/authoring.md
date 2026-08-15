@@ -68,8 +68,11 @@ a SKILL.md, a reference, a generated doc, an ADR.
 ## Size discipline
 
 Router SKILL.md ≤150 lines (our cap; spec ideal is <500 — we're stricter).
-References ~120 lines target, split by domain when a file outgrows one
-sitting. Scripts in `scripts/` are black boxes — invoked, never loaded
+References ~120 lines as a DRAFTING target — split by domain when a file
+outgrows one sitting. Not a rot threshold to audit against: a shipped
+reference legitimately deep on one topic is fine at any length
+(`token-hygiene.md`'s corrected Rule-File Novel entry owns that
+distinction — the always-paid surface is what gets the hard numbers). Scripts in `scripts/` are black boxes — invoked, never loaded
 into context; a reference that walks through an algorithm step-by-step
 should usually be a script instead.
 
@@ -141,6 +144,50 @@ model-invocation, weigh it per skill. Three distinct fat-failures: sprawl
 the other), sediment (stale layers nobody dares remove). And the hard
 lesson from a good author's changelog: cut skills that don't get invoked,
 however well-written.
+
+## Reference links carry their own load condition
+
+Every `references/*.md` link inside a SKILL.md body states, inline, WHEN
+to load it — not just its filename. `[Pull Requests](references/pull-
+requests.md) — load for PR inspection, changed-file completeness, review
+comments, checkout, review, or merge` lets the agent skip a load it
+already knows doesn't apply, instead of opening the file to find out. A
+bare filename list forces a load-to-check; an annotated one doesn't.
+
+## Filler files to never create
+
+Don't create `README.md`, `QUICKSTART.md`, `CHANGELOG.md`, or
+`INSTALL_NOTES.md` inside a skill directory unless the skill is explicitly
+about authoring/installing something — `SKILL.md` plus `references/` is
+the complete surface. A skill-local README nobody reads is pure token
+weight with no routing value; the suite-level `README.md`/`CHANGELOG.md`
+already own that role.
+
+## Gating language — reusable phrase bank
+
+For the skip/temptation row of the form-to-failure table above, don't
+reinvent gate wording per skill — reuse the phrasing pattern:
+
+- `Do NOT continue until all required inputs are collected.`
+- `If validation fails, report the failure, identify the cause, and stop.`
+
+Consistent gate phrasing across skills means an agent that has learned to
+respect the pattern in one skill respects it everywhere, instead of
+re-parsing a novel formulation each time.
+
+## Self-audit before shipping a rule file
+
+`node scripts/check-skills.js` lints the mechanical layer; it does not
+score token economy. Before shipping a new/edited `shared/*.md` or
+`references/*.md`, check it against `token-hygiene.md`'s named
+anti-patterns by hand — no fact duplicated elsewhere, a fires/skips table
+if the rule is genuinely conditional across unrelated tasks. Treat a file
+that fails its own hygiene check as unshipped, the same way a router over
+150 lines is. `node scripts/check-token-hygiene.js` mechanizes the two
+parts of this that ARE reliably checkable from repo state — the
+always-paid surface (skill description char count, `impulse-
+instructions.js` size) and cross-file word-overlap duplication — run it
+before shipping; it's advisory (never fails CI), read its output.
 
 ## Lineage hygiene
 

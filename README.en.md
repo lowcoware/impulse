@@ -2,7 +2,7 @@
 
 # impulse
 
-An anti-overengineering engineering skill suite for Claude Code — 22 skills
+An anti-overengineering engineering skill suite for Claude Code — skills
 covering backend (Go-first microservices, Python where it earns it),
 frontend (Vue 3 / Nuxt 4), diff review, technical debt, humanized writing,
 docs, project management, legacy code, AI/RAG infrastructure, security,
@@ -46,13 +46,14 @@ doesn't port per target.
 
 ## Skills
 
-All 22 skills and how to invoke them. The `/impulse-*` commands are Claude
+All skills and how to invoke them. The `/impulse-*` commands are Claude
 Code; on other CLIs the same skills auto-attach by description. Live
 one-screen card: `/impulse-help`.
 
 | Skill | Command | For |
 |---|---|---|
 | impulse | `/impulse` | Universal router: describe a situation, it names the best-fit impulse skill to plug in and disambiguates the overlapping pairs |
+| impulse-core | always on (`/impulse-core on\|off`) | Master layer: engineering spine + token economy, hook-injected into every session and every subagent |
 | impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go-first: ladder, day-one baseline, ceiling markers |
 | impulse-frontend | `/impulse-frontend [mode]` | Vue 3 / Nuxt 4 / Tailwind v4: register split, AI-tells bans, GSAP/Lenis canon, DESIGN.md protocol |
 | impulse-review | `/impulse-review` | Diff review: overengineering, baseline, seams, AI-typical bugs, architecture decay, AI-tells — one line per finding |
@@ -84,9 +85,10 @@ full ruleset (default); hardcore = architecture first (boundaries,
 contracts, every seam's failure modes before code).
 
 Activate: `/impulse-backend [blitz|medium|hardcore]`, `/impulse-frontend [blitz|medium|hardcore]`.
-Deactivate: `stop impulse` (or `normal mode`). Config:
-`~/.config/impulse/config.json` (`defaultMode`, `docstringLang`,
-`coverageTarget`) — full reference card: `/impulse-help`.
+Deactivate: `stop impulse` (or `normal mode`) — domain modes only; the
+always-on impulse-core layer stays (`/impulse-core off` or `IMPULSE_CORE=0`
+to disable it too). Config: `~/.config/impulse/config.json` (`defaultMode`,
+`docstringLang`, `coverageTarget`, `core`) — full reference card: `/impulse-help`.
 
 ## Usage across CLIs
 

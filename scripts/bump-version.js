@@ -18,7 +18,13 @@ const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
 for (const { file } of MANIFESTS) {
   const abs = path.join(ROOT, file);
-  const manifest = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(abs, 'utf8').replace(/^﻿/, ''));
+  } catch (e) {
+    console.error(`bump-version: ${file} unreadable/unparseable: ${e.message}`);
+    process.exit(2);
+  }
   if (!SEMVER_RE.test(manifest.version || '')) {
     console.error(`bump-version: ${file} version ${JSON.stringify(manifest.version)} is not a pinned X.Y.Z — fix it before bumping.`);
     process.exit(2);

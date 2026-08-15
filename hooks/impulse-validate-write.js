@@ -19,7 +19,10 @@ try {
   // Require inside the try: a broken install must be a silent no-op, not a stack dump.
   const config = require('./impulse-config');
   flag = config.readFlag();
-  if (!flag) process.exit(0); // impulse off — say nothing
+  // Marker rot-check is core-layer discipline: the `impulse:` convention is
+  // in the always-on ruleset, so the write-time check runs whenever core is
+  // on, not only under a domain mode.
+  if (!flag && !config.isCoreEnabled()) process.exit(0);
   emit = config.emit;
 } catch (e) {
   process.exit(0); // silent fail — never block a write
@@ -34,7 +37,8 @@ const SCAN_EXT = new Set([
 // Identical to scripts/impulse-debt.js MARKER_RE — one convention, one regex.
 // `//` or `#` must actually start a comment: not preceded by `:` (blocks http://),
 // and either at line start or preceded by whitespace/punctuation.
-const MARKER_RE = /(?:^|[\s;{}()])(?:(?<!:)\/\/|#)\s*impulse:\s*(.+?)\s*$/;
+// `--` covers SQL comments (SCAN_EXT includes .sql).
+const MARKER_RE = /(?:^|[\s;{}()])(?:(?<!:)\/\/|#|--)\s*impulse:\s*(.+?)\s*$/;
 
 let input = '';
 let done = false;
