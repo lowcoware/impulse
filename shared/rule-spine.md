@@ -175,6 +175,10 @@ tag set previously reached.
 | DO-CI15 | rulesets over classic branch protection; merge queue only at real contention | merge queue on a two-dev repo, or no required checks at all | `infra:` |
 | DO-CI16 | CI security-scan stack: `trivy`/`trufflehog`/`hadolint`/`lychee`/`shellcheck`/lint-formatters, image scanned post-publish | "build, lint, test" as the whole gate, or a scan of the build context instead of the pushed image | `infra:` |
 | DO-CI17 | Semgrep as its own gate: `pull_request` trigger for diff-aware scanning, `p/ci`/`p/owasp-top-ten` ruleset, SARIF uploaded via `upload-sarif` | semgrep folded into a generic lint step with no SARIF/Security-tab wiring, or a blanket `.semgrepignore`/bare `// nosemgrep` instead of a targeted `nosemgrep: rule-id` | `infra:` |
+| DO-CI18 | bumping runner size only when wall-clock drops by more than the core-count price ratio; per-job, not whole-matrix | a larger runner on every matrix leg "for speed" with no time-vs-cost check | `infra:` |
+| DO-CI19 | monorepo CI runs only affected packages (`paths-filter` gate job, `nx affected`, `turbo --filter=...[HEAD^1]`) | every package tested/built on every PR regardless of what changed | `infra:` |
+| DO-CI20 | draft PRs excluded via the workflow's own `pull_request: { types: [...] }` trigger, not an in-job `if:` | full suite running on every WIP push to a draft PR, or a `draft == false` check that still bills the runner start | `infra:` |
+| DO-CI21 | a GitHub budget with spend thresholds configured before further optimization | no budget/alerting — a regression shows up as a bill, not a graph | `infra:` |
 | DO-GL1 | `workflow:rules` suppresses duplicate branch+MR pipelines | push to an MR branch spawning two pipelines | `infra:` |
 | DO-GL2 | `rules:` only — never `only/except`, never mixed | `only:`/`except:` in any job | `infra:` |
 | DO-GL3 | `needs:` where it shortens the critical path; `interruptible: true` default | artificial stage waits, stale pipelines running to completion | `infra:` |

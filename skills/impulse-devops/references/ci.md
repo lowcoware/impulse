@@ -109,7 +109,15 @@
     comparable-or-better perf — default for arch-agnostic Linux jobs.
     Self-hosted runners NEVER on public repos: any fork PR executes code
     on your machine, and a non-ephemeral runner stays compromised for
-    every later job.
+    every later job. On a private repo, self-hosted ROI is a real break-even,
+    not a default: one worked example put GitHub-hosted at $0.008/min
+    against auto-scaled EC2 self-hosted at ~$0.00224/min effective,
+    break-even near ~267 min/month, ~72% savings above it — the exact
+    number is scenario-specific (instance choice, spot pricing), but the
+    order of magnitude generalizes. GitHub's proposed self-hosted-runner
+    per-minute surcharge was announced then postponed indefinitely — as of
+    this writing self-hosted still bills $0 on GitHub's side, only infra
+    cost applies.
 15. **Rulesets over classic branch protection; merge queue only at real
     contention.** Rulesets are layerable, org-wide, audit-logged, with
     dry-run evaluate mode. A merge queue (cheap checks on `pull_request`,
@@ -174,6 +182,45 @@
     triage state rather than vanishing, which is what keeps a suppression
     from quietly becoming permanent blindness to that line.
 
+18. **Runner-size math: a bigger runner must beat its own price ratio, not
+    just be faster.** GitHub bills larger runners roughly linearly with
+    core count, not flat — an 8-core Linux runner is ~3.7x the 2-core
+    rate ($0.022/min vs $0.006/min). Bumping size only saves money if the
+    job's wall-clock drops by MORE than that ratio (here, under ~27% of
+    the 2-core time); short of that threshold it's spending budget faster
+    for a smaller win, not a real optimization. Bump size per-job for the
+    one genuinely slow job in a workflow, not the whole matrix — most
+    matrix jobs don't need it. Windows runners bill ~1.7x Linux, macOS
+    ~10x — default to Linux/ARM unless the job needs the other OS to
+    exist at all.
+19. **Monorepo: run only what the PR actually touched.** The single
+    highest-leverage minute-saver once a repo has more than a couple of
+    independently-testable packages — bigger than any caching tweak. A
+    `dorny/paths-filter` gate job feeding `if:` conditions on every
+    downstream job (or `nx affected` / `turbo run --filter=...[HEAD^1]`
+    for a monorepo already on Nx/Turborepo) skips CI entirely for
+    untouched packages; teams report 70-80% minute cuts moving from
+    "test everything" to affected-only. Nx's own docs put it plainly:
+    running 4 affected packages instead of 45 total beats any cache
+    optimization on top of running all 45.
+20. **Draft PRs shouldn't trigger the full suite.** Gate the workflow's
+    trigger itself — `pull_request: { types: [opened, reopened,
+    synchronize, ready_for_review] }` — so CI stays silent through WIP
+    pushes on a draft and only runs once the author marks it ready. One
+    measured case (a ~220-PR/month monorepo) reported ~30% fewer billed
+    minutes from this switch alone. The trap: filtering with an in-job
+    `if: github.event.pull_request.draft == false` does NOT save
+    minutes the same way — the runner still starts and gets billed
+    before that condition is evaluated; the event-type list above is the
+    cheap mechanism, an in-job condition is not.
+21. **Native spend alerting, not a surprise bill.** GitHub ships budgets
+    natively (org or SKU-scoped): 75/90/100% thresholds, email + banner,
+    optional hard-stop that blocks further usage past 100%. Set one
+    before optimizing anything else — it's the cheapest change in this
+    file and the only one that catches a regression (a reintroduced
+    `fetch-depth: 0`, a matrix that grew, a cache that stopped hitting)
+    before it shows up as a bill instead of a graph.
+
 ```yaml
 deploy:
   needs: [build, test]
@@ -207,4 +254,13 @@ Sources: [GitHub Security Lab: preventing pwn requests](https://securitylab.gith
 [Semgrep CI overview — diff-aware scanning](https://docs.semgrep.dev/semgrep-ci/overview/) ·
 [Semgrep sample CI configs](https://docs.semgrep.dev/semgrep-ci/sample-ci-configs) ·
 [Semgrep: ignoring files, folders, and code (nosemgrep)](https://docs.semgrep.dev/ignoring-files-folders-code) ·
-[j3ssie/sample-semgrep-ci — SARIF + upload-sarif example](https://github.com/j3ssie/sample-semgrep-ci)
+[j3ssie/sample-semgrep-ci — SARIF + upload-sarif example](https://github.com/j3ssie/sample-semgrep-ci) ·
+[GitHub Actions runner pricing](https://docs.github.com/en/billing/reference/actions-runner-pricing) ·
+[GitHub Actions product billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions) ·
+[GitHub Actions 2026 repricing changelog](https://github.blog/changelog/2025-12-16-coming-soon-simpler-pricing-and-a-better-experience-for-github-actions/) ·
+[dorny/paths-filter](https://github.com/dorny/paths-filter) ·
+[Nx CI features — affected](https://nx.dev/docs/features/ci-features/github-integration) ·
+[oneuptime: monorepos on GitHub Actions](https://oneuptime.com/blog/post/2026-01-26-monorepos-github-actions/view) ·
+[LeanIX: halve your GitHub Actions bill (draft-PR gating case study)](https://engineering.leanix.net/blog/halve-your-github-actions-bill/) ·
+[devopscube: self-hosted runner cost/ROI](https://devopscube.com/reduce-github-actions-runner-cost/) ·
+[GitHub budgets (native spend alerting)](https://docs.github.com/en/billing/how-tos/set-up-budgets)
