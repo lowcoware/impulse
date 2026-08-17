@@ -110,6 +110,61 @@ Traefik ever sees the packets. That needs upstream protection (host/CDN
 DDoS filtering), not more Traefik config. Treat edge middleware as
 defense-in-depth, not the complete answer.
 
+## `forwardAuth` — SSO in front of a service that has no auth of its own
+
+Traefik's `forwardAuth` middleware sends every request to an
+auth-decision service first; a non-2xx response short-circuits the
+request before it reaches the backend. This is the way to put
+authentication in front of an internal panel/tool that doesn't implement
+its own — closing it without touching its code. Two real
+implementations of the pattern: **Authelia** running as a dedicated
+`forwardAuth` target (CEL-based access rules, `authz.md`), and
+**authentik's outpost** (a small Go reverse-proxy component deployed
+specifically for this — checks the session, injects identity headers).
+Same shape either way: Traefik asks "let this through?", the outpost/
+Authelia instance answers, only Traefik enforces. Reach for this before
+adding ad hoc auth middleware inside a service that was never designed to
+have any.
+
+## WAF at the edge — Coraza + OWASP Core Rule Set
+
+Where it sits: in front of Traefik's own middlewares, or as a Traefik
+middleware itself — request path is client → WAF inspection → Traefik
+routing/TLS/rate-limit/CORS → backend. Coraza is a **library** (Go), not a
+standalone product: "Coraza is a library at its core, with many
+integrations to deploy on-premise Web Application Firewall instances."
+[corazawaf/coraza README](https://github.com/corazawaf/coraza/blob/main/README.md)
+It ships ModSecurity-SecLang-compatible and is "100% compatible with the
+OWASP Core Rule Set v4" — the rules aren't Coraza's own, they're the
+community-maintained [OWASP CRS](https://coreruleset.org) loaded into the
+engine, covering SQLi, XSS, PHP/Java code injection, HTTPoxy, Shellshock,
+scanner/bot detection.
+
+**Deployment shape** — pick the integration matching the existing edge,
+maintained by the Coraza project itself:
+- [coraza-caddy](https://github.com/corazawaf/coraza-caddy) — Caddy reverse-proxy plugin (stable)
+- [coraza-proxy-wasm](https://github.com/corazawaf/coraza-proxy-wasm) — proxy-wasm extension for Envoy-class proxies (stable)
+- [coraza-spoa](https://github.com/corazawaf/coraza-spoa) — HAProxy SPOE filter (experimental)
+- Traefik: a native Coraza WAF middleware exists in Traefik Hub / Traefik's
+  own middleware reference — same "inspect before route" position relative
+  to the rest of this file's Traefik middlewares (rate limit, CORS,
+  security headers) as the Caddy/HAProxy integrations above.
+- No official nginx-native plugin — `libcoraza` (C library binding) is
+  listed experimental for that path.
+
+**Rollout: detection mode before blocking mode.** Coraza's `SecRuleEngine`
+directive takes `On | Off | DetectionOnly` — `DetectionOnly` "process[es]
+rules but never executes any disruptive actions (block, deny, drop, allow,
+proxy and redirect)."
+[Coraza SecLang directives](https://www.coraza.io/docs/seclang/directives/)
+Set it first, log what CRS would have blocked without blocking it, so a
+first rollout doesn't take down legitimate traffic on CRS false positives
+before the ruleset is tuned to this app's actual traffic shape. Only flip
+to `On` after a detection-mode observation window shows the false-positive
+rate is acceptable — a WAF's false positives are an availability outage,
+not just noise, so the log-first step earns its cost before anything gets
+denied.
+
 ## Gateway-vs-custom-code boundary
 
 Traefik-as-gateway is sufficient for: token validation, rate limiting,

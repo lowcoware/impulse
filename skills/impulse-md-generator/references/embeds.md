@@ -60,6 +60,12 @@ ADRs; don't build the Base file just to embed it once.
 ![[Note#^list-id]]
 ```
 
+A block ID/embed always targets exactly one block (one paragraph, one list,
+one blockquote) — there's no range syntax to embed "paragraphs 2 through 4."
+Needing several consecutive blocks means either embedding the whole section
+by heading (`![[Note#Heading]]`) or giving the source note a heading that
+wraps just that span.
+
 Where the source list carries a block ID:
 
 ```markdown

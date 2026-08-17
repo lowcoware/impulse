@@ -52,6 +52,15 @@ hreflang/canonical/OG are SEO tags that i18n owns per-locale. Nuxt 4,
    staging — don't rely on eyeballing the UI.
 7. Named interpolation (`{count}`), never positional (`{0}`) — positional
    breaks silently when translators reorder the sentence.
+8. Strings live outside the codebase, in a translation platform (Weblate or
+   Crowdin), not hardcoded per-PR — a copy fix otherwise needs a release.
+   Where the toolchain supports it, generate typed accessors from the
+   message keys (codegen, à la LocalSend's `slang`) so a typo'd key is a
+   build failure, not a blank string in prod; `vue-i18n`'s `missingWarn`
+   (item 6) is the fallback when full codegen isn't wired up. ICU
+   MessageFormat (`{count, plural, ...}`) for plurals — never string
+   concatenation or a hand-rolled `count === 1 ? ... : ...` branch, which
+   breaks on languages with more than two plural forms.
 
 Sources: [Nuxt SEO — useSeoMeta vs useHead](https://nuxtseo.com/learn-seo/nuxt/mastering-meta) ·
 [@nuxtjs/seo module](https://nuxt.com/modules/seo) ·

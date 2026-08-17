@@ -92,6 +92,35 @@ hybrid, not either/or.
    YAGNI-skip rung applied to eval tooling.
 3. Faithfulness/groundedness: reference-free LLM-as-judge, target >0.8, as
    the pragmatic small-team substitute for a human-labeled dataset.
+4. Once that threshold is crossed, **Ragas** is the reach-for tool, not a
+   custom harness — it's the only piece of this stack that separates
+   "retrieval found the wrong chunks" from "generation ignored the right
+   ones," via distinct retrieval-relevance and answer-faithfulness scores.
+   Debugging a bad RAG answer without that split means guessing whether to
+   fix the chunker or the prompt; in practice retrieval is the more common
+   culprit even when the prompt gets blamed first. Both tools below are
+   LLM-judged and therefore non-deterministic — fix judge model and seed,
+   and check the eval set into the repo, or "got worse" is indistinguishable
+   from judge noise:
+   - **promptfoo** answers "did this prompt/agent edit make things worse" —
+     declarative check sets, side-by-side variant comparison, pass/fail
+     thresholds, wired into CI.
+   - **Ragas** answers "is the fault retrieval or generation" for the RAG
+     pipeline specifically — the tool above can't localize a regression to
+     one stage, Ragas's split metrics can.
+
+## Small specialized models before an LLM call at all
+
+The "which model" ladder has a rung below "which LLM": a lot of what looks
+like an LLM task is actually classification, OCR, face/object recognition,
+or an embedding computation — all cheaper, deterministic, and CPU-viable
+via **ONNX Runtime**, with no generated-text output to treat as untrusted.
+Immich runs its face detection, OCR, and image-embedding pipeline entirely
+on ONNX Runtime on CPU or an on-device accelerator — no LLM call in that
+path at all. Reach for this before reaching for a general-purpose LLM
+whenever the task is really "score/classify/embed this input," not
+"reason about this input." Self-hosting a full LLM (vLLM) is a different,
+separate decision from this one — see `llm-gateway.md`.
 
 ## Embedding service hygiene
 

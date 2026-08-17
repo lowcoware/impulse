@@ -23,7 +23,18 @@
    remotely. Dedicated deploy key (not a personal key), scoped to an
    environment-level secret with required reviewers on prod, and a pinned
    `known_hosts` (host key is not secret, commit it) — never blind
-   `ssh-keyscan`, that's the MITM hole. **Why not OIDC here:** OIDC
+   `ssh-keyscan`, that's the MITM hole. This is the "SSH commands from a
+   control plane" access model (what GitHub Actions running the deploy key
+   above IS) — compare the other two models self-host panels use, since the
+   choice sets the blast radius of a compromised control plane: SSH-command
+   (Coolify — no agent to install, but the panel/key holds root over every
+   server it touches), agent-over-SSH (Beszel — an agent is installed, but
+   auth/encryption ride the SSH protocol already solved), agent-with-mTLS
+   (Komodo — most setup cost, but the control plane itself is never
+   all-powerful and the network can be locked down harder). Our GH-Actions-
+   over-SSH deploy is model one; the deploy-key scoping/rotation
+   requirements above exist precisely because that model has no cheaper
+   substitute for "don't let the key become a skeleton key." **Why not OIDC here:** OIDC
    federation (GitHub Actions → short-lived cloud credentials, no
    `AWS_SECRET_ACCESS_KEY`-style long-lived key sitting in secrets forever)
    is the right fix for cloud-API deploys (AWS/GCP/Azure), and is
@@ -32,7 +43,13 @@
    OIDC trust relationship an SSH server can consume, so the deploy key
    itself stays the credential; the mitigations above (dedicated key,
    environment gate, reviewers) are what carries the weight OIDC would
-   carry in a cloud-native pipeline.
+   carry in a cloud-native pipeline. **If you do use cloud OIDC elsewhere:**
+   GitHub's subject claim used to carry only the (mutable) repo name — a
+   renamed or recycled repo/org could mint a token matching an old trust
+   policy. Since mid-2026 the claim also carries immutable owner/repo IDs
+   (`repo:octocat@123456/my-repo@456789:ref:...`) — update the cloud-side
+   trust policy to match, new repos get the new format automatically.
+   [GitHub: immutable OIDC subject claims](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/)
 5. Cache keyed on lockfile hash (`hashFiles('go.sum')`), never `github.sha`
    — a SHA-keyed cache never hits.
 6. **Script injection via event fields.** `${{ github.event.issue.title }}`
@@ -61,7 +78,12 @@
     from every workflow referencing it by tag — a tag is a mutable
     pointer an attacker can move. Pin to the 40-char SHA (org policy can
     enforce this since Aug 2025), let Dependabot/Renovate bump the pins,
-    and lint workflows with `actionlint` + `zizmor` in CI.
+    and lint workflows with `actionlint` + `zizmor` in CI. GitHub's 2026
+    roadmap moves toward immutable action releases (mutable tags
+    deprecated at the platform level) plus artifact attestations
+    defaulting on for public repos — real hardening, but neither
+    substitutes for SHA pinning today.
+    [GitHub 2026 Actions security roadmap](https://github.com/orgs/community/discussions/190621)
 11. **`timeout-minutes` on every job.** The default is 360 — one hung job
     silently burns six hours of minutes. 10-30 min fits most jobs; a
     timeout that fires is a signal, not an inconvenience.
@@ -94,6 +116,63 @@
     full suite on `merge_group`) pays when several PRs land on one busy
     branch daily — below that, branch protection + required checks is the
     whole answer.
+16. **"Build, lint, test" is three checks; the working minimum is wider —
+    steal it from a project whose own CI builds itself** (Woodpecker,
+    Authelia):
+
+    | Check | Tool | Catches |
+    |---|---|---|
+    | Dependency/image CVEs | `trivy` | known CVEs, misconfig, and SBOM in one pass — run it first, it covers four rows below in one step |
+    | Secrets | `trufflehog` | a key committed, before it's buried in history |
+    | Dockerfile | `hadolint` | the multi-stage violations `dockerfile.md` lists |
+    | Static analysis | `golangci-lint` / `eslint` / `semgrep` | incl. the review checklist `impulse-security` owns |
+    | Formatting/lint | `editorconfig-checker`, `yamllint`, `markdownlint` | drift that would otherwise get argued over in review |
+    | Docs | `lychee` | dead links |
+    | Shell scripts | `shellcheck` | classic bash footguns |
+
+    **Scan the published image, not just the build context** — `trivy`
+    reads layers straight out of the registry, which is the only way to
+    catch what actually shipped and stays consistent with rule 1's "build
+    once, promote the same artifact" (an image scanned before push can
+    still drift from what's tagged and deployed).
+
+17. **Semgrep as a dedicated static-analysis gate, diff-aware, SARIF into the
+    Security tab.** Row 16's stack lists `semgrep` alongside `golangci-lint`/
+    `eslint` as one of several linters — this rule is the concrete wiring for
+    running it as its own gate rather than folding it into a generic lint
+    step. Trigger on `pull_request: {}` (Semgrep's own diff-aware scanning
+    activates automatically in a PR context — it reports only findings
+    introduced after the baseline, not every pre-existing hit in files the
+    PR happens to touch, which is what keeps a first rollout from drowning a
+    legacy codebase in noise) plus `push` to main/release for a full-repo
+    scan. Start from `--config auto` (Semgrep's own auto-detection across
+    registry rulesets) or an explicit named ruleset — `p/ci` is Semgrep's
+    own general low-false-positive CI default, `p/owasp-top-ten` when the
+    review checklist is specifically OWASP-Top-Ten-shaped. Emit SARIF and
+    upload it so findings land in GitHub's native Security tab next to
+    CodeQL, not just console output that scrolls off:
+    ```yaml
+    semgrep:
+      runs-on: ubuntu-latest
+      permissions:
+        security-events: write   # required to upload SARIF
+        contents: read
+      steps:
+        - uses: actions/checkout@v4
+        - run: semgrep scan --config p/ci --sarif --output semgrep.sarif
+        - uses: github/codeql-action/upload-sarif@v3
+          if: always()
+          with:
+            sarif_file: semgrep.sarif
+    ```
+    **Suppression discipline:** a real finding gets fixed; a false positive
+    gets a targeted `// nosemgrep: rule-id` (or `# nosemgrep: rule-id` —
+    space required after `//`/`#`) on the flagged line, not a blanket
+    `.semgrepignore` path exclusion. A ruleless bare `// nosemgrep` silences
+    every rule on that line, not just the false positive — always name the
+    rule-id. Suppressed findings still register as findings in Ignored
+    triage state rather than vanishing, which is what keeps a suppression
+    from quietly becoming permanent blindness to that line.
 
 ```yaml
 deploy:
@@ -121,4 +200,11 @@ Sources: [GitHub Security Lab: preventing pwn requests](https://securitylab.gith
 [buildkit cache-mount persistence](https://depot.dev/blog/how-to-use-buildkit-cache-mounts-in-ci) ·
 [ARM runners](https://github.blog/news-insights/product-news/arm64-on-github-actions-powering-faster-more-efficient-build-systems/) ·
 [GH merge queue](https://github.blog/engineering/engineering-principles/how-github-uses-merge-queue-to-ship-hundreds-of-changes-every-day/) ·
-[rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets)
+[rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) ·
+[Woodpecker's own pipelines](https://github.com/woodpecker-ci/woodpecker/tree/main/.woodpecker) ·
+[trivy](https://github.com/aquasecurity/trivy) · [trufflehog](https://github.com/trufflesecurity/trufflehog) ·
+[hadolint](https://github.com/hadolint/hadolint) · [lychee](https://github.com/lycheeverse/lychee) ·
+[Semgrep CI overview — diff-aware scanning](https://docs.semgrep.dev/semgrep-ci/overview/) ·
+[Semgrep sample CI configs](https://docs.semgrep.dev/semgrep-ci/sample-ci-configs) ·
+[Semgrep: ignoring files, folders, and code (nosemgrep)](https://docs.semgrep.dev/ignoring-files-folders-code) ·
+[j3ssie/sample-semgrep-ci — SARIF + upload-sarif example](https://github.com/j3ssie/sample-semgrep-ci)

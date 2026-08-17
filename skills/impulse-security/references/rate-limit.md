@@ -10,6 +10,20 @@ positives (NAT'd legitimate users sharing one IP) and false negatives
 (`user_id` or API key), fall back to IP only for genuinely unauthenticated
 routes.
 
+A fourth layer sits above both, and is the one teams tend to skip
+entirely: **IP-reputation blocking from collective data, before traffic
+reaches the edge at all.** Reference architecture, CrowdSec
+(`github.com/crowdsecurity/crowdsec`): an agent reads logs and scores
+behavior, a separate **bouncer** does the actual blocking at the boundary
+(Traefik plugin, nginx, iptables) — decision and enforcement are
+deliberately split processes. The three layers above (edge IP, app user,
+app operation) only ever see this service's own traffic; reputation
+catches an address already known-bad from everyone else's traffic, before
+it ever hits this stack. Same caveat as any block-on-external-data
+system: false positives lock out real users, so pair it with an allowlist
+and a documented unblock procedure — never ship the block without the
+runbook.
+
 ## Algorithm choice
 
 Sliding-window-counter is the pragmatic default: fixed-window allows a 2x

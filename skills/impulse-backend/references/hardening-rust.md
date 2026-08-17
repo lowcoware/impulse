@@ -105,14 +105,38 @@ set for MEDIUM/LOW-priority polish (naming, macros, project layout).
     deliberately by the actual communication pattern (one-to-one request/
     response, one-to-many broadcast, latest-value-only), not by habit.
 
+## Task spawning and panics
+
+20. A panic inside a `tokio::spawn`ed task does NOT crash the process and
+    does NOT propagate anywhere by default — it's captured into the task's
+    `JoinHandle` and the rest of the runtime keeps running normally. A
+    background task spawned and never `.await`ed on its handle (the common
+    fire-and-forget shape) silently drops the panic; nobody ever sees it,
+    the task just stops. Either await the `JoinHandle` and check
+    `JoinError::is_panic()`, or use `tokio::runtime::Builder::unhandled_panic
+    (UnhandledPanic::ShutdownRuntime)` for services where "keep running with
+    a silently-dead worker" is worse than a controlled crash-and-restart.
+    [tokio docs: `UnhandledPanic`](https://docs.rs/tokio/latest/tokio/runtime/enum.UnhandledPanic.html)
+21. Cancellation-safe vs not is a documented, specific list — don't guess
+    per-future. Cancel-safe (fine to lose the race in `select!` or drop on
+    timeout): `mpsc::Receiver::recv`, `broadcast::Receiver::recv`,
+    `watch::Receiver::changed`, `TcpListener::accept`, `AsyncRead::read`/
+    `read_buf`, `AsyncWrite::write`/`write_buf`, stream `.next()`. NOT
+    cancel-safe: `read_exact`/`read_to_end`/`read_to_string`, `write_all`
+    (partial-progress data loss on cancel) — and `Mutex::lock`/
+    `RwLock::read`/`write`/`Semaphore::acquire`/`Notify::notified` lose their
+    place in the internal fairness queue on cancel, not data, but can starve
+    a task that keeps losing the race. [tokio `select!` docs, Cancellation
+    Safety section](https://docs.rs/tokio/latest/tokio/macro.select.html)
+
 ## Concurrency
 
-20. Use the weakest correct memory `Ordering` for every atomic operation —
+22. Use the weakest correct memory `Ordering` for every atomic operation —
     reaching for `SeqCst` everywhere "to be safe" isn't free; it's a real
     performance cost paid for a guarantee the operation usually doesn't
     need. Get the ordering right for the actual synchronization pattern,
     don't default to the strongest one out of caution.
-21. `std::thread::scope` to borrow stack data across threads instead of
+23. `std::thread::scope` to borrow stack data across threads instead of
     `Arc`-wrapping data that's provably going to outlive the threads
     anyway — scoped threads let the borrow checker prove the lifetime
     instead of paying a runtime reference-count cost for a lifetime
@@ -120,26 +144,26 @@ set for MEDIUM/LOW-priority polish (naming, macros, project layout).
 
 ## Numeric safety
 
-22. Integer overflow gets handled explicitly (`checked_`/`saturating_`/
+24. Integer overflow gets handled explicitly (`checked_`/`saturating_`/
     `wrapping_`/`overflowing_`) at any boundary where the input isn't
     already bounds-checked — release builds silently wrap on overflow by
     default (debug builds panic), so a debug-clean codebase can still
     silently corrupt a value in production on the exact input that
     overflows.
-23. Never compare floats with `==`; use a tolerance comparison, and
+25. Never compare floats with `==`; use a tolerance comparison, and
     `total_cmp` (not the fallible `partial_cmp`) when floats need a total
     order (sorting, `BinaryHeap`).
-24. `TryFrom` for narrowing numeric casts, not `as` — `as` silently
+26. `TryFrom` for narrowing numeric casts, not `as` — `as` silently
     truncates (a `u64` that doesn't fit in a `u32` just loses the high
     bits) with no error, no panic, nothing to catch it in review.
 
 ## Module organization and public surface
 
-25. Prefer the modern `<name>.rs` module file style (`config.rs` +
+27. Prefer the modern `<name>.rs` module file style (`config.rs` +
     `config/parser.rs`) over the legacy `mod.rs` style — the file name
     directly indicates the module name, and there's no ambiguity from
     multiple identically-named `mod.rs` files across a project.
-26. Keep modules private (`mod foo;`, never `pub mod foo;`) and publish a
+28. Keep modules private (`mod foo;`, never `pub mod foo;`) and publish a
     curated surface via `pub use` at the crate root instead. `pub mod`
     exposes the whole module namespace and its internal path structure as
     public API; `pub use` gives one flat, stable import path
@@ -149,6 +173,49 @@ set for MEDIUM/LOW-priority polish (naming, macros, project layout).
     type there), leave it `pub` but don't re-export it — living in a
     non-re-exported module makes it unreachable to downstream crates
     despite the keyword.
+
+## Axum/tokio service patterns
+
+29. Graceful shutdown: combine ctrl-c and (on Unix) SIGTERM into one future
+    and pass it to `axum::serve(...).with_graceful_shutdown(...)` — SIGTERM
+    is what a container orchestrator sends on rollout/scale-down, `ctrl_c`
+    alone only covers a local dev interrupt.
+    ```rust
+    async fn shutdown_signal() {
+        let ctrl_c = async { tokio::signal::ctrl_c().await.expect("ctrl_c handler"); };
+        #[cfg(unix)]
+        let terminate = async {
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                .expect("SIGTERM handler")
+                .recv().await;
+        };
+        #[cfg(not(unix))]
+        let terminate = std::future::pending::<()>();
+        tokio::select! { _ = ctrl_c => {}, _ = terminate => {} }
+    }
+    // axum::serve(listener, app).with_graceful_shutdown(shutdown_signal()).await?;
+    ```
+    Sourced from the official [tokio-rs/axum `graceful-shutdown`
+    example](https://github.com/tokio-rs/axum/blob/main/examples/graceful-shutdown/src/main.rs).
+    In-flight requests finish; new connections stop being accepted the
+    moment the signal future resolves — any background task holding work
+    outside a request (a spawned worker, an in-memory queue) still needs
+    its own drain step, this pattern doesn't cover those.
+30. `tower_http::trace::TraceLayer` + the `tracing` crate is the canon
+    request-observability stack, layered via `ServiceBuilder` alongside
+    `tower_http::timeout::TimeoutLayer` — don't hand-roll request logging
+    middleware when the tower-http layer already does span-per-request with
+    method/path/status/latency for free.
+31. sqlx `PgPoolOptions`: `max_connections` has no safe default for
+    production — the crate's own docs call out modifying it as close to
+    mandatory, sized against Postgres's own `max_connections` divided by
+    replica count, same formula as `hardening-go.md`'s pool-sizing section.
+    Set `max_lifetime` even though connections aren't failing — sqlx's own
+    docs recommend retiring connections periodically (daily is enough) to
+    let the database-side clean up per-connection state that accumulates
+    over a long-lived connection, not just as a failure-recovery measure.
+    `idle_timeout` additionally saves cost on usage-billed managed Postgres.
+    [sqlx `PoolOptions` docs](https://docs.rs/sqlx/latest/sqlx/pool/struct.PoolOptions.html)
 
 ## Release profile (Cargo.toml)
 
@@ -181,6 +248,7 @@ make an invalid state unrepresentable.
 
 Ownership-model and unsafe-code discipline are language-inherent, not
 project-specific — apply these regardless of which framework/runtime a
-Rust service uses. Framework-specific guidance (axum/actix routing,
-tokio-postgres/sqlx patterns) isn't covered here; add a
-`stores-*.md`-shaped file if/when a Rust service's data layer needs one.
+Rust service uses. The Axum/tokio/sqlx section above covers the blessed
+stack's own footguns (`deps.md`); actix or a non-Postgres store isn't
+covered here — add a `stores-*.md`-shaped file if/when a Rust service's
+data layer needs one.

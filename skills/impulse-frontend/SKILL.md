@@ -89,7 +89,8 @@ IDs `FE-H01`–`FE-H16` follow this numbering. [`shared/rule-spine.md`](../../sh
 | [references/components.md](references/components.md) | product UI — shadcn-vue, 8 states, harden list, a11y numbers |
 | [references/motion.md](references/motion.md) | any animation — GSAP/Lenis Vue composable skeletons, motion-v split |
 | [references/motion-craft.md](references/motion-craft.md) | animation micro-craft — should-it-animate gate, exact easing/duration/spring values, gesture physics, motion review catalog |
-| [references/gsap-api.md](references/gsap-api.md) | writing GSAP against the raw API — tween/timeline/ScrollTrigger option tables, plugin configs (SplitText/MorphSVG/Flip/Draggable), gsap.utils, Nuxt lazy-plugin loader |
+| [references/gsap-api.md](references/gsap-api.md) | writing GSAP against the raw core API — tween/timeline option tables, ease matrix, gsap.utils, Nuxt lazy-plugin loader |
+| [references/gsap-plugins.md](references/gsap-plugins.md) | GSAP ScrollTrigger config/callbacks/batch/scrollerProxy, and the plugin catalog (SplitText/MorphSVG/Flip/Draggable/Observer/etc) |
 | [references/tokens.md](references/tokens.md) | tokens/theming — DESIGN.md protocol, `@theme`, dark surface ladder, Lila Rule |
 | [references/preflight.md](references/preflight.md) | before delivering ANY UI — mechanical checks, one unticked = not done |
 | [references/interface-audit.md](references/interface-audit.md) | reviewing a component/page beyond the greps — 55 checkable interface rules (a11y, hydration, touch/safe-area, i18n, dark-mode) with file:line output |
@@ -104,7 +105,7 @@ IDs `FE-H01`–`FE-H16` follow this numbering. [`shared/rule-spine.md`](../../sh
 | [references/ux-laws.md](references/ux-laws.md) | layout/IA decisions — 29 UX laws as checkable rules + folklore corrections |
 | [references/rtl-i18n-ui.md](references/rtl-i18n-ui.md) | RTL or bidi text in UI — logical properties, bdi/dir rules, mirror tables (seo-i18n owns routing) |
 | [references/typography-cjk.md](references/typography-cjk.md) | Japanese/CJK content — horizontal metrics (em not ch, kinsoku) and vertical `writing-mode` rules |
-| [references/rendering-pwa.md](references/rendering-pwa.md) | picking a render mode or adding PWA/offline — routeRules decision |
+| [references/rendering-pwa.md](references/rendering-pwa.md) | picking a render mode, adding PWA/offline, or packaging for desktop — routeRules decision, Tauri vs Electron |
 | [../../shared/rule-spine.md](../../shared/rule-spine.md) | adding or renumbering a hard rule, or wondering which review tag catches one — the builder↔review crosswalk |
 | [../../shared/communication.md](../../shared/communication.md) | chat tone (RU), thinking compression |
 | [../../shared/completeness.md](../../shared/completeness.md) | any code/doc deliverable — no truncation stubs, scope-count lock, clean PAUSED breakpoints |

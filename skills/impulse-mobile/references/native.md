@@ -5,13 +5,23 @@
    OEM/hardware API access a cross-platform bridge can't reach cleanly.
    Otherwise cross-platform wins on two-team-cost grounds. From an existing
    Flutter/RN app, drop to native for the ONE feature that needs it via a
-   platform channel/native module — never a full native rewrite.
+   platform channel/native module — never a full native rewrite. Separate
+   question: if nontrivial logic (especially crypto) must run identically on
+   3+ platforms, bind a shared Rust core in via `uniffi` instead of writing
+   it twice in Swift and Kotlin (see `SKILL.md`'s ladder addendum).
 2. **SwiftUI state:** iOS 17+ `@Observable` macro replaces
    `@Published`/`@ObservedObject` boilerplate — model uses `@Observable`, the
    owning view holds it via `@State` (yes, reference types now), passed-down
    views use `@Bindable`. Pre-iOS17 rule still matters for older targets:
    whoever creates the object owns it via `@StateObject`; children get
-   `@ObservedObject`.
+   `@ObservedObject`. `@Observable` tracks property access per-field, not
+   per-object — a view reading only `model.name` doesn't redraw when
+   `model.age` changes, unlike `ObservableObject`'s any-`@Published`-field-
+   changed redraws-everyone behavior. Under Swift 6 strict concurrency, mark
+   `@Observable` view models `@MainActor` explicitly — `@Observable` doesn't
+   imply main-actor isolation on its own, and the compiler will flag
+   cross-actor UI mutation as a data race rather than silently allowing it
+   like pre-Swift-6 code did.
 3. **Kotlin/Compose:** `viewModelScope` auto-cancels on ViewModel clear —
    put async work there, never `GlobalScope`. `LaunchedEffect`/
    `rememberCoroutineScope` for composable-scoped effects (auto-cancelled on

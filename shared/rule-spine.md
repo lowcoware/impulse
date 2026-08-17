@@ -134,6 +134,8 @@ ones — `impulse-mobile/references/hardening-mobile.md`, no IDs.
 | MO-BL04 | dispose discipline: every subscription/controller/listener paired | opened with no teardown — the #1 mobile leak | `bug:` |
 | MO-BL05 | phased rollout with a crash-rate halt threshold | rollout config + halt threshold present | `baseline:` |
 | MO-BL06 | no secret in the app binary — it is public | literal key/token in Dart/Swift/Kotlin source or assets | `bug:` |
+| MO-BL07 | feature flags wired from release #1 | no kill-switch for a shipped feature on a rollout that can't be redeployed | `baseline:` |
+| MO-BL08 | Flutter/RN toolchain version pinned in-repo (fvm/.nvmrc) | build depends on whatever's locally installed | `baseline:` |
 
 ## Infra
 
@@ -148,7 +150,9 @@ tag set previously reached.
 | DO-CO2 | one `env_file:` per service per env, never a shared `.env` | var in one env's file, missing from another — resolves empty, no error | `infra:` |
 | DO-CO3 | credentials via top-level `secrets:`, never `environment:` | env var holding a credential | `infra:` |
 | DO-CO4 | `depends_on: {condition: service_healthy}` + a real healthcheck | plain `depends_on`, or a `sleep`-based check | `infra:` |
-| DO-CO5 | named volumes and networks declared, never anonymous | anonymous volume — orphans silently on `down` | `infra:` |
+| DO-CO5 | `develop.watch` is a dev-loop convenience, never carried into a prod overlay | `watch:` block reachable from a `-f`'d prod compose command | `infra:` |
+| DO-CO6 | named volumes and networks declared, never anonymous | anonymous volume — orphans silently on `down` | `infra:` |
+| DO-CO7 | `image:` pinned by digest, including third-party/pulled images | `image:` with a moving tag, no `@sha256:` | `infra:` |
 | DO-DF1 | dependency manifests copied and installed before `COPY . .` | source-first COPY invalidating the dep layer | `infra:` |
 | DO-DF2 | base images pinned by digest, not just tag | `FROM` with no `@sha256:` | `infra:` |
 | DO-DF3 | non-root `USER` in the final stage | no `USER`, or root at runtime | `infra:` |
@@ -169,6 +173,8 @@ tag set previously reached.
 | DO-CI13 | PR feedback under 10 min: fast-fail lint jobs, paths filters, heavy suites off PR, shard past ~5 min | one monolithic job, E2E on every PR | `infra:` |
 | DO-CI14 | ARM runners for arch-agnostic jobs; self-hosted never on public repos | self-hosted runner attached to a public repo | `bug:` |
 | DO-CI15 | rulesets over classic branch protection; merge queue only at real contention | merge queue on a two-dev repo, or no required checks at all | `infra:` |
+| DO-CI16 | CI security-scan stack: `trivy`/`trufflehog`/`hadolint`/`lychee`/`shellcheck`/lint-formatters, image scanned post-publish | "build, lint, test" as the whole gate, or a scan of the build context instead of the pushed image | `infra:` |
+| DO-CI17 | Semgrep as its own gate: `pull_request` trigger for diff-aware scanning, `p/ci`/`p/owasp-top-ten` ruleset, SARIF uploaded via `upload-sarif` | semgrep folded into a generic lint step with no SARIF/Security-tab wiring, or a blanket `.semgrepignore`/bare `// nosemgrep` instead of a targeted `nosemgrep: rule-id` | `infra:` |
 | DO-GL1 | `workflow:rules` suppresses duplicate branch+MR pipelines | push to an MR branch spawning two pipelines | `infra:` |
 | DO-GL2 | `rules:` only — never `only/except`, never mixed | `only:`/`except:` in any job | `infra:` |
 | DO-GL3 | `needs:` where it shortens the critical path; `interruptible: true` default | artificial stage waits, stale pipelines running to completion | `infra:` |

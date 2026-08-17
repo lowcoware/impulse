@@ -42,6 +42,23 @@ active acceptance for (account creation, explicit checkbox) as a binding
 contract, full stop. A passive browsewrap ToS on an otherwise-public page
 is the one case with genuine legal ambiguity — that's a call for the user
 to make with their own counsel, not this skill to route around silently.
+Ziff Davis v. OpenAI (2025) held `robots.txt` is not a legally binding
+technical access control under the DMCA — this confirms the "signal, not
+statute" framing above, it does not loosen the hard-stop rule.
+
+## Anti-bot circumvention — a separate exposure from CFAA/ToS
+
+Bypassing an active anti-bot system (Cloudflare/DataDome challenge solving,
+stealth-patched fingerprints, rate-limit evasion) is not covered by the hiQ
+public-data analysis above — hiQ is about ACCESS to data behind no technical
+barrier at all. Defeating a live technical barrier is a third legal theory:
+DMCA §1201 circumvention-of-technological-measures. Reddit v. Perplexity
+(filed late 2025, pending) invokes exactly this against scrapers that evaded
+rate limits and anti-bot systems. Practical rule: recon/harvest scripts using
+a real browser's own network stack (this skill's normal mode) is not
+circumvention; deliberately defeating a bot-challenge the target actively
+serves is a materially different — and less settled — legal position, flag
+it to the user rather than solving it silently.
 
 ## Assets, design, and copyright — separate from the scraping question
 
@@ -57,4 +74,5 @@ anything that ships.
 
 [Jenner & Block: hiQ v. LinkedIn, Ninth Circuit reaffirms narrow CFAA reading](https://www.jenner.com/en/news-insights/publications/client-alert-data-scraping-in-hiq-v-linkedin-the-ninth-circuit-reaffirms-narrow-interpretation-of-cfaa) ·
 [ByteTunnels: is robots.txt legally binding](https://bytetunnels.com/posts/is-robots-txt-legally-binding-scraping-law-explained/) ·
-[cloro: website scraping legal 2026, US + EU rules](https://cloro.dev/blog/website-scraping-legal/)
+[cloro: website scraping legal 2026, US + EU rules](https://cloro.dev/blog/website-scraping-legal/) ·
+[ZeroBot: web scraping legal landscape, what changed in 2026 (Ziff Davis v. OpenAI, Reddit v. Perplexity)](https://blog.zerobot.info/web-scraping-legal-landscape-what-changed-2026)

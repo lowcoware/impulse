@@ -26,7 +26,11 @@ how small the eventual diff turns out to be.
 
 A review whose time approaches the *human* baseline for writing that code,
 or a diff over roughly 400 lines, is functionally a rubber stamp — nobody
-reads 400 lines carefully in the time budget review actually gets. Two
+reads 400 lines carefully in the time budget review actually gets. The
+400-line number isn't arbitrary: Google's own engineering practices target
+~200-line changelists, and Google's measured review turnaround is ~1h for
+a small CL vs ~5h for a large one — the gap is the reviewer skimming, not
+reading, once a diff grows past what one sitting can hold. Two
 responses, not one:
 
 1. **Prevent it**: specs decompose (`spec-driven.md`) before implementation
@@ -55,6 +59,7 @@ no judgment call:
 | `/impulse-review` BLOCKs | > 10 | One systemic-debt task, not 10 tickets (impulse-review Verdict rule) |
 | Blast radius | change touches a contract / shared lib / auth / money path | Force `Ask` tier, ignore diff size |
 | Coverage delta | drops below `coverageTarget` | CI blocks — non-negotiable, no reviewer override |
+| PR idle time | sits unreviewed past ~50% of its own age (2026 benchmark data: half of all PRs now idle over half their lifespan) | Nudge/reassign — a stalling PR is a queue problem, not a quality one, but it still needs an owner |
 
 The point is removing discretion where discretion fails: a tired reviewer
 rubber-stamps a "small-looking" 500-line diff; a gate doesn't get tired. Keep

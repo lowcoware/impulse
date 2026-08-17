@@ -42,6 +42,23 @@ One row per marker (columns as the script prints them):
    debt, it's decay. Fix: add a trigger or delete the shortcut's excuse.
 2. git-age > 6 months → flag `STALE`. Check whether the trigger already fired.
 
+An `impulse:` marker is a deliberate carve-out by construction — it always
+lands in Fowler's technical debt quadrant's Deliberate column, never
+Inadvertent. The column that matters for triage is Prudent vs Reckless: a
+marker with a real ceiling and trigger is Deliberate-Prudent ("we know the
+limit, we'll act when it's hit"); a marker with no trigger (already flagged
+`ROT` above) has degraded into Deliberate-Reckless — the "we know this is
+bad and left no way to know when to fix it" case, which is exactly why a
+trigger-less marker is decay rather than tracked debt, not just a formatting
+gap.
+
+Research on self-admitted technical debt (SATD) comments — the academic
+name for exactly this marker pattern — found roughly 46.7% of TODO-style
+comments in open-source repos are low-quality: ambiguous, missing the
+information a future reader needs to act on them. A `ROT`-flagged
+`impulse:` marker is this same failure mode caught mechanically instead of
+left for a human to notice years later.
+
 A marker can carry both flags. Whether a trigger's metric is actually measured
 (e.g. a named p95 with no `/metrics` on that path) is a human call — the
 scanner has no deps and can't inspect other services, so read the trigger and

@@ -33,7 +33,15 @@ Applies to every platform.
 4. **Offline-first sync:** the local DB is the source of truth; every synced
    table needs a `sync` flag + UTC `updated_at` (+ version counter), soft
    deletes, and a `pending_ops` table to preserve operation order. Flutter:
-   sqflite. RN: WatermelonDB/Realm for complex sync. This pattern (last-
+   **drift** (typed SQLite, codegen, migration support — the de facto
+   standard once there's a real local schema, not just cached settings;
+   `sqflite` is the untyped driver underneath it, reach for it directly only
+   for something trivial enough not to need a schema). RN: WatermelonDB/
+   Realm for complex sync. Once there's a local mirror of server state, pull
+   **deltas** ("what changed since cursor X" against a server-side audit/
+   changefeed table), not full-state dumps — full-state re-sync is what
+   turns "works offline for an hour" into "re-downloads everything on every
+   reconnect." This pattern (last-
    write-wins by `updated_at`) is the right default — it's simple and
    covers most mobile sync shapes. **Reach for CRDTs specifically** only
    when multiple devices can genuinely edit the SAME record concurrently
@@ -46,6 +54,23 @@ Applies to every platform.
    sequential edits" — that's exactly what the simpler pattern above
    already handles.
    [Calibraint: offline-first mobile with CRDT, when it's justified](https://www.calibraint.com/blog/offline-first-mobile-app-in-2026)
+   Drift concretely: bump `schemaVersion` and implement `MigrationStrategy`'s
+   `onUpgrade(Migrator m, int from, int to)` as a stepped `switch` per target
+   version (`case 2: await m.addColumn(notes, notes.color);`) — never a
+   destructive drop-and-recreate, that's a data-loss bug wearing a migration
+   costume. Drift's schema-testing tooling snapshots each version so a
+   migration path is actually tested, not just written. DAOs group queries
+   per table/feature; call `.watch()` instead of `.get()` on a query to get
+   a `Stream` that re-emits on every underlying row change, wiring straight
+   into a Riverpod `StreamProvider` for auto-refreshing UI with no manual
+   invalidation — but it re-runs on any change to the watched table, so keep
+   `where()` selective on large tables. Composing with the sync engine: the
+   same write transaction that updates a row also inserts its
+   `pending_ops` entry (never two separate transactions — that's the gap
+   where a crash mid-sync loses the queue entry); on reconnect the engine
+   drains `pending_ops` in FIFO order, then pulls server deltas and
+   reconciles by `updated_at` comparison per the LWW default above.
+   [FlutterStudio: offline-first Flutter apps with Drift](https://flutterstudio.dev/blog/offline-first-flutter-drift.html)
 5. **Push notifications:** token-based auth to APNs/FCM, keep connections
    open (don't cycle per-message), collapse keys to avoid backlog floods on
    reconnect. Silent push is throttled/blocked by iOS Low Power Mode — never
@@ -77,6 +102,17 @@ Applies to every platform.
    swap to an instant cut; an app that goes from spring-everywhere to
    zero-motion under Reduce Motion reads as broken, not accessible.
    (Distilled from OtherdaysStudio/springy-motion, harvested GitHub skill.)
+
+8. **API client: generate it from the backend's OpenAPI schema, don't
+   hand-write it.** A server/client field mismatch becomes a build error
+   instead of a runtime parse failure in prod — the same discipline the
+   backend-compatibility section asks for, done by codegen instead of by
+   remembering. Both platforms consuming one schema (mobile client + web
+   SDK) keeps them from drifting from each other, not just from the server.
+9. **E2E on the built app: Maestro** (YAML-driven, black-box, runs against
+   the actual installed binary) — the layer above widget/unit tests, catches
+   what those can't (real navigation, real permissions dialogs, real
+   platform chrome).
 
 Sources: [Android Developers WebView security (CC BY 2.5)](https://developer.android.com) ·
 [HackTricks WebView attacks](https://book.hacktricks.wiki) · deep-linking/rollout facts are

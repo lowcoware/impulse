@@ -3,7 +3,8 @@
 # impulse
 
 An anti-overengineering engineering skill suite for Claude Code — skills
-covering backend (Go-first microservices, Python where it earns it),
+covering backend (Go-first microservices, Python/Rust where they earn it,
+Node.js for end-to-end TypeScript),
 frontend (Vue 3 / Nuxt 4), diff review, technical debt, humanized writing,
 docs, project management, legacy code, AI/RAG infrastructure, security,
 devops, mobile, brainstorming, systematic debugging, and dependency
@@ -54,7 +55,7 @@ one-screen card: `/impulse-help`.
 |---|---|---|
 | impulse | `/impulse` | Universal router: describe a situation, it names the best-fit impulse skill to plug in and disambiguates the overlapping pairs |
 | impulse-core | always on (`/impulse-core on\|off`) | Master layer: engineering spine + token economy, hook-injected into every session and every subagent |
-| impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go-first: ladder, day-one baseline, ceiling markers |
+| impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go/Python/Rust/Node: ladder, day-one baseline, ceiling markers |
 | impulse-frontend | `/impulse-frontend [mode]` | Vue 3 / Nuxt 4 / Tailwind v4: register split, AI-tells bans, GSAP/Lenis canon, DESIGN.md protocol |
 | impulse-review | `/impulse-review` | Diff review: overengineering, baseline, seams, AI-typical bugs, architecture decay, AI-tells — one line per finding |
 | impulse-debt | `/impulse-debt` | Harvest `impulse:` markers into a ledger, flag rot |

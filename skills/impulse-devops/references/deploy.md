@@ -1,13 +1,72 @@
-# Deploy — zero-downtime on Compose (no k8s)
+# Deploy — zero-downtime on Compose, and when that stops being the answer
 
 The DORA/Accelerate benchmarks this file's defaults implicitly target:
 elite performers deploy on demand, lead time under a day, change failure
 rate near 5%. The mechanisms below (rolling restart, blue-green, health-
 gated rollback) exist because hitting those numbers on a single VPS
 without Kubernetes requires the same discipline Kubernetes gives you for
-free — nothing here is VPS-specific compromise, it's the same target by
-different means.
+free — below the threshold in the next section, nothing here is
+VPS-specific compromise, it's the same target by different means.
 [Taskade: DORA metrics explained, 2026 benchmarks](https://www.taskade.com/blog/dora-metrics-explained)
+
+## Compose is the default, not a lifetime ban on Kubernetes
+
+Revised position: "Kubernetes is never used" is wrong. What's true is
+narrower — Compose wins below a threshold, and past it the cost of NOT
+having orchestration exceeds the cost of running it. The threshold is
+numbers, not a vibe:
+
+- more than one machine in prod, or a requirement to survive a machine
+  dying
+- more than ~10 services in one environment
+- deploys more often than once a day, with zero-downtime no longer
+  optional
+
+Below that line, Compose is not a compromise — it does local/single-node
+deploy faster and simpler than any cluster, and stays the dev-environment
+answer forever regardless of what prod runs.
+
+**Past the line, k3s is canon, not full Kubernetes.** One binary under
+100MB, one systemd unit, `curl … | sh` to a working node in a minute — the
+jump is "install one more service," not "operate a cluster." It ships
+Traefik as its default ingress, so the edge/TLS knowledge in this skill
+transfers directly (Compose labels → `IngressRoute`, not a rewrite from
+scratch); single-node storage is SQLite, multi-node is embedded etcd, so
+there's no separate etcd cluster to stand up first. What it buys that
+Compose structurally cannot: health-gated rolling update, automatic
+reschedule of a service when a node dies, replicas across nodes, secrets
+as an RBAC'd resource, node drain for maintenance without downtime,
+resource limits with eviction. (Docker Swarm was considered as a
+lower-cost middle step — same daemon, same file format, gets you
+rolling-update/replicas/rollback without a new system — and rejected: it's
+effectively frozen upstream, and the operational knowledge doesn't
+transfer anywhere past Swarm itself. Paying once for k3s beats paying
+for Swarm and then a cluster anyway.)
+
+Real costs past the line, so this isn't a free upgrade: manifests replace
+the compose file and Helm/Kustomize become mandatory almost immediately
+(bare YAML duplicated per environment doesn't scale); network debugging
+gains a Service/CNI/CoreDNS hop, so "name doesn't resolve" goes from a
+10-minute check to an evening; **Kubernetes `Secret` is base64, not
+encryption** — anyone with namespace + etcd-backup access reads it in
+plaintext, so SOPS/sealed-secrets/an external manager becomes mandatory
+where Compose's file-mounted `secrets:` was already adequate
+(`impulse-security/references/secrets.md`); backups gain a second
+required object — an etcd snapshot or the SQLite file — with the same
+proven-restore bar as `backup.md` already sets for the database; and a
+single k3s node is convenience and forward-prep, not HA — a node dying is
+still a product outage until there's a second node.
+
+This skill's Compose rules (`compose.md`, `ci.md`, `cert-tls.md`) stop
+being the deploy mechanism once the threshold is crossed, but don't stop
+being useful — dev still runs Compose, and Traefik/CI/backup discipline
+transfers in spirit even where the YAML shape changes. Manifest/Helm/
+kubectl mechanics for the far side of the threshold are covered in
+`k3s.md`: Helm/Kustomize/raw-manifest choice, manifest hygiene (probes,
+resource limits, PodDisruptionBudget, securityContext, NetworkPolicy),
+how this skill's health/shutdown/logging baseline maps onto k8s
+primitives, k3s-specific datastore/Traefik/ServiceLB/air-gap behavior,
+and GitOps (ArgoCD/Flux) as the delivery mechanism.
 
 1. **Never `docker compose down && up -d` as a deploy script.** It drops all
    containers before starting new ones — a guaranteed downtime window even

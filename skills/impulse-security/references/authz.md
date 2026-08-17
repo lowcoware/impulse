@@ -10,6 +10,63 @@ roles have proven insufficient, is the over-engineering direction most
 teams actually hit — the more common mistake is ABAC-by-default, not
 RBAC-that-turned-out-too-coarse.
 
+## Past ~3 roles: declarative rules in one place, not `if`-sprawl
+
+Once role-based checks scatter across more than roughly three roles, `if`
+chains diverge between endpoints and stop being reviewable as a set.
+Three real projects converge on the same fix — permissions as declarative
+rules checked in one place, not hand-written per endpoint: Infisical uses
+**CASL** (`@casl/ability`, TS) — `can('read', 'Secret', {projectId})`
+rules that ALSO compile to a DB-query filter (`@ucast/mongo2js`), so the
+rule automates the "condition lives in the WHERE clause" IDOR fix above
+instead of replacing it. Authelia uses **CEL** (`google/cel-go`) —
+access-control rules as CEL expressions in config, the same
+spec'd/sandboxed expression language Google uses, not a bespoke
+mini-language. Trivy uses **Rego** (OPA) for policy checks — the same
+engine Kubernetes/Gatekeeper uses, so the skill transfers even without a
+cluster. Pick one when the third-role line is crossed; treat the choice
+as an ADR-worthy decision, not a default.
+
+**CASL's actual selling point isn't the `can`/`cannot` syntax — it's that
+the same rules compile to a query filter.** `AbilityBuilder` builds rules
+(`can('update', 'Post', {authorId: user.id})`, `cannot('delete', 'Post',
+{status: 'published'})`) that check in-memory (`ability.can(...)`) AND —
+via `accessibleBy(ability)` — compile to a MongoDB-style query object you
+hand straight to the DB driver (`Post.accessibleBy(ability).exec()` in
+mongoose, or `db.collection('posts').find(accessibleBy(ability,
+'update').ofType('Post'))` raw). That's the point: one rule set produces
+both the in-memory check and the DB-level filter, so there's no
+fetch-broadly-then-filter-in-app-code path to forget on one endpoint (the
+exact IDOR risk in the checklist below). [stalniy/casl](https://github.com/stalniy/casl).
+
+**OPA: sidecar (REST, most common, upgrade OPA independently) vs
+embedded-as-library (Go `rego` package, no network hop, but OPA version
+is pinned to your build).** Docs recommend the SDK "if you're unsure
+which one to use." Either way, the input convention is a single JSON
+`input` document (`{"input": {"method": "GET", "path": [...], "subject":
+{...}}}`) the policy reads as the `input` var — keeps the policy decoupled
+from your API shape. `opa test . -v` runs the Rego test suite (`_test.rego`
+files, `test_` prefixed rules) — wire it as a CI gate so a policy change
+that breaks an allow/deny case fails the build, not production.
+[OPA integration docs](https://www.openpolicyagent.org/docs/integration).
+A Claude Code skill already covers this end to end —
+[Void3110/rego-skill](https://github.com/Void3110/rego-skill): generates
+Rego with default-deny, RBAC and ABAC examples, a 10-point security
+checklist, and enforces `opa check` + `opa test . -v` before calling a
+policy done.
+
+**RBAC vs ABAC vs ReBAC — this file's RBAC-default above still holds; add
+ReBAC only when the resource graph itself is the permission model.**
+OpenFGA (Zanzibar-style ReBAC) is warranted once authorization questions
+shift from "what role does this user have" to "what is this user's
+relationship to this resource, and to resources related to it" — flat
+RBAC "breaks down with hierarchy, sharing, or multi-tenancy" (per-doc,
+per-folder sharing; nested groups; ownership that inherits down a tree).
+[OpenFGA authorization concepts](https://openfga.dev/docs/authorization-concepts).
+Don't reach for ReBAC to solve what a `WHERE owner_id = ?` clause or a
+CASL condition already solves — it's for when permissions ARE the graph,
+not when they're a lookup on one row.
+
 ## IDOR — an authorization bug, not an authentication bug
 
 Insecure Direct Object Reference: the token is perfectly valid, verified,
@@ -30,6 +87,20 @@ explicit `if resource.OwnerID != userID { return 403 }` check) is a
 candidate IDOR. Grep-able pattern: object lookup by user-supplied ID with
 zero references to the auth-context variable anywhere in the same
 function.
+
+## A server action is a public endpoint
+
+Nuxt's `server/api`/`server/routes` and Next's `"use server"` functions look
+like plain function calls from the component that invokes them — the
+client/server boundary disappears from the code. It hasn't disappeared from
+the network: each one is still a normal HTTP endpoint, reachable directly
+with curl regardless of how many places in the UI call it, or whether a
+button that triggers it is hidden. "Authorization always on the server" is
+the same rule as for a REST/tRPC handler; the only thing that changed is
+that nothing in the source forces the author to notice they wrote an
+endpoint. Treat every server action/route handler as a review target on the
+same checklist below, not as trusted internal code because it's colocated
+with the component (`Fullstack — стек`).
 
 ## Real incidents — the textbook progression
 

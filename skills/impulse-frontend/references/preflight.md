@@ -39,6 +39,13 @@ scanner hit is a lead, not a verdict — see "How a grep lies" below.
 | 25 | Flex percentage math | `rg -n "w-\[calc\(" $SRC` | 0 — Grid (`grid-cols-*`) replaces flex-math splits |
 | 26 | New dependency not installed | new import against `package.json` | 0 unlisted — output the install command before importing, never assume a library exists |
 | 27 | Core Web Vitals (manual, pre-ship) | Lighthouse run on the changed page | LCP < 2.5s, INP < 200ms, CLS < 0.1 |
+| 28 | Browser-compat lint wired | `eslint-plugin-compat` in the lint config, targets the project's browserslist | present as a blocking CI step, not a manual read of caniuse |
+| 29 | Tailwind class lint wired | `eslint-plugin-better-tailwindcss` in the lint config | present — catches unsorted/duplicate classes so it's not a review-time nitpick |
+| 30 | Type-check as its own CI step | `vue-tsc --noEmit` (or the project's equivalent) runs separately from the linter | present as a blocking step — an editor-only red squiggle isn't a check |
+
+A check that only lives in a human's head gets skipped under deadline
+pressure; #28-30 exist so browser-compat, class order, and type errors are
+caught by the pipeline instead of by review comments after the fact.
 
 Notes:
 

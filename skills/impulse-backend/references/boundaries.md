@@ -33,6 +33,16 @@ service that had been split without the boundary criteria in section 1
 actually being met.
 [devclass: Amazon Prime Video microservices-to-monolith case study, 90% cost cut](https://devclass.com/2023/05/05/reduce-costs-by-90-by-moving-from-microservices-to-monolith-amazon-internal-case-study-raises-eyebrows/)
 
+**One image, several entrypoints** — the middle ground before reaching for
+separate services: one codebase/image, different processes started with
+different commands (`api`, `worker`, `scheduled-maintenance`), scaled
+independently (`--scale svc-api=3`). Cheaper than splitting into real
+services and doesn't block scaling the hot part separately — reach for an
+actually separate service only when a part needs its own release cadence,
+its own SLA, or a different trust level (sandboxing rule in
+`Design-decisions`-equivalent judgment calls), not just independent
+scaling.
+
 ## 3. Data ownership
 
 1. Each service owns its DB (or schema). No other service gets credentials to it.

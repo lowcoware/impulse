@@ -6,7 +6,21 @@
    strings — enables diff/rollback independent of a code deploy.
 2. Regression testing: golden input → expected-output-*shape* set (same
    pattern as `rag.md`'s golden-query suite) — gate on shape before
-   subjective quality.
+   subjective quality. **promptfoo** is the reach-for tool for this
+   specific job — declarative check sets, side-by-side prompt-variant
+   comparison, pass/fail thresholds, wired into CI — vs. `rag.md`'s Ragas,
+   which answers a different question (retrieval vs. generation fault) for
+   the RAG pipeline specifically, not prompt regressions in general.
+3. Without versioning, "which prompt produced this bad response" is
+   unanswerable after the fact — the same gap a missing migration history
+   leaves in a schema. A full LLM-ops platform (Langfuse) closes this
+   together with call tracing, but pulls in four extra stateful services
+   (Postgres, ClickHouse, Redis, MinIO) — that's an S1-level infra decision,
+   not a default. Below production call volumes where ClickHouse's ingest
+   throughput actually matters, a plain table (prompt id, version, template,
+   created_at) in the existing database plus the metrics this repo already
+   exports via Prometheus covers the canon's requirements without the extra
+   datastores.
 
 ## User-facing prompt injection
 

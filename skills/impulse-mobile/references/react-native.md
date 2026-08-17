@@ -7,7 +7,11 @@
    legacy bridge, not just an architectural preference: complex-list
    rendering ~43% faster, scroll frame drops down ~95%, memory ~33% lower,
    JS-to-native call latency 30-50% faster (JSI's direct memory access
-   replaces the old serialize-over-the-bridge round trip).
+   replaces the old serialize-over-the-bridge round trip). RN 0.82 doesn't
+   error on the old opt-out flags — `newArchEnabled=false` (Android) and
+   `RCT_NEW_ARCH_ENABLED=0` (iOS CocoaPods) are silently ignored, not
+   rejected — a leftover flag from a pre-0.82 project reads as "using legacy
+   arch" but isn't; don't trust it as a signal.
 2. **FlatList perf (the classic RN killer):** stable `keyExtractor` (never
    array index if data reorders — same class as the web `:key="index"` bug),
    `getItemLayout` when item height is fixed (skips per-item measurement —
@@ -68,4 +72,5 @@ Sources: [React Native docs (MIT)](https://reactnative.dev) ·
 [Expo docs (MIT)](https://docs.expo.dev) ·
 [pmndrs/zustand (MIT)](https://github.com/pmndrs/zustand) ·
 [ImpactTechLab: New Architecture JSI/Fabric/TurboModules performance data](https://impacttechlab.com/react-native-new-architecture-app-performance/) ·
+[React Native 0.82 blog: New Architecture always-on, legacy flags ignored](https://reactnative.dev/blog/2025/10/08/react-native-0.82) ·
 [Medium: FlashList vs FlatList 2026](https://medium.com/@KaushalVasava/flashlist-vs-flatlist-in-react-native-a-2026-deep-dive-into-performance-architecture-and-fa4266f92ea9)

@@ -69,6 +69,13 @@ html.dark {
 }
 ```
 
+`color-mix()` is Baseline-safe now (every Chromium/Artifacts-relevant engine
+ships it) if a token needs a one-off tint/shade rather than a fully
+hand-picked dark hex — e.g. `color-mix(in srgb, var(--clay) 85%, white)` for
+a hover state — but the base token pairs above stay hand-picked: the ivory-
+to-near-black flip isn't a mechanical lighten/darken, it's a different
+color relationship (see the note above), and `color-mix()` can't derive that.
+
 ## Semantic color mapping (confirmed usage across the corpus)
 
 | Token | Means | Seen on |

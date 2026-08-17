@@ -72,10 +72,15 @@ pool ceiling = max(N, downstream's actual concurrent capacity)
 
 Only **CPU-bound** work (hashing, encoding, in-process compute) sizes near
 core count — and even then, `GOMAXPROCS` must be aligned to the container's
-actual CPU limit (`uber-go/automaxprocs` or equivalent), or it defaults to
-the *host's* core count inside a cgroup-limited container: the pool sizes
-itself against a number the kernel then throttles, and scheduling
-contention makes throughput worse than a smaller pool would have.
+actual CPU limit, or it defaults to the *host's* core count inside a
+cgroup-limited container: the pool sizes itself against a number the
+kernel then throttles, and scheduling contention makes throughput worse
+than a smaller pool would have. **Go 1.25+: the runtime does this itself**
+— on Linux it now reads the cgroup CPU limit at startup and periodically
+re-checks it, so `go.uber.org/automaxprocs` is redundant on 1.25+ (still
+needed pre-1.25, or where the limit changes faster than the runtime's
+poll interval and exact-immediacy matters).
+[Go blog: container-aware GOMAXPROCS](https://go.dev/blog/container-aware-gomaxprocs)
 
 Three pool invariants, cheap to violate silently:
 

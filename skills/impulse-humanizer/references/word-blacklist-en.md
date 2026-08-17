@@ -170,6 +170,10 @@ knowledge update`, `Based on the information available` — удалить це�
 noted` → конкретное имя или удалить
 — `Studies have shown` / `Research suggests` → конкретная ссылка или удалить
 — `It is widely believed` / `Some people argue` → удалить или конкретизировать
+— Стопка модальных хеджей `may / could / generally / it's worth noting`
+подряд без конкретной причины — актуальный tell по независимым 2026-тестам
+детекторов (Memeburn), не только устаревший «delve»-список → назвать
+условие/цифру или убрать хедж
 
 ## 3. Бизнес/корпоративный жаргон (общий для языков)
 

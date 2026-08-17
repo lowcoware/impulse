@@ -1,5 +1,12 @@
 # Supply-chain — attacks, scanners, incidents
 
+Prior art worth knowing about, not folded in here: `latiotech/secure-
+supply-chain-skills` is an existing Claude Code plugin covering the same
+ground plus adjacent domains this skill doesn't own (Docker base-image
+digest pinning, GitHub Actions SHA pinning, Terraform provider pinning, IDE
+extension verification, OIDC/commit-signing setup) — check it if a gap here
+turns out to need one of those.
+
 ## Attack catalog
 
 | Attack | Mechanism | Defense |
@@ -31,14 +38,32 @@ check.
 | Stack | Tool | Runs |
 |---|---|---|
 | Go | `govulncheck` | CI + pre-add; symbol-aware (flags only reachable vulns) |
+| Go → GitHub Code Scanning | `golang/govulncheck-action` with `output-format: sarif` | surfaces findings as inline PR annotations, not just a CI log line — must scan source (not binary mode), binary mode has no line numbers for SARIF |
 | Python | `pip-audit` | CI + pre-add; against installed set |
 | JS/TS | `npm audit` / `pnpm audit` | CI; noisy — triage by reachability |
+| Rust | `cargo audit` | CI + pre-add; checks `Cargo.lock` against RustSec's `advisory-db` |
+| Rust (superset) | `cargo deny` | CI; advisories (same `advisory-db`) *plus* licenses, banned/duplicate crates, and untrusted registry sources in one pass — reach for this over bare `cargo audit` once the check needs more than vuln advisories |
 | Any / polyglot | `osv-scanner` (Google, OSV.dev) | CI; one tool across ecosystems |
-| Containers | `trivy` / `grype` | image scan in `impulse-devops` build |
+| Containers | `trivy` / `grype`; `osv-scanner` V2 | image scan in `impulse-devops` build |
+
+OSV-Scanner V2 added layer-aware container scanning (Debian/Ubuntu/Alpine
+bases): it reports which image layer introduced each vulnerable package
+and filters findings unlikely to be reachable in that layer's actual
+history — cuts the flat-scanner noise `trivy`/`grype` alone produce on a
+multi-stage image where a vuln lives only in a build stage that never
+ships. Worth adding alongside, not instead of, the container scanners
+already in `impulse-devops`.
 
 Advisory sources: OSV.dev (aggregate), GitHub Advisory DB, ecosystem-native
 (`RUSTSEC`, `PyPA`). Wire one into CI so new CVEs in pinned deps surface on the
 next build, not at exploit time.
+
+RustSec's `advisory-db` also carries informational (non-CVE) advisories for
+crates flagged **unmaintained** — no vuln required, just an abandoned
+upstream. `cargo audit`/`cargo deny` both read these; `cargo deny` can be
+configured to error on them, which is the closest Rust equivalent to the
+"Unmaintained / stale / archived" row in the Dependency health risk table
+below, enforced as a CI gate instead of a manual scoring pass.
 
 ## Lockfile discipline
 
@@ -67,6 +92,17 @@ next build, not at exploit time.
 - `npm ci` / `uv sync --frozen` / `go mod verify` in CI — install from the lock,
   fail on drift.
 
+## SBOM — generate one, don't just say you should
+
+`syft` (Anchore) is the concrete tool: point it at a container image, a
+filesystem, or a repo and it walks the actual installed/declared package set
+across ecosystems (Go, Python, JS, Rust, Java, Ruby, PHP, OS packages) and
+emits CycloneDX or SPDX. Runs offline, no external API calls. Pairs with the
+scanners above rather than replacing them — an SBOM is the inventory,
+`osv-scanner`/`trivy`/`grype` etc. are what turns that inventory into
+findings; `osv-scanner` and `grype` can both consume a `syft`-generated SBOM
+directly instead of rescanning the filesystem.
+
 ## Real incidents (why the rules exist)
 
 - **xz-utils backdoor (CVE-2024-3094, 2024)** — a long-game maintainer social-
@@ -88,6 +124,17 @@ next build, not at exploit time.
 - **PyPI/npm typosquat campaigns (ongoing)** — thousands of near-miss-named
   malicious pkgs with credential-stealing install hooks. Lesson: exact names +
   `--ignore-scripts`.
+- **keyv/cacheable npm worm (Aug 2026)** — a maintainer GitHub account
+  compromise pushed a `preinstall` hook (keyv 6.0.0 and related
+  cache-manager/cacheable-request releases) that self-propagated to 400+
+  downstream packages, stole cloud/CI/crypto-wallet credentials, and — the
+  ecosystem-specific detail worth flagging here — set up persistence via
+  IDE/agent config, including Claude Code hooks and `tasks.json`, and pulled
+  its C2 address from an Ethereum smart contract to survive takedown of any
+  one domain. Lesson: `--ignore-scripts` still applies, but agent tooling
+  config is now itself a persistence target, not just source code —
+  the same install-hook root cause as event-stream (2018) and node-ipc
+  (2022), current as of this year, not a solved problem.
 
 ## Prioritizing CVEs once they exist — EPSS over bare CVSS
 

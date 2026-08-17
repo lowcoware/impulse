@@ -68,3 +68,12 @@ needs to show product:
 
 A hero with text over a gradient blob is a placeholder, not a hero — it
 needs one of the four options above.
+
+## 5. Media-grid loading placeholder
+
+For a grid of images/thumbnails loading progressively (gallery, feed), use
+`thumbhash` — a compact hash stored alongside the file record (tens of
+bytes) that decodes to a blurred preview of the actual image, shown before
+the real asset loads. Closes layout shift better than a gray box because the
+placeholder already carries the image's color and rough shape (Immich, and
+the mobile clients that share its media pipeline).

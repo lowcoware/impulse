@@ -18,7 +18,7 @@ files, or persist anything.
 |---|---|---|
 | impulse | `/impulse` | Router: describe a situation, it recommends which skill(s) to plug in and splits the overlapping pairs |
 | impulse-core | always on (`/impulse-core on\|off`) | Master layer: engineering spine + token economy, hook-injected every session and subagent |
-| impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go-first: ladder + day-one baseline + ceiling markers |
+| impulse-backend | `/impulse-backend [mode]` | Greenfield microservice backends, Go-first (Python/Rust/Node where they earn it): ladder + day-one baseline + ceiling markers |
 | impulse-frontend | `/impulse-frontend [mode]` | Vue 3 / Nuxt 4 / Tailwind v4: register split, AI-tells bans, GSAP/Lenis canon, DESIGN.md protocol |
 | impulse-review | `/impulse-review` | Diff review: overengineering + baseline + seams + AI-typical bugs + architecture-decay + AI-tells. One line per finding |
 | impulse-debt | `/impulse-debt` | Harvest `impulse:` markers into a ledger, flag rot |
@@ -30,7 +30,7 @@ files, or persist anything.
 | impulse-legacy | `/impulse-legacy` | Existing/unfamiliar code: characterization tests, seams, blast-radius assessment, Strangler Fig, agent read-before-write protocol |
 | impulse-ai | `/impulse-ai` | RAG/embeddings/Qdrant, LLM gateway, MCP server/tool design + security, Claude Code subagent conventions |
 | impulse-security | `/impulse-security` | JWT/HMAC auth, secrets management, IDOR/authz, layered rate limiting, CORS, Traefik edge hardening |
-| impulse-devops | `/impulse-devops` | Compose multi-env, multi-stage Dockerfiles, GH Actions (pull_request_target footgun), Traefik ACME/TLS, blue-green on one VPS, infra decay |
+| impulse-devops | `/impulse-devops` | Compose multi-env (default), k3s canon past a scale/HA threshold, multi-stage Dockerfiles, GH Actions (pull_request_target footgun), Traefik ACME/TLS, blue-green on one VPS, infra decay |
 | impulse-mobile | `/impulse-mobile` | Flutter/React Native/native: platform-choice ladder, day-one mobile baseline, dispose/leak catalog, secrets-in-binary rule |
 | impulse-brainstorm | `/impulse-brainstorm` | Hard-to-reverse design decision: 3 real approaches, score vs named constraints, recommend + trip-wire → ADR |
 | impulse-systematic-debug | `/impulse-debug` | Disciplined bug hunt: reproduce → bisect → hypothesis-log → smallest fix → regression test |

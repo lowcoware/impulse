@@ -35,6 +35,7 @@ CI on every PR: unit + integration + contract. Red at any level blocks merge.
 3. Consumer side: assert your client/handler parses fixtures generated from the OWNER's schema — never hand-written JSON that drifts.
 4. Every seam gets one: each REST endpoint consumed, each gRPC method, each Kafka topic produced or consumed.
 5. Goal: a breaking schema change breaks a test in-repo BEFORE deploy, not a partner service after.
+6. **Schemathesis for OpenAPI/GraphQL surfaces** — a different check than the schema-diff above: it generates request cases FROM the schema (property-based, on top of `hypothesis`) and asserts the live server's responses actually conform to it, catching the class of bug schema-diffing can't (500s, unicode/empty/negative-number edge cases nobody hand-writes a test for). Run as CLI (`schemathesis run <schema-url>`) or as a pytest plugin (`@schema.parametrize()`). Fix the Hypothesis seed for reproducibility and move any counterexample it finds into a normal regression test — don't rely on regenerating it.
 
 ## 4. E2E — required
 
@@ -172,3 +173,66 @@ right reason *before* the code exists (or before the fix, when debugging).
    rule is: any test you're relying on to catch a specific failure, you watch
    fail once. Especially AI-generated tests — the AI wrote green; you make it
    prove red.
+
+## 11. Node/Fastify testing craft
+
+Go's testify/go-sqlmock and Python's pytest/miniredis (§5, §8) have a
+direct Node equivalent — Vitest as the runner, Fastify's `inject()` as the
+transport-mock, testcontainers as the same integration tool already in
+§5's table (its Node package, not a different tool).
+
+1. **`inject()`, not a real listening server, for route tests.** Fastify's
+   built-in `server.inject({ method, url, payload, headers })` drives a
+   request through the full plugin/hook/handler chain without binding a
+   port — no `supertest`, no real socket, no port-collision flakiness in
+   parallel CI. Reserve an actual `listen()` + real HTTP client for the
+   rare case being tested IS the network layer (an external client SDK
+   hitting your service). `response.json()` gives the parsed body directly.
+2. **`build()`/`buildServer()` app-factory, exactly matching `layout.md`'s
+   `app.ts`/`server.ts` split.** The factory returns a configured
+   `FastifyInstance` without calling `listen()`; tests call the factory,
+   `inject()` against the result, and `close()` when done — same pattern
+   Fastify's own docs and `deps.md`'s Vitest+testcontainers pairing both
+   point at. `beforeAll` builds once per suite file when tests don't
+   mutate shared state; a fresh instance per test only when they do.
+3. **Unit vs integration line, same as go-sqlmock/miniredis (§5):** a
+   service function that takes its dependency (`pg.Pool`, Redis client) as
+   a plain argument is unit-testable with a `vi.fn()` stub on just the
+   methods it calls — no server, no `inject()`, no container. Reserve
+   `inject()` + a real (or testcontainer) DB for what only exists at the
+   route layer: schema validation status codes (400 on bad body),
+   auth/`preHandler` behavior, and the actual SQL against a real engine.
+   Table, adapted to Fastify's layers:
+
+   | What you want to verify | Test type |
+   |---|---|
+   | Business rule (duplicate check, calculation) | Unit — mock the dependency arg |
+   | Input normalization (trim, lower-case) | Unit |
+   | Error type / status code thrown by the service | Unit |
+   | HTTP status returned by the route | Integration — `inject()` |
+   | Request schema validation (400 on bad body) | Integration — `inject()` |
+   | End-to-end DB reads/writes, migrations | Integration — testcontainers |
+4. **Test tree mirrors `src/`**, same rule as Go package-adjacent tests
+   and pytest's mirrored `tests/`: `test/services/users.test.ts` next to
+   `src/services/users.ts`, `test/routes/users.test.ts` for the
+   route-level `inject()` suite — not one flat `test/` dump.
+5. **Testcontainers wiring: env var, not pre-`decorate()`.** Start the
+   container, set `process.env.DATABASE_URL` to its connection URI, run
+   migrations, THEN call the app factory — the `db` plugin registers
+   normally against the real container. Decorating `db` on the built
+   instance before `ready()` to swap in a container pool works but races
+   the plugin's own `decorate('db', ...)` call depending on registration
+   order; treat it as the advanced/fallback option, not the default.
+   Container startup is slow (~30s) — set the suite's own timeout, not
+   the framework default, and don't spin up a fresh container per test
+   file if the suite can share one and truncate between tests instead.
+6. **Auth/`preHandler` routes:** test both sides explicitly with
+   `inject({ headers: { authorization: ... } })` — the 401-without-token
+   case is as much a required test as the 200-with-token case, and it's
+   the one AI-generated test suites most often skip.
+
+Sources: [Fastify: Testing guide](https://fastify.dev/docs/latest/Guides/Testing/) ·
+[Fastify: `inject()` reference](https://fastify.dev/docs/latest/Reference/Server/#inject) ·
+[TheCodePace/fastify-skills — testing.md](https://github.com/TheCodePace/fastify-skills/blob/main/skills/fastify-best-practise/rules/testing.md) ·
+[TheCodePace/fastify-skills — unit-testing.md](https://github.com/TheCodePace/fastify-skills/blob/main/skills/fastify-best-practise/rules/unit-testing.md) ·
+[TheCodePace/fastify-skills — test-containers.md](https://github.com/TheCodePace/fastify-skills/blob/main/skills/fastify-best-practise/rules/test-containers.md)

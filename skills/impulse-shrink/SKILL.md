@@ -21,7 +21,10 @@ Rungs: `impulse-backend/references/ladder.md`.
 ## Hunt
 
 Where repo-scale over-engineering hides (a diff review never sees these —
-they accrete across many PRs):
+they accrete across many PRs). If the stack has one, run a dead-code/unused-export
+tool first and treat its output as leads, not verdicts (Knip for JS/TS —
+unused files/exports/deps in one pass, ~150 zero-config plugins; ts-prune,
+Vulture for Python via AST with a confidence score):
 
 - deps the stdlib or platform already ships (go.mod/package.json vs
   platform-native.md)
@@ -31,6 +34,8 @@ they accrete across many PRs):
 - duplicated blocks across files that should share one function
 - ceremony directory layers with a single pass-through file
 - utils/helpers modules where half the exports have zero callers
+  (verify zero-caller by grep before reporting — tool output alone false-positives on
+  dynamic imports, re-exports, test-only helpers)
 
 ## Effort
 

@@ -29,7 +29,15 @@ The act of observing changes timing/optimization. Causes: uninitialized memory,
 race, compiler opt, debugger serializing threads. Technique: log to a buffer
 flushed later (not synchronous stdout that adds a sync point); add asserts on
 invariants rather than prints; check for reliance on undefined
-init-order/uninitialized state.
+init-order/uninitialized state. On Linux, prefer a record-and-replay debugger
+(`rr`, 10K+ stars, originated at Mozilla for Firefox, now used on Chrome/QEMU/
+LibreOffice) over repeated print-and-rerun when the bug won't reproduce
+reliably: `rr record <cmd>` captures one execution deterministically,
+`rr replay` re-runs the SAME recorded trace under gdb with reverse-execution
+(`reverse-next`, `reverse-continue`) and hardware watchpoints — turns "add a
+print, hope it repros again" into "step backward from the crash in the exact
+run that crashed."
+[rr-debugger/rr](https://github.com/rr-debugger/rr)
 
 ## Flaky test (passes/fails on same code)
 

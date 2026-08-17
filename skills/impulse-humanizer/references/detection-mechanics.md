@@ -83,6 +83,24 @@ tracking features deliberately model-agnostic (targeting generation
 
 [Copyleaks methodology](https://copyleaks.com/ai-content-detector/testing-methodology)
 
+## GPTZero — now four layers, not two
+
+GPTZero dropped perplexity/burstiness as its sole signal in autumn 2023;
+current architecture (2025-2026) combines four layers: perplexity,
+burstiness, a deep classifier trained on 600M+ documents that assigns an
+AI-probability score, and a "Paraphraser Shield" aimed specifically at
+humanized/reworded text — the same target as Pangram 3.0's AI-assistance
+detection above. [GPTZero: how AI detectors work](https://gptzero.me/news/how-ai-detectors-work/)
+GPTZero was acquired by Superhuman (Grammarly) in June 2026.
+
+Independent testing (Memeburn, 2026) found GPTZero performs best on fully
+AI-generated text with minimal editing; accuracy declined once human
+revisions were introduced, and even relatively small changes to sentence
+structure, transitions, and wording measurably reduced detection
+confidence — a data point specific to GPTZero, not license to treat a
+cosmetic pass as sufficient against the ensemble detectors covered below.
+[Memeburn: How to Detect AI Text in 2026](https://memeburn.com/how-to-detect-ai-content/)
+
 ## Ensemble systems — why fixing one axis isn't enough
 
 GPTZero describes its own system as fusing seven components; Copyleaks and

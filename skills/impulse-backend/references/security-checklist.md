@@ -1,11 +1,12 @@
-# Security checklist — Go / FastAPI production hardening
+# Security checklist — Go / FastAPI / Fastify production hardening
 
-Complements `hardening-go.md`/`hardening-python.md` (lifecycle/perf traps),
-`ai-bug-patterns-be.md` (SQL injection, hardcoded secrets, missing auth
-middleware, upload-by-extension), and `impulse-security` (JWT/cookie-flag/
-CORS/edge already own that ground — not repeated here). This file is the
-layer none of those cover: HTTP-server misconfiguration, framework-idiom
-footguns, and the specific detection pattern to grep for each.
+Complements `hardening-go.md`/`hardening-python.md`/`hardening-node.md`
+(lifecycle/perf traps), `ai-bug-patterns-be.md` (SQL injection, hardcoded
+secrets, missing auth middleware, upload-by-extension), and
+`impulse-security` (JWT/cookie-flag/CORS/edge already own that ground —
+not repeated here). This file is the layer none of those cover: HTTP-server
+misconfiguration, framework-idiom footguns, and the specific detection
+pattern to grep for each.
 
 ## Go (net/http)
 
@@ -39,6 +40,22 @@ footguns, and the specific detection pattern to grep for each.
 | Host header validated | no `TrustedHostMiddleware`, app trusts `Host` header for URL generation | absence of trusted-host middleware | `TrustedHostMiddleware` or equivalent allowlist in production |
 | WebSocket endpoints authenticated | `@app.websocket(...)` accepts and processes messages with no auth check | `@app.websocket`/`websocket_endpoint` with no auth before sensitive operations | require auth during handshake, validate `Origin` for browser clients, rate-limit connections/messages |
 | Request/multipart size bounded | no request or multipart size limit at app or edge | absent size-limit config | enforce at both edge (proxy) and app layer — DoS via memory/CPU exhaustion is a documented Starlette/python-multipart advisory class |
+
+## Fastify (Node.js)
+
+| Rule | Insecure pattern | Detect | Fix |
+|---|---|---|---|
+| Response schema always set | route registered with `schema.body` only, no `schema.response` | route definitions missing `response:` key | set `response` schemas on every route — Fastify drops fields not in the schema at serialize time, closing excessive-data-exposure at the framework level, not just via manual DTO discipline |
+| No mass assignment | `db.update(request.body)` / spread into an ORM write with no allowlist | `request.body` spread or passed whole into a write call | explicit body schema with `additionalProperties: false`, or an allowlisted update DTO |
+| Request body size bounded | default/unset `bodyLimit`, or a raised limit with no per-route override for upload endpoints | `bodyLimit` absent from `Fastify({...})` init | set `bodyLimit` at app init; override tighter/looser per-route only where justified |
+| `@fastify/helmet` registered | no security-headers plugin, hand-rolled `reply.header(...)` per route | absence of `@fastify/helmet` in plugin registration | register `@fastify/helmet`; hand-rolled per-route headers drift and get missed on new routes |
+| `@fastify/cors` explicit allowlist | `origin: true` (reflects any origin) or `origin: '*'` combined with `credentials: true` | `origin: true`, `origin: '*'` near `@fastify/cors` | explicit origin allowlist (function or array); `credentials: true` + wildcard origin is a direct credentialed cross-origin read |
+| No SSRF on outbound fetch | `fetch(request.query.url)` / `undici.request(userInput)` | `fetch(`, `request(` with request-derived URL | same allowlist + DNS-rebinding discipline as the Go row above — resolve once, fetch the resolved IP, preserve original Host header |
+| Path traversal blocked | `@fastify/static` root misconfigured, or `fs.readFile(path.join(base, request.params.file))` with no containment check | `readFile(path.join(`, `@fastify/static` root pointed above the intended asset dir | allowlist file IDs mapped server-side; verify resolved path stays under the base dir after `path.resolve` |
+| Crypto-grade randomness | `Math.random()` for session/token/nonce generation | `Math.random()` near auth/session/token code | `crypto.randomBytes()` / `crypto.randomUUID()`, never `Math.random()` for anything security-sensitive |
+| Constant-time secret comparison | `===`/`==` comparing tokens/MACs/API keys | `===` near token/MAC/secret compare | `crypto.timingSafeEqual()` |
+| Prototype pollution blocked | unguarded deep-merge of request body into a config/options object (`Object.assign(target, request.body)`, a naive recursive merge) | deep-merge helpers fed request-controlled input | reject `__proto__`/`constructor`/`prototype` keys explicitly, or use a merge utility with pollution guards; AJV's schema validation already rejects unknown keys when `additionalProperties: false` is set, closing most of this at the validation layer |
+| No `eval`/`new Function`/`child_process.exec` on request-derived input | template/expression evaluation, or shell command built from user input | `eval(`, `new Function(`, `exec(` with request-derived data | never evaluate/execute request-controlled strings; `execFile` with an argument array (not `exec` with a shell string) if a subprocess is genuinely required |
 
 ## Cross-framework: GraphQL-specific hardening
 

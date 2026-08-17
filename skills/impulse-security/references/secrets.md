@@ -10,6 +10,15 @@ pragmatic middle ground, cheapest to most robust:
 | SOPS (age/PGP-encrypted, committed to git) | Best middle ground for this project's scale | Git-native, auditable diffs on secret *changes* (not values), no extra running service to operate |
 | A lightweight self-hosted manager (e.g. Infisical) | Once rotation-on-schedule and an audit trail actually matter | Itself just another Compose service — don't reach for it before the simpler tiers prove insufficient |
 
+At that top tier, the concrete choice is usually Infisical (TypeScript,
+`@casl/ability` authz — `authz.md` — plus KMS/PKI/ACME integrations) vs
+**OpenBao** (`github.com/openbao/openbao`, Go), HashiCorp Vault's fork
+after Vault's 2023 license change to BUSL. Same pattern as Valkey↔Redis:
+once the upstream relicenses away from OSI-approved terms, the fork's
+license itself becomes a selection criterion on par with feature set, not
+an afterthought — evaluate both, don't default to the incumbent's name
+recognition alone.
+
 Pick the tier the project's actual scale justifies — jumping straight to a
 secrets-manager service for a 2-service solo project is the ladder's
 over-engineering direction, same mistake as ABAC-by-default in
@@ -56,3 +65,9 @@ finding exists to catch in review before the commit lands, not after.
    meaning, never real values (`impulse-backend`'s day-one baseline already
    requires `.env.example`; this is the same file, same rule, from the
    security angle).
+4. **`trufflehog` runs in both pre-commit and CI**, not CI alone — cheaper
+   to stop a secret before it enters git history than to rotate it after.
+   Real precedent: Authelia's own CI runs `trufflehog` on every push
+   alongside `grype` for dependency vulnerabilities. Once a secret is
+   committed, treat it as leaked forever regardless of later `git rm` —
+   rotation is the only valid response, not deleting the commit.

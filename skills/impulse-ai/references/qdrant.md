@@ -17,6 +17,14 @@ on a small collection and silently degrades to a full scan as data grows,
 with no error, just increasingly bad latency. Create the index before bulk
 ingestion, not after noticing slow queries.
 
+The `filter` on a search request is applied *during* HNSW graph traversal,
+not as a post-hoc pass over the top-k results — this is what makes "find
+similar among this user's documents" behave correctly at all. Filtering
+client-side after an unfiltered top-k search either starves a selective
+filter (too few results survive) or forces an artificially huge `limit` to
+compensate; always push the condition into the query's `filter`, never
+apply it after the response comes back.
+
 ## HNSW tuning order
 
 Leave defaults (`m: 16`, `ef_construct: 100`) unless a measured recall
@@ -61,6 +69,13 @@ custom in place — decide up front if isolation will ever be needed).
 Data residency (e.g. regional compliance) uses the same custom-sharding
 mechanism, keyed by region instead of tenant.
 
+**v1.19** adds per-tenant IDF statistics for BM25/sparse scoring: without
+it, term rarity is computed against the WHOLE collection's vocabulary,
+which skews relevance for any tenant whose domain vocabulary differs from
+the aggregate (a legal-docs tenant sharing a collection with a
+support-tickets tenant gets scoring tuned to neither). Scope IDF to the
+tenant filter when hybrid/BM25 search is multitenant.
+
 **A payload filter is not your whole security model.** Tenant isolation
 via payload filtering is an application-layer responsibility — the filter
 enforces nothing on its own if application code forgets to apply it.
@@ -72,6 +87,17 @@ indexes) is what actually threatens OOM; OS page cache holding original
 vectors degrades performance under pressure but doesn't crash the
 service. If resident memory exceeds ~80% of total RAM, that's the signal
 to act — not to add nodes reflexively.
+
+**v1.19 (Aug 2026)** replaces the old per-setting memory knobs with one
+unified `memory` parameter that places each component (vectors, index,
+payload) into one of three tiers — `pinned` (always RAM), `cached` (RAM
+when available, disk-backed otherwise), `cold` (disk-first) — reason about
+placement per component instead of juggling `on_disk`/`always_ram` flags
+separately. Same release adds a TurboQuant datatype: compresses vectors to
+4 bits without retaining a full-precision copy, up to 9x storage reduction
+over prior TurboQuant quantization — evaluate before reaching for
+`float16`/`int8` below if the precision loss is tolerable for the recall
+bar in use.
 
 Cheapest-first memory reduction, before reaching for more hardware:
 
@@ -141,6 +167,11 @@ philosophy: these don't break today, they compound silently.
 2. **No TTL/purge job on a growing collection** → stale vectors compete
    with ground truth in retrieval ranking. A documented real case
    accumulated ~6,000 stale records/month with zero cleanup running.
+   Deletion itself is lazy: a delete marks the point, it doesn't reclaim
+   space until segment optimization runs — plan a TTL/purge job as
+   "delete, then wait for optimization to actually free memory," not as an
+   instant reclaim, or capacity planning will be wrong by exactly the size
+   of the not-yet-optimized backlog.
 3. **Soft-deleted points may remain reconstructible inside the HNSW
    graph** — a real compliance/erasure-obligation gap if "deleted" is
    assumed to mean gone; if erasure guarantees matter, verify Qdrant's

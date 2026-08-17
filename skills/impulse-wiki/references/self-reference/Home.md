@@ -1,6 +1,6 @@
 ---
 title: impulse
-description: Anti-overengineering engineering skill suite for Claude Code — Go-first backends, Vue/Nuxt frontends, review/debt/security/devops, and the planning-and-execution layer on top.
+description: Anti-overengineering engineering skill suite for Claude Code — Go/Python/Rust/Node backends, Vue/Nuxt frontends, review/debt/security/devops, and the planning-and-execution layer on top.
 ---
 
 # impulse

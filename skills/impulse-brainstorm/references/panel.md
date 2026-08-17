@@ -30,6 +30,14 @@ operational load; a two-person-team decision weights team-fit over ceiling.
 Three flavors of one idea (Postgres / Postgres+cache / Postgres+read-replica)
 is NOT divergence — that's one approach with tuning knobs.
 
+Generate all three angles before comparing any of them, not one-then-critique-
+then-next. This mirrors brainwriting research: independent parallel generation
+consistently outproduces sequential/discussed generation because the latter
+suffers production blocking (one voice at a time suppresses the others) and
+early anchoring on whichever idea got said first — the same failure mode this
+file's Anti-patterns section calls out below, just from group-dynamics
+literature instead of individual bias.
+
 ### Subagents — one-way doors only
 
 Default is **one context**: generate the three approaches inline. A subagent

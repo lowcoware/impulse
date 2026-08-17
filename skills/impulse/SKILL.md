@@ -33,7 +33,7 @@ Genuine fork -> `AskUserQuestion` with the 2-3 candidates, one line each.
 | Existing/unfamiliar code, refactor without tests, migration | impulse-legacy |
 | Proactive security while writing: JWT, authz/IDOR, rate limit, CORS, secrets | impulse-security |
 | Third-party dependency safety: CVE, supply chain, "safe to install?" | impulse-dependency-audit |
-| Deploy/infra without k8s: Compose, Dockerfile, GH Actions, Traefik/TLS, VPS | impulse-devops |
+| Deploy/infra: Compose (default), k3s past the threshold, Dockerfile, GH Actions, Traefik/TLS, VPS | impulse-devops |
 | Review a diff/PR for slop, baseline, AI-typical bugs | impulse-review |
 | Repo-wide over-engineering cut-list (not a diff) | impulse-shrink |
 | Harvest `impulse:` ceiling markers into a debt ledger | impulse-debt |

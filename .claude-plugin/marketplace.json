@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "impulse",
-  "description": "Anti-overengineering microservice backend (Go-first) + Vue/Nuxt frontend engineering suite. Ladder + day-one baseline for services, register split + AI-tells kill list for UI.",
+  "description": "Anti-overengineering microservice backend (Go/Python/Rust/Node) + Vue/Nuxt frontend engineering suite. Ladder + day-one baseline for services, register split + AI-tells kill list for UI.",
   "owner": {
     "name": "Aki"
   },

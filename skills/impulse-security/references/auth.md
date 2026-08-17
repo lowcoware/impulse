@@ -1,5 +1,121 @@
 # Authentication — JWT and HMAC guest sessions
 
+## Passkey (WebAuthn) as the primary login, not a 2FA add-on
+
+For internal tools where the team controls enrollment, passkey-only login
+(no password at all) removes password brute-force, password phishing, and
+email-based recovery-as-weak-link in one move — the cheapest large
+security win available for internal panels. Reference implementation:
+Pocket ID (`go-webauthn/webauthn` + `go-jose/v4` for the JWKS/signing
+side, Go, certified OIDC), small enough to read end-to-end to see how
+token issuance, the JWKS endpoint, and discovery actually fit together —
+more useful for understanding this file's JWT rules than a generic
+article. Don't build a self-hosted IdP or protocol implementation from
+scratch: `go-webauthn/webauthn` (WebAuthn), `go-oidc`/`go-jose` (OIDC/JWT)
+on the Go side cover it; for a full IdP with SSO in front of
+already-deployed services, see `edge.md`'s `forwardAuth` pattern
+(Authelia/authentik) instead of hand-rolling auth into each service.
+
+### Ceremony flow — four calls, two round trips
+
+`go-webauthn/webauthn` exposes registration and login each as a
+begin/finish pair; the "ceremony" is just: server hands the browser a
+challenge, `navigator.credentials.create()`/`.get()` runs in-browser
+against the authenticator, the signed result comes back for verification.
+
+1. `BeginRegistration(user)` → server-generated random challenge + RP info,
+   sent to the browser as `PublicKeyCredentialCreationOptions`.
+2. Browser calls `navigator.credentials.create(...)`; the authenticator
+   (Touch ID, Windows Hello, security key, phone) signs the challenge and
+   returns an attestation object + the new public key.
+3. `FinishRegistration(user, response)` → verifies the challenge, origin,
+   and (if requested) attestation, then hands back a `webauthn.Credential`
+   to persist.
+4. `BeginLogin(user)` / `FinishLogin(user, response)` mirror the same
+   shape for authentication, verifying the assertion signature against
+   the stored public key and checking the signature counter.
+
+### RP ID — the pitfall that breaks logins silently
+
+RP ID must be the bare effective domain, no scheme, no port:
+`RPID: "example.com"`, `RPOrigins: []string{"https://example.com"}`. A
+credential registered under one RP ID never validates under another — the
+common failure is setting RP ID to `login.example.com` in dev and
+`example.com` in prod, which silently invalidates every credential on
+promotion. RP ID must be a registrable domain suffix of the origin: given
+origin `https://login.example.com`, valid RP IDs are `login.example.com`
+and `example.com`, but not `m.login.example.com` (not a suffix relation)
+and not a public suffix like `com`. Pick the broadest RP ID your topology
+allows (`example.com`, not a subdomain) up front — narrowing it later
+orphans every existing credential.
+
+### Attestation — default to none for internal tools
+
+Attestation conveyance (`none` / `indirect` / `direct` / `enterprise`)
+answers "prove this is a genuine YubiKey/Titan/etc.", not "prove this is
+the right user" — that's what the signature counter and stored public key
+already do. For internal tools where you don't need device-model
+provenance, request `none`: it skips a privacy-prompting browser dialog,
+avoids running an attestation-format-specific verifier (packed, TPM,
+Android SafetyNet/Key, FIDO-U2F, Apple anonymous — one per authenticator
+vendor), and is what `go-webauthn` recommends absent a specific compliance
+need for device attestation.
+
+### Credential storage schema
+
+Persist the `webauthn.Credential` struct go-webauthn hands back on
+registration, not just the public key: credential ID, public key (COSE
+format), attestation type, transport hints (`usb`/`nfc`/`ble`/`internal`/
+`hybrid`), and — critically — the authenticator's signature counter and
+clone-warning flag. Verify and update the signature counter on every
+login: a counter that doesn't increase from the last stored value signals
+a cloned authenticator (cloned secure-element dump) and should hard-fail
+the login, not just warn.
+
+### Discoverable credentials, platform vs roaming, and hybrid/cross-device
+
+- **Discoverable (resident) credentials** let login start with no
+  username field at all — the authenticator itself lists which accounts
+  it holds a credential for. Enable this (`ResidentKey: "required"` or
+  `"preferred"` in the registration options) for a real usernameless flow;
+  without it the browser still needs a username to look up which
+  credential to challenge.
+- **Platform authenticators** (Touch ID, Windows Hello, Android
+  fingerprint) are bound to one device and can't be moved off it.
+  **Roaming authenticators** (USB/NFC/BLE security keys) work across
+  devices by design. Registering only a platform authenticator without a
+  second credential is a lockout risk the moment that device is lost.
+- **Cross-device / hybrid** (the QR-code flow, formerly "caBLE"): a user
+  on a machine with no passkey of their own scans a QR code with a phone
+  that holds one, and the phone authenticates over a Bluetooth-brokered
+  channel. This is negotiated entirely by the browser/OS — nothing
+  server-side to implement — but it's the reason RP ID and origin
+  validation must be exactly right; a mismatched RP ID breaks the hybrid
+  flow with an opaque browser-side failure, not a server error to debug
+  against.
+
+### Fallback and recovery — passkey-only still needs an escape hatch
+
+Passkey-only removes passwords, not the "I lost every enrolled device"
+case. Standard shape: require **at least two** enrolled credentials
+(covers "lost my laptop" without covering "lost everything"), plus a set
+of one-time recovery codes generated at enrollment, shown once, stored
+hashed server-side exactly like a password would be. Recovery-code
+redemption should re-trigger credential enrollment before the session is
+treated as fully trusted, not silently restore full access on a stale
+device fingerprint.
+
+## OIDC login must bind to an existing account only on verified email
+
+A third-party OIDC login (Google/GitHub/etc.) that auto-links to an
+existing account by email match, without confirming that email is
+verified on both sides, lets an attacker register the victim's email with
+an arbitrary IdP and take over the existing account — no password guess
+needed. Real case: Kaneo shipped exactly this account-takeover shape.
+Rule: OIDC-to-existing-account linking requires a confirmed/verified
+email on the incoming assertion, checked explicitly, not inferred from
+"the IdP returned an email field."
+
 ## JWT access/refresh architecture
 
 1. **Refresh token rotation is baseline, not a hardening option** (RFC
@@ -37,7 +153,17 @@ token:**
 | Python (PyJWT) | `jwt.decode(token, key)` | `jwt.decode(token, key, algorithms=["RS256"])` — the allowlist is mandatory, not optional |
 
 Real-world confirmed instances of this exact bug class: CVE-2024-54150
-(cjwt), CVE-2015-9235 (jsonwebtoken). Not a theoretical attack.
+(cjwt), CVE-2015-9235 (jsonwebtoken). Not a theoretical attack. Newest
+addition to the pattern: **CVE-2026-29000** (pac4j-jwt, CVSS 10.0) — the
+`JwtAuthenticator` fails to validate the cryptographic signature on
+encrypted (JWE) tokens, letting an attacker forge admin tokens from
+nothing but the server's own RSA *public* key, the same public-key-as-
+trust-anchor confusion as the RS256→HS256 case above, just on the
+encryption path instead of the signing path. Fixed in 4.5.9+/5.7.9+/6.3.3+.
+A second, distinct library bug in the same 2026 window: **CVE-2026-32597**
+(PyJWT < 2.12.0) — the library doesn't enforce RFC 7515 §4.1.11's `crit`
+header requirement, so a token declaring critical extensions PyJWT doesn't
+understand gets accepted instead of rejected. Pin PyJWT ≥2.12.0.
 
 ## Claims validation — signature-valid ≠ valid for this request
 

@@ -32,9 +32,18 @@ Stop at the first that holds:
 4. **Full native (SwiftUI/Kotlin)** only when most of the app is that one
    feature.
 
+Not a rung, a separate axis: once the same **nontrivial** logic must run
+identically on 3+ platforms (mobile + desktop + web/CLI), put it in a shared
+Rust core and give each platform a thin UI layer instead of N reimplementations
+— bindings via `flutter_rust_bridge` (Dart), `uniffi` (Swift/Kotlin), `napi`
+(Electron/Node), `wasm-pack` (web). Crypto is almost always over this
+threshold — divergent implementations cost user data, not just dev time.
+Below the threshold (2 platforms, or logic that's genuinely simple), separate
+codebases are fine — don't reach for a Rust core to serve one extra platform.
+
 ## Day-one mobile baseline — never skipped
 
-IDs `MO-BL01`–`MO-BL06` in listed order; [`shared/rule-spine.md`](../../shared/rule-spine.md) maps each to the impulse-review tag that catches it.
+IDs `MO-BL01`–`MO-BL08` in listed order; [`shared/rule-spine.md`](../../shared/rule-spine.md) maps each to the impulse-review tag that catches it.
 
 - Crash reporting wired (Sentry/Crashlytics) from build #1
 - Release signing + auto-incremented build number in CI (never by hand)
@@ -43,12 +52,19 @@ IDs `MO-BL01`–`MO-BL06` in listed order; [`shared/rule-spine.md`](../../shared
   opened has a paired teardown — the #1 mobile leak (`hardening-mobile.md`)
 - Phased rollout (1%→5%→20%→50%→100%) with a crash-rate halt threshold
 - No secret in the app binary (see cross-cutting.md — it's public)
+- **Feature flags wired from release #1** — a mobile rollout can't be
+  redeployed away: a user already on a broken build stays broken until the
+  next release clears store review. A flag is the only kill-switch that
+  reaches them (GrowthBook is a common choice).
+- **Toolchain version pinned in-repo** — fvm + `.fvmrc` for Flutter. One
+  line, and it removes the entire "builds on my machine, not in CI" class of
+  drift.
 
 ## References — load on demand
 
 | File | Covers | Load when |
 |---|---|---|
-| references/flutter.md | state-mgmt choice, rebuild perf, BuildContext-async-gap, go_router, platform channels, isolates, dispose | any Flutter work |
+| references/flutter.md | state-mgmt choice, rebuild perf, BuildContext-async-gap, auto_route/go_router, pigeon platform channels, isolates, dispose, fvm, localization codegen | any Flutter work |
 | references/react-native.md | New Arch/Expo choice, FlatList perf, Expo Router, state, bridge/listener leaks | any React Native work |
 | references/native.md | native-vs-cross-platform decision, SwiftUI @Observable state, Kotlin coroutines/Compose, dropping to native | native code or a platform channel |
 | references/cross-cutting.md | secrets-in-binary, deep linking, WebView security, offline-first sync, push, release discipline | any app (all platforms) |

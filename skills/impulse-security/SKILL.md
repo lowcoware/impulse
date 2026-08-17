@@ -61,7 +61,7 @@ Both are diff-visible, so both carry a impulse-review tag via
 | references/authz.md | RBAC vs ABAC, IDOR — the code-level tell, Peloton/T-Mobile case studies | any resource lookup by user-supplied ID |
 | references/secrets.md | small-team secrets tiers (.env → Compose secrets → SOPS → lightweight manager), rotation reality check | choosing/reviewing secrets storage |
 | references/rate-limit.md | layered rate limiting, sliding window, the endpoints teams forget, GraphQL batching bypass | any new unauthenticated endpoint |
-| references/edge.md | Traefik rate-limit/CORS/headers config, TLS/cert management, realistic DDoS ceiling, webhook signature verification, real Traefik CVEs | edge/infra config changes |
+| references/edge.md | Traefik rate-limit/CORS/headers config, TLS/cert management, realistic DDoS ceiling, webhook signature verification, real Traefik CVEs, Coraza/OWASP-CRS WAF (Caddy/HAProxy/proxy-wasm plugin shapes, detection-mode-first rollout) | edge/infra config changes |
 | [../../shared/rule-spine.md](../../shared/rule-spine.md) | builder↔review crosswalk — `SE-M1`/`SE-M2` and the `bug:` tag that reports them | asking which review tag catches a security mistake, or adding a third one |
 | references/privacy.md | PII log-redaction (zap/structlog), PII-in-Kafka (reference-by-ID, crypto-shredding), schema minimization, right-to-delete, retention-as-code, 152-ФЗ localization, prod-dump masking | logging user data, PII in events/schema, deletion requests, staging data |
 

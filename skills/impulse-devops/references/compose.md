@@ -23,10 +23,25 @@
    race where the app connects to Postgres before it accepts connections.
    Set `start_period` on slow-booting services or `retries` exhausts during
    normal cold start and Compose marks it permanently unhealthy.
-5. Named volumes + named networks declared explicitly, never anonymous —
+5. **`develop.watch` (GA since Compose v2.22) is a dev-loop convenience —
+   sync/rebuild/restart on local file change — never something to carry
+   into `docker-compose.prod.yml`.** It belongs in the base/dev file only;
+   a `watch:` block merged into a prod overlay via `-f` either does
+   nothing (no `compose watch` process running) or, worse, becomes a live
+   hook if someone runs `docker compose watch` against a prod context by
+   habit. Keep it out of any file `-f`'d into a prod command.
+6. Named volumes + named networks declared explicitly, never anonymous —
    anonymous volumes survive `docker compose down` and orphan silently
    (`decay.md`). Connect the observability overlay via a shared
    `external: true` network so neither stack owns the other's lifecycle.
+7. **Pin `image:` by digest in the compose file itself, not just in
+   Dockerfiles you own.** `postgres:16-alpine@sha256:...` — third-party
+   images (Postgres, Valkey/Redis, the exact base you didn't build) move
+   under a moving tag exactly like a `FROM` line does; the pin belongs
+   wherever the tag is written, including pulled-not-built services.
+   Immich pins this way in its own `docker-compose.yml`, Postgres and
+   Valkey included — reproducible deploy for the cost of one string per
+   service.
 
 ```yaml
 # docker-compose.prod.yml

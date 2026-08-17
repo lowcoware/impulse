@@ -53,8 +53,8 @@ The v1 manifest uses fixed canonical file names:
 
 At runtime, manifest metadata takes precedence over the legacy Markdown H1 and
 `> Category:` conventions. Those Markdown conventions remain readable fallback
-metadata for legacy packages. The exact precedence and authoring rules live in
-[`docs/design-systems.md`](../docs/design-systems.md).
+metadata for legacy packages. The exact precedence and authoring rules follow
+the manifest/schema contracts in `_schema/`.
 
 The catalog is scanned on every `/api/design-systems` request. After changing a
 package, refresh the Design System surface; a daemon restart is not required.
@@ -112,8 +112,8 @@ For new repository content:
    fonts, or source evidence.
 6. Run `pnpm guard` and `pnpm typecheck`.
 
-The complete authoring guide and review checklist are in
-[`docs/design-systems.md`](../docs/design-systems.md).
+The complete authoring guide and review checklist are the steps above plus
+the contracts in [`_schema/AGENTS.md`](_schema/AGENTS.md).
 
 ## Importing and refreshing
 

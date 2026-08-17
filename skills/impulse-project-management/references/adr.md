@@ -153,6 +153,11 @@ needs to know whether the old ADR still applies at all:
 - **Amend** — a partial revision; the old ADR stays live for everything
   it didn't change. Cite the amendment in the old ADR's Links, don't mark
   it superseded (that would wrongly suggest the whole thing is void).
+  ADRs are append-only, never edited in place: date-stamp the amendment,
+  keep the prior content intact, and add a note explaining why the update
+  was needed — the same discipline as a git commit message, not a silent
+  rewrite of the original text.
+  [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record)
 - **Exception** — a conscious, bounded carve-out from a general rule for
   one specific case; the general rule stays fully live everywhere else.
   Never marked superseded — an exception ADR that gets filed as a

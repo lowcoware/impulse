@@ -1,4 +1,4 @@
-# Layout — Go / FastAPI
+# Layout — Go / FastAPI / Fastify / Axum
 
 One structure per service. Flat, idiomatic, zero architecture ceremony. Split by responsibility, never by line count.
 
@@ -84,6 +84,35 @@ embedder/
 2. pydantic v2 validates at the trust boundary. No hand-rolled dict checks past the router.
 3. No Clean-Arch onion, no `domain/entities/value_objects` tree, no repository ABC hierarchy.
 
+## Node.js: Fastify
+
+Where TypeScript earns it over Go/Python: a thin BFF/gateway in front of
+other services, real-time-heavy edges (`realtime.md`), or a team that
+already lives in TS end-to-end with `impulse-frontend`.
+
+```
+orders/
+  src/
+    app.ts                # app factory: register plugins, schemas, hooks — no listen() here
+    server.ts              # composition root: build app, fastify.listen, graceful shutdown
+    plugins/                # fastify-plugin-wrapped decorators: db pool, config, auth
+    routes/                 # one plugin per resource: schema + handler, calls service
+    services/               # business logic; owns domain errors
+    repositories/            # Postgres/Redis access via Drizzle/Kysely; SQL lives here only
+    schemas/                 # TypeBox/Zod request/response + env schemas
+  migrations/              # versioned, from migration #1 (drizzle-kit / node-pg-migrate)
+  contracts/                # proto / OpenAPI / AsyncAPI this service owns
+  Dockerfile                # multi-stage, non-root, build → slim runtime
+  .env.example
+  tsconfig.json             # strict: true, noUncheckedIndexedAccess
+```
+
+1. `app.ts`/`server.ts` split exists so tests can `build()` the app without binding a port (Fastify's own recommended pattern).
+2. Routes hold zero business logic: decode (schema does this for free), call service, translate errors.
+3. Schemas validate at the trust boundary AND double as the TypeScript source of truth (TypeBox/Zod) — never a hand-written `interface` for a request/response shape (`hardening-node.md`).
+4. No Clean-Arch onion, no `domain/entities/value-objects` tree, no repository interface hierarchy for a single implementation.
+5. Plugin encapsulation is the module boundary — a plugin exports one `FastifyPluginAsync`, decorates only what siblings genuinely need (`hardening-node.md`).
+
 ## Python: Telegram bot (aiogram v3)
 
 A Telegram bot is its own microservice. Python async, aiogram v3. Thin adapter only — zero business logic.
@@ -104,6 +133,38 @@ support-bot/
 2. All business logic lives in the service the bot calls over gRPC — the bot is the transport, not the brain.
 3. Day-one baseline applies (see baseline.md), plus: graceful shutdown drains polling/webhook in flight before exit; every gRPC call gets a timeout (baseline rule, no exemption for bots).
 
+## Rust: Axum (the language-choice ladder's rung 3)
+
+Only when the language-choice ladder in `deps.md` actually lands on Rust
+(measured hot path, algorithmic gap, or shared cross-platform core) —
+almost never a whole service from scratch.
+
+```
+orders/
+  src/
+    main.rs               # composition root: load+validate config, wire by hand, graceful shutdown
+    handler/               # Axum handlers/routers: decode, validate input, call service, map errors to HTTP
+    service/                # business logic; owns domain errors (thiserror)
+    repo/                    # sqlx access; SQL lives here only, compile-time checked
+    error.rs                  # domain error enum + IntoResponse impl (the HTTP-mapping seam)
+  migrations/                 # versioned, from migration #1 (sqlx-cli)
+  contracts/                  # OpenAPI (utoipa-generated) this service owns
+  Dockerfile                  # multi-stage: cargo build --release → slim runtime, non-root
+  .env.example
+```
+
+1. Everything private by module default (`hardening-rust.md` §28) — export
+   nothing but the contract. Other services consume contracts, never crates.
+2. When handler/service/repo stops fitting, grow by domain noun
+   (`src/billing/`), not by adding layers — same rule as Go's `internal/`.
+3. Zero `ports/`, `adapters/`, `usecases/`, trait-per-struct DI hierarchies.
+   A trait exists only where axum/sqlx's own API asks for one (extractors,
+   `FromRow`) or a second real implementation exists — same "one impl, no
+   interface" rule as Go's Interfaces table below.
+4. One `main.rs` per binary. Wiring by hand — no DI framework/container.
+5. No `utils.rs`/`common.rs`/`helpers.rs` dumping ground; name the module
+   for the responsibility it owns.
+
 ## Error-handling ladder
 
 | Layer | Owns | Action |
@@ -111,6 +172,8 @@ support-bot/
 | repo / clients | infra errors (pgx, redis, kafka, HTTP) | wrap with operation context: `fmt.Errorf("fetch order %s: %w", id, err)`; never return raw driver errors |
 | service | domain errors (`ErrOrderNotFound`, `ErrCurrencyMismatch`) | translate nameable infra errors to domain (`pgx.ErrNoRows` → `ErrOrderNotFound`); pass unknown infra errors up wrapped |
 | handler | HTTP mapping | domain error → real code; unmapped → 500 + log with stack |
+| Rust repo/service | domain errors via `thiserror` enum (`sqlx::Error::RowNotFound` → `OrderError::NotFound`) | never let `sqlx::Error`/`reqwest::Error` cross into the handler layer unmapped |
+| Rust handler | HTTP mapping | `impl IntoResponse for OrderError` at the crate's `error.rs` seam — one match arm per domain variant, same class table below; unmapped falls through to 500 (`hardening-rust.md` §5-7) |
 
 | Domain error class | HTTP |
 |---|---|
@@ -122,7 +185,7 @@ support-bot/
 
 1. Swallowing banned: `_ = err`, `except Exception: pass`, empty catch = BLOCK. Deliberate ignore = one-line comment naming why.
 2. `200` with an error body — banned. `500` for every failure — banned.
-3. Log each error once, at the boundary, structured (zap) with `correlation_id` + entity IDs. No log-and-rethrow at every layer.
+3. Log each error once, at the boundary, structured (zap / pino) with `correlation_id` + entity IDs. No log-and-rethrow at every layer.
 4. Timeout, cancellation: propagate `ctx` to the lowest call; a network call without a timeout is a bug (see baseline.md).
 
 ## Naming

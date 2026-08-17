@@ -32,6 +32,27 @@ Package: `d3` (tree-shakeable — import only the modules used: `d3-scale`,
 `d3-shape`, `d3-force`, etc., not the `d3` umbrella package for anything
 beyond a prototype).
 
+**Maps.** MapLibre GL, not Google Maps/Mapbox GL (Mapbox went proprietary
+license in 2021) — self-hosted vector tiles via `pmtiles` (single static
+file) beat a hosted provider: no API key in the bundle, no per-view billing.
+
+**Video.** `hls.js` for adaptive streaming playback + `media-chrome` (web
+components) for the controls chrome, over a hand-rolled `<video>` control
+bar or a heavier player framework.
+
+**Component showcase.** Storybook as its own app once a design system
+outlives one project (Formbricks runs it as a separate app in the
+monorepo) — don't stand it up for a single-project component set that has
+no second consumer yet.
+
+**Copy vs. package.** shadcn-vue's copy-into-`components/ui/` model (§1
+below) is right for one product. Once a design system serves 2+ products,
+switch it to a versioned package published from its own repo (Immich's
+`@immich/ui`) — copies drift between consumers past that point. A shared
+package inside one monorepo with consumers on one release train (`@plane/ui`
+pattern) is the middle ground; a separate repo is only worth it once release
+cadences actually diverge.
+
 ### 0a. Design-system honesty
 
 Brief reads as a KNOWN official design system → use the official package,
@@ -133,6 +154,15 @@ Full pass in hardcore. In blitz/medium, spot-check 3: RTL, empty state, one API 
 | concurrent actions | submit clicked 10x fast = one request |
 | untrusted input reaching CSS | zero: a user-controlled string interpolated into `style="..."`, a dynamic class name built from user data, or a value written into a CSS custom property from unsanitized input. Style values from data (a brand color, a user-set accent) go through an allowlist/validation, not straight interpolation |
 
+Layout-math ceiling: if virtualization + memoization on a large grid still
+bottlenecks on the recalculation itself (thousands of items, recompute on
+every resize), the next rung is a WASM module for the layout math, not more
+JS tuning — Immich moved its justified-photo-grid layout into
+`@immich/justified-layout-wasm` once profiling pointed at the computation,
+not the render. Mark it `// impulse: JS layout math, upgrade to WASM if
+profiling shows compute-bound past virtualization` — a default, not a
+starting point.
+
 ## 6. A11y numbers
 
 Ratios below are WCAG 2.x math — the enforceable/legal standard, still the
@@ -176,6 +206,18 @@ standing.
 3. `provide`/`inject` for state a deep, unknown-depth subtree needs (theme, form context) — never as a props-drilling shortcut for 1-2 levels. Cost: consumers become untestable without a wrapping provider in every test — budget that before choosing it over Pinia (`pinia.md`).
 4. `v-model` via `defineModel()` (3.4+), not manual `modelValue` prop + `update:modelValue` emit boilerplate.
 5. Composable-extraction criteria and the lifecycle-sync rule live in `composables.md` — a component that's grown three unrelated concerns is usually three composables, not one bigger component.
+6. Vue 3.5+: destructured `defineProps()` bindings are reactive by default
+   (compiler rewrites access to `props.x`) — write `const { count = 0 } =
+   defineProps<{ count?: number }>()` for a default instead of the old
+   `withDefaults()` boilerplate; only wrap a destructured prop in `toRef()`
+   when passing it across a function boundary (composable, watch source)
+   that needs the ref itself, not the auto-tracked value.
+7. Template refs: `useTemplateRef('name')` (3.5+) over a bare `ref(null)` +
+   matching `ref="name"` in the template — works inside composables (a bare
+   `ref` declared outside `setup()`'s template-linked scope never binds),
+   and `@vue/language-tools` type-checks it against the template's `ref=`
+   usage.
+   [Vue 3.5 announcement](https://blog.vuejs.org/posts/vue-3-5)
 
 ## 8a. Filter interactions
 

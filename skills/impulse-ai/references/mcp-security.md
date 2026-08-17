@@ -60,6 +60,30 @@ only mechanism that's shown to actually work.
 [Practical DevSecOps: MCP security statistics 2026](https://www.practical-devsecops.com/mcp-security-statistics-2026-report/) ·
 [Zylos: indirect prompt injection defenses, 2026 state of the art](https://zylos.ai/research/2026-04-12-indirect-prompt-injection-defenses-agents-untrusted-content/)
 
+## Outbound tool calls and generated-code execution — separate services, not shared process
+
+Trust boundary 3 above ("server ↔ downstream") has a concrete architectural
+answer, not just a policy one. Dify splits this into dedicated services
+rather than trusting in-process checks: an `ssrf_proxy` that all tool
+outbound HTTP goes through — internal network ranges and cloud metadata
+endpoints (`169.254.169.254` and friends) are unreachable from it by
+construction — and a separate sandbox service for any model-generated code
+execution, not the application process. The reasoning for the second one:
+once a tool call's output is code the model wrote, static review of that
+code buys little — isolation is the only validation that actually holds,
+same as `mcp-server.md`'s Tool Execution Error rule is the only thing that
+lets a model self-correct instead of failing hard. Treat "tools issue raw
+outbound requests from app code" and "generated code runs in the app
+process" as the same class of finding as a missing readonly DB grant on
+the SQL tool above — a check in application code is defense-in-depth, the
+actual guarantee is a separate service the compromised call can't escape.
+
+Irreversible actions (delete, payment, external send) reached through a
+tool call need the same human-confirmation gate any autonomous system
+needs before a destructive action — `destructiveHint` (`mcp-server.md`) is
+metadata a client MAY act on, not an enforced confirmation step; don't
+treat declaring the annotation as equivalent to actually gating the call.
+
 ## Named CVEs — concrete, not hypothetical
 
 - **CVE-2025-6514** (mcp-remote, CVSS 9.6) — arbitrary OS command
@@ -92,6 +116,11 @@ be accepted by server B), RFC 9728 Protected Resource Metadata, RFC 9207
 issuer validation. Tokens never go in query strings. This directly
 prevents the confused-deputy pattern where a proxy/gateway MCP server acts
 with broader privilege than the individual requesting client actually has.
+As of spec 2026-07-28 (`mcp-server.md`), Dynamic Client Registration is
+superseded by Client ID Metadata Documents (CIMD) — client credentials
+bind to their issuing authorization server, closing the gap where a
+dynamically-registered client could be replayed against an unrelated
+server.
 
 ## Cost/loop-runaway guardrails
 

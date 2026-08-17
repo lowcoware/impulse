@@ -74,15 +74,15 @@ addendum (RAG-subagent citation discipline, MCP-tool-scoped subagents).
 
 | File | Covers | Load when |
 |---|---|---|
-| references/rag.md | chunking, retrieval eval, contextual retrieval, embedding versioning/caching, code-level AI bugs (normalization, blocking calls, rate-limit backoff) | building or reviewing a RAG pipeline |
+| references/rag.md | chunking, retrieval eval (promptfoo/Ragas), contextual retrieval, embedding versioning/caching, ONNX Runtime for classification/OCR/embedding tasks that don't need an LLM, code-level AI bugs (normalization, blocking calls, rate-limit backoff) | building or reviewing a RAG pipeline |
 | references/qdrant.md | collection design, multitenancy, payload indexing, HNSW tuning order, memory/quantization, embedding-model migration, snapshots, decay patterns | any Qdrant-touching diff |
 | references/pgvector.md | vector search inside Postgres (halfvec, HNSW config, filtered-search strategy, binary quantization) — the pre-Qdrant ladder rung | corpus small enough a dedicated vector DB isn't earned yet, or the project already runs Postgres |
-| references/llm-gateway.md | provider fallback/circuit-breaker, prompt-injection isolation, output validation, OpenAI-compat-shim caveat | building the Claude/OpenAI-compatible gateway |
+| references/llm-gateway.md | provider fallback/circuit-breaker, when self-hosting via vLLM earns its place, prompt-injection isolation, output validation, price/context-window table as a repo file (LiteLLM reference schema), OpenAI-compat-shim caveat | building the Claude/OpenAI-compatible gateway |
 | references/mcp-server.md | tool design, granularity, naming, error classification, context budget, response-shape/pagination conventions, spec version history | building an MCP server or tool |
-| references/mcp-security.md | trust boundaries, tool poisoning, OAuth 2.1, real CVEs, cost/loop-runaway guardrails | any MCP server (tool poisoning applies even to stdio/localhost), any exposed server, any agentic loop with spend risk |
+| references/mcp-security.md | trust boundaries, egress-proxy + code-sandbox as separate services, tool poisoning, OAuth 2.1, real CVEs, cost/loop-runaway guardrails | any MCP server (tool poisoning applies even to stdio/localhost), any exposed server, any agentic loop with spend risk |
 | references/subagents.md | AI-infra addendum only (RAG citation discipline, MCP-scoped subagents) — general policy is `../../shared/subagents.md` | designing a RAG/MCP-facing subagent specifically |
 | references/speech.md | STT streaming-vs-batch, Vosk-vs-Whisper, VAD, sample-rate silent bug, self-host sizing, ElevenLabs TTS cache-by-hash | any STT/TTS/voice feature |
-| references/prompts.md | prompt versioning, user-facing prompt injection (Air Canada/Chevy/DPD), never-let-output-authorize, LLM output eval | managing prompts or evaluating LLM output |
+| references/prompts.md | prompt versioning (promptfoo for regression, when Langfuse's 4-datastore footprint is/isn't earned), user-facing prompt injection (Air Canada/Chevy/DPD), never-let-output-authorize, LLM output eval | managing prompts or evaluating LLM output |
 | [../../shared/context7.md](../../shared/context7.md) | Qdrant client/MCP spec/LLM SDK API syntax before writing against it — spec and client versions move fast | building against Qdrant, an MCP SDK, or a provider SDK |
 
 ## Boundaries

@@ -43,7 +43,13 @@ it's impulse-frontend's job, not this skill's.
    pinned+SRI CDN scripts, and only when the user actually wants
    export-outside-the-chat — never bring in a CDN dependency for anything
    else (charting libraries included: hand-build the SVG per this skill's
-   own techniques rather than reaching for D3/Chart.js/etc.).
+   own techniques rather than reaching for D3/Chart.js/etc.). A
+   ` ```mermaid ` fence (or `<pre class="mermaid">` in HTML) is not a CDN
+   dependency — Artifacts renders it natively, no script tag involved —
+   but reach for it only on a simple static structural diagram; the
+   diagram genre's pan/zoom, clickable nodes, and animated request paths
+   (`pan-zoom.md`, `animated-connectors.md`) need hand-built SVG, which
+   mermaid's output can't give you.
 
 ## What this is not
 

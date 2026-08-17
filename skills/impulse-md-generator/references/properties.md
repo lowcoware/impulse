@@ -32,6 +32,20 @@ due: 2026-02-01T14:30:00
 | List | `tags: [one, two]` or a YAML block list |
 | Link | `related: "[[Other Note]]"` — quote it, `[[` unquoted breaks YAML |
 
+Any value containing a colon also needs quotes (`title: "ADR-014: event flow"`,
+not `title: ADR-014: event flow`) — an unquoted colon mid-value breaks YAML
+parsing the same way an unquoted `[[` does.
+
+A property's type is set vault-wide the first time that property name is
+used — reusing a name with a different shape later (e.g. `status` as text in
+one note, a list in another) doesn't create two types, it corrupts the one
+type Obsidian already inferred. Keep the shape consistent with the
+vocabulary table below, not just the name.
+
+List pitfall: `tags: one, two` is NOT a list — it's a single text value
+containing a comma. Use `tags: [one, two]` (flow list) or the YAML block-list
+form actually shown above.
+
 ## Default (Obsidian-recognized) properties
 
 - `tags` — searchable, shown in the tag pane and graph view.

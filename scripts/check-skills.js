@@ -160,6 +160,12 @@ const BARE_MD_ALLOWLIST = [
   'module-impulse-goal.md', 'module-impulse-wiki.md',
   'ADR-014-event-driven-communication.md', // impulse-md-generator/style.md — good-name example
   'ADR-014-the-decision-to-adopt-an-event-driven-architecture-for-services.md', // same, bad-name contrast
+  // impulse-backend/references/testing.md lineage citations — link-text labels
+  // for TheCodePace/fastify-skills' own rule files, not suite files
+  'unit-testing.md', 'test-containers.md',
+  // impulse-devops/references/k3s.md lineage citation — learnk8s/kubernetes-production-best-practices'
+  // own checklist filenames (`02-your-manifests.md` / `03-your-security.md`), not suite files
+  'your-manifests.md', 'your-security.md',
 ];
 const bareAllowed = new Set(BARE_MD_ALLOWLIST);
 

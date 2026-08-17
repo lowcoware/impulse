@@ -37,7 +37,11 @@ useAsyncData are themselves composables and share the lifecycle-sync rule.
 | Client-only, event-driven (submit, click, search-as-you-type) | raw `$fetch` |
 
 1. Always pass an explicit `key` — the auto file+line key breaks when the
-   composable runs in a loop or dynamically.
+   composable runs in a loop or dynamically. Nuxt 4: two calls sharing a
+   key now share the SAME `data`/`error`/`status` refs (a singleton per
+   key, not per call site) — mismatched `deep`/`transform`/`pick`/`default`
+   across calls using that key logs a dev warning; keep those options
+   identical wherever a key is reused.
 2. `pick`/`transform` to shrink the SSR payload (both still fetch the full
    response server-side; they trim what's serialized to the client).
 3. `lazy: true` + own pending guard for non-blocking navigation;
@@ -46,7 +50,26 @@ useAsyncData are themselves composables and share the lifecycle-sync rule.
    (`ai-bug-patterns-fe.md`). Wire `status` into the 4-branch
    pending/error/empty/data chain from `components.md` §3 — same pattern,
    nothing new to relearn.
+5. Nuxt 4: the returned `data` is a `shallowRef`, not a deep `ref` — a
+   mutation to a nested property (`data.value.items.push(x)`) no longer
+   triggers a re-render; reassign `data.value = ...` (the SSR-safe pattern
+   anyway) or pass `deep: true` on that call when nested-property mutation
+   is genuinely needed.
+
+## API client: generated, never hand-rolled
+
+A hand-written fetch wrapper mirroring the backend's response shape drifts
+from the server within roughly two sprints — someone changes a field on one
+side and forgets the other (Immich's stack doc, `Fullstack — стек`). Generate
+the client from the OpenAPI schema the server already emits (`oazapfts`,
+`openapi-typescript` + `openapi-fetch`, or Orval) into a checked-in
+`sdk`/`client` package; call sites import typed functions, never build request
+shapes by hand. Regenerate on schema change as a build/CI step, not manually
+when someone remembers. Wrap generated calls in `useFetch`/`useAsyncData` per
+the table above — generation replaces the request layer, not the Nuxt data
+layer.
 
 Sources: [Vue composables (sync-call rule)](https://vuejs.org/guide/reusability/composables) ·
 [Nuxt useAsyncData](https://nuxt.com/docs/4.x/api/composables/use-async-data) ·
+[Nuxt 4 upgrade guide (shared singleton data, shallowRef)](https://nuxt.com/docs/4.x/getting-started/upgrade) ·
 [VueUse composables style guide](https://alexop.dev/posts/vueuse_composables_style_guide/)

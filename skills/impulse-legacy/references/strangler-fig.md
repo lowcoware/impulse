@@ -42,6 +42,32 @@ facade are both deleted. Track deletion as its own explicit task from the
 start, with its own acceptance criterion, not an implied follow-up nobody
 owns.
 
+## Transitional architecture is deliberate, not waste
+
+Fowler's own framing (martinfowler.com, the pattern's canonical source):
+teams routinely balk at building "transitional architecture — code that
+will go away once the modernization is complete" because it reads as
+throwaway effort. It isn't. The alternative is a big-bang cutover, and the
+whole point of strangling is trading a chunk of temporary-code cost for
+earlier delivered value and lower risk at every step along the way. Budget
+and plan for the facade/dual-write code as its own line item, not as
+scope creep on top of "the real work" — and don't apologize for its
+existence when it's later deleted; deleting it is the plan working, not
+rework.
+
+## Decompose by seam, not by file
+
+Fowler names four activities the pattern actually requires, beyond "route
+gradually": understand the outcome the migration is FOR (not just "modernize"
+as a goal in itself), decompose the system into replaceable pieces along
+real seams (see `characterization.md`'s seam taxonomy — the same concept,
+applied at module/service scale here), deliver pieces incrementally to
+capture value early, and expect the organization's own structure/process to
+need to shift alongside the code (Conway's Law cuts both ways — a system
+split along seams that don't match team ownership fights itself the same way
+`ai-bug-patterns-be.md`'s "networked monolith" does).
+[martinfowler.com: StranglerFigApplication](https://martinfowler.com/bliki/StranglerFigApplication.html)
+
 ## When to reach for it vs. a smaller change
 
 Strangler Fig is for module/service-scale migrations — replacing a whole
@@ -69,6 +95,23 @@ freezing or replacing the original outright — the rewrite earned its
 users gradually, the same underlying logic as Strangler Fig's
 coexist-don't-cut-over principle, just applied at product scale instead of
 route scale.
+
+## The routing-toggle mechanism needs a named tool, not just "a flag"
+
+"Route gradually" above implies old-path/new-path-per-request routing,
+percentage rollout, and a kill-switch on regression — that's a feature-flag
+system, not something to hand-roll with an env var and a redeploy (a
+redeploy-to-toggle defeats the whole point: instant rollback is the
+strangler pattern's main safety property). Concrete pick for this project's
+self-hosted-first, Compose-deployable stack (`impulse-backend/references/deps.md`):
+**Unleash** (github.com/Unleash/unleash) — open-source, backed by Postgres
+(already a first-class dependency here), ships an official Docker Compose
+setup (Unleash/unleash-docker), and covers per-user/per-tenant targeting,
+percentage rollout, and instant kill-switch toggling natively. If
+provider lock-in is a concern, put OpenFeature (CNCF incubating spec,
+openfeature.dev) behind the call site instead of calling Unleash's SDK
+directly — same trade as any other vendor-neutral abstraction: one extra
+layer now buys a swap-later option.
 
 ## Practical checklist for this project's stack
 

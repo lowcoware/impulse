@@ -1,9 +1,24 @@
 # MCP server and tool design
 
-Current spec: 2025-11-25 (stable). A 2026-07-28 release candidate exists
-(statelessness via removing the init handshake, an Extensions framework,
-deprecating Roots/Sampling/Logging on a 12-month removal window) — not
-final, don't build against it yet.
+Current spec: **2026-07-28 (stable, officially released — supersedes
+2025-11-25)**. It removes the `initialize`/`initialized` handshake and
+session IDs entirely: MCP is now request/response stateless, each request
+carries protocol version/identity/capabilities independently, which is
+what makes plain load-balancing across server instances finally work with
+no shared session state. Roots, Sampling, Logging, and the legacy HTTP+SSE
+transport are deprecated (12-month minimum offramp, still functional).
+New: an Extensions framework holding Tasks, MCP Apps, and Enterprise
+Managed Authorization as first-class-but-optional additions; Multi
+Round-Trip Requests (MRTR) replace server-initiated requests/open streams
+for mid-call confirmations. Auth hardening: RFC 9207 issuer validation is
+now required, and Dynamic Client Registration is superseded by Client ID
+Metadata Documents (CIMD) — client credentials bind to their issuing
+authorization server. All four Tier-1 SDKs (TypeScript, Python, Go, C#)
+support it at launch. Migrating an existing server: audit for
+session-dependent logic (now dead weight), any Roots/Sampling/Logging
+usage (still works, but on notice), and DCR-based auth flows (move to
+CIMD).
+[MCP blog: the 2026-07-28 specification](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 
 ## Tool granularity — a real tradeoff, not a fixed rule
 
@@ -137,7 +152,11 @@ was authorized for).
   client MUST treat these as untrusted unless the server itself is
   trusted); elicitation; resource links; OAuth Resource Server
   classification + RFC 8707 Resource Indicators (see `mcp-security.md`).
-- **2025-11-25** (current stable) — SEP-986 tool-name format, icons
-  metadata, incremental OAuth scope consent, tool-calling in sampling,
-  OAuth Client ID Metadata Documents, experimental Tasks, JSON Schema
-  2020-12 as default dialect, SEP-1303 error classification above.
+- **2025-11-25** — SEP-986 tool-name format, icons metadata, incremental
+  OAuth scope consent, tool-calling in sampling, OAuth Client ID Metadata
+  Documents, experimental Tasks, JSON Schema 2020-12 as default dialect,
+  SEP-1303 error classification above.
+- **2026-07-28** (current stable) — stateless core (no init handshake, no
+  session IDs), Extensions framework (Tasks/MCP Apps/EMA), MRTR, CIMD-based
+  auth, RFC 9207 issuer validation required, Roots/Sampling/Logging +
+  HTTP+SSE deprecated. See top of this file for migration notes.

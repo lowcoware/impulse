@@ -453,6 +453,23 @@ enforces for a different reason); and **every finding cites the specific
 node/endpoint actually inspected** — no claiming a mismatch exists
 without pointing at the evidence.
 
+## Approve-on-improvement, not approve-on-perfect — calibrating the verdict
+
+Google's own reviewer standard (21K+ stars, the field's most-cited internal
+review doc, archived-as-complete in 2026): "reviewers should favor approving
+a CL once it is in a state where it definitely improves the overall code
+health of the system, even if the CL isn't perfect" — the only hard block is
+a change that definitely *worsens* code health (outside an emergency).
+Applied here: this skill's BLOCK/WARN/INFO split already encodes the same
+split Google marks with a literal `Nit:` comment prefix — a WARN/INFO that's
+a style preference or a "you could also..." improvement rather than a
+concrete failure scenario is a nit, optional for the author, and should read
+as one; reserve BLOCK for changes that make code health measurably worse,
+not for "not yet ideal." Purely educational asides (teaching a pattern, not
+required for this diff to be mergeable) get the same nit framing — useful,
+never gating.
+[google/eng-practices: The Standard of Code Review](https://google.github.io/eng-practices/review/reviewer/standard.html)
+
 ## Company practice, 2026 snapshot
 
 Google reports ~75% of new code is AI-authored; its internal guidance
@@ -474,3 +491,4 @@ authorship shifts to AI, not less. Corroborates this skill's entire premise.
 - [Are Coding Agents Generating Over-Mocked Tests?, MSR'26](https://andrehora.github.io/pub/2026-msr-agents-over-mocked-tests.pdf)
 - [9to5google: Google's internal AI-coding guidance, 2025-06-30](https://9to5google.com/2025/06/30/google-engineers-ai-code/)
 - [GitClear 2026: The Maintainability Gap](https://www.gitclear.com/the_ai_code_quality_maintainability_gap)
+- [google/eng-practices: The Standard of Code Review](https://google.github.io/eng-practices/review/reviewer/standard.html)

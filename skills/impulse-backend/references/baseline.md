@@ -10,9 +10,9 @@ list decides what always exists.
 |---|---|---|
 | Health endpoints | `/health/live` = process alive. `/health/ready` = DB reachable, migrations applied, broker connected. | both routes respond; ready returns 503 while a dependency is down |
 | Graceful shutdown | Handle SIGTERM: drain in-flight, close consumers/pools. | see shutdown order below; `kill -TERM` loses zero in-flight requests |
-| Structured logs | JSON via zap. Fields: `timestamp`, `level`, `service`, `correlation_id`, `trace_id`, `message`. IDs propagated on every outbound call and published event. | grep a request id across two services and get both sides |
+| Structured logs | JSON via zap (Go) / pino (Node). Fields: `timestamp`, `level`, `service`, `correlation_id`, `trace_id`, `message`. IDs propagated on every outbound call and published event. | grep a request id across two services and get both sides |
 | Metrics | Prometheus `/metrics`: latency histogram, RPS, error rate per handler. | endpoint scrapes clean |
-| Migrations | Versioned (golang-migrate / Alembic) from migration #1. No schema by hand, ever. | fresh DB + migrate up = working service |
+| Migrations | Versioned (golang-migrate / Alembic / drizzle-kit) from migration #1. No schema by hand, ever. | fresh DB + migrate up = working service |
 | Config validation | Typed config, validated at startup. Invalid = refuse to boot. | see rules below |
 | Timeouts | Timeout on EVERY network call. No timeout = bug. | see table below; zero infinite-wait calls in the diff |
 | Idempotent consumers | Events arrive twice. Dedup by `event_id` before side effects. | replaying an event produces no second side effect (details: events.md) |
@@ -20,11 +20,11 @@ list decides what always exists.
 | Retries | Exp backoff + jitter, capped attempts. Idempotent operations ONLY. Formula: [AWS Builders' Library, "capped exponential backoff, then full jitter"](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) — capping alone still synchronizes every client at the cap; jitter is what actually spreads the retries, not an optional extra. | no retry wraps a non-idempotent call |
 | Outbox + DLQ | Required when events cross a service boundary with money/state at stake. Otherwise: `impulse:` marker with trigger. | outbox present, or marker like `// impulse: sync publish, add outbox when event carries money/state` (details: events.md) |
 | Backups restore-tested | Every stateful store: automated backup + a drilled restore path + a named owner (details: impulse-devops/backup.md). Untested backups = GitLab 2017: five channels, all silently dead. | restore drill run before real data reaches prod; owner named |
-| Money-path deploy safety | Code that moves money: staged rollout + automated kill-switch on an exposure threshold + second reviewer on the deploy. Knight 2012: $460M in 45 min, no kill switch, no reviewer. | kill-switch and rollout gate exist before the first money-moving deploy |
+| Money-path deploy safety | Code that moves money: staged rollout + automated kill-switch on an exposure threshold + second reviewer on the deploy. Knight 2012: $460M in 45 min, no kill switch, no reviewer. Tool pick for the flag/kill-switch: impulse-legacy/strangler-fig.md (Unleash / OpenFeature). | kill-switch and rollout gate exist before the first money-moving deploy |
 
 ## Config validation at startup
 
-1. One typed config struct/model per service (viper + struct in Go, pydantic-settings in Python). All settings enter through it — zero `os.Getenv` outside config loading.
+1. One typed config struct/model per service (viper + struct in Go, pydantic-settings in Python, a TypeBox/Zod schema in Node). All settings enter through it — zero `os.Getenv`/`process.env` outside config loading.
 2. Validate at boot: required fields present, ports/URLs parse, numbers in range, enums match.
 3. Invalid config → log the exact failing key, exit non-zero. Never limp to the first request and die there.
 4. Defaults for dev only. Production values explicit via env.

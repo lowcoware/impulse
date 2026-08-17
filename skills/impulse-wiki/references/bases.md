@@ -53,7 +53,9 @@ Three namespaces: note properties (`author` or `note.author`, from
 frontmatter), file properties (`file.name`/`file.path`/`file.mtime`/
 `file.tags`/`file.backlinks`/...), formula properties (`formula.X`). `this`
 = the base file itself in the main area, the embedding file when embedded,
-the active file in the sidebar.
+the active file in the sidebar. A property name with a space or special
+character can't follow dot notation — use bracket form instead:
+`note["Due Date"]`, never a backtick-quoted name.
 
 ## Formula gotchas (the actual failure modes)
 
@@ -79,9 +81,16 @@ contains double quotes.
 ## Views
 
 `table` (default, `summaries` per column), `cards` (`order` should lead
-with an image/cover property), `list` (minimal), `map` (needs lat/lng
-properties + the Maps community plugin — note this dependency to the user
-before building one).
+with an image/cover property), `list` (minimal), `map` (needs a
+`coordinates` property per note — `"lat, lng"` string or a `[lat, lng]`
+list, not separate `lat`/`lng` properties — plus the Maps community
+plugin; note this dependency to the user before building one).
+
+Built-in named summaries for `table` columns (`summaries: { prop: Name }`,
+type-gated — not every name applies to every property): all types get
+`Empty`/`Filled`/`Unique`; numbers add `Sum`/`Average`/`Min`/`Max`/`Median`/
+`Range`/`Stddev`; dates add `Earliest`/`Latest`/`Range`; checkboxes add
+`Checked`/`Unchecked`.
 
 ## Embedding
 

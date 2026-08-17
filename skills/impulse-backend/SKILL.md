@@ -1,6 +1,6 @@
 ---
 name: impulse-backend
-description: "Backend engineering for greenfield microservices: Go-first (Gin, then Fiber), Python where it earns it (FastAPI). Anti-overengineering ladder + day-one baseline + ceiling markers for scaling. Use when BUILDING or EXTENDING backend code: new service, API, endpoint, handler, worker, consumer, Kafka, gRPC, migration, queue, database. RU: бэкенд, сервис, микросервис, эндпоинт, ручка, консьюмер, воркер, миграция, очередь, база — напиши/добавь/сделай сервис или эндпоинт. A reported bug or observed failure routes to impulse-systematic-debug; reviewing a diff routes to impulse-review."
+description: "Backend engineering for greenfield microservices: Go-first (Gin, then Fiber), Python where it earns it (FastAPI), Rust where a profiled hot path or shared cross-platform core demands it (Axum), Node.js/TypeScript where end-to-end shared types earn it (Fastify). Anti-overengineering ladder + day-one baseline + ceiling markers for scaling. Use when BUILDING or EXTENDING backend code: new service, API, endpoint, handler, worker, consumer, Kafka, gRPC, migration, queue, database. RU: бэкенд, сервис, микросервис, эндпоинт, ручка, консьюмер, воркер, миграция, очередь, база — напиши/добавь/сделай сервис или эндпоинт. A reported bug or observed failure routes to impulse-systematic-debug; reviewing a diff routes to impulse-review."
 ---
 
 # impulse-backend
@@ -63,7 +63,7 @@ Every service ships with, from commit #1 — IDs `BE-BL01`–`BE-BL13` in baseli
 
 - `/health/live` + `/health/ready`
 - graceful shutdown on SIGTERM (drain in-flight, close consumers/pools)
-- structured JSON logs (zap) with `correlation_id`/`trace_id` propagated
+- structured JSON logs (zap / pino) with `correlation_id`/`trace_id` propagated
 - `/metrics` Prometheus
 - versioned migrations from migration #1
 - config validation at startup — invalid config = refuse to boot
@@ -81,7 +81,7 @@ New-service bring-up: state boundaries, contracts, data ownership, and topics as
 
 ## Ceiling markers — scaling groundwork, not speculative code
 
-`// impulse: <ceiling>, <upgrade trigger>` (Go/TS) / `# impulse: ...` (Python).
+`// impulse: <ceiling>, <upgrade trigger>` (Go/TS/Rust) / `# impulse: ...` (Python).
 Example: `// impulse: global mutex, switch to per-account locks when p95 > 50ms`.
 Every deliberate simplification with a known ceiling gets one. A marker without
 an upgrade trigger is rot — impulse-debt flags it.
@@ -102,10 +102,11 @@ Before "done": walk baseline.md done-when + carve-outs — one unticked = not do
 | references/hardening-go.md | Go production traps: context/panic/worker-pool-sizing/DB-pool/migrations/gRPC/logging, each with a real incident | Go concurrency-heavy code, DB pool config, migrations, gRPC chains |
 | references/hardening-python.md | Python production traps: async-blocking/Pydantic v2/asyncio tasks/GIL/aiogram v3, each with a real incident | async FastAPI code, Pydantic models, asyncio background tasks, Telegram bot services |
 | references/hardening-rust.md | Rust production traps: ownership, error handling, memory, unsafe-code discipline, async/await, concurrency, numeric safety | writing/reviewing Rust service code, anything touching `unsafe` |
-| references/security-checklist.md | HTTP-server hardening + framework-idiom security footguns (Go net/http, FastAPI): timeouts, SSRF/SSTI/path-traversal, mass assignment, excessive data exposure, pprof exposure — each with detection grep | writing a new HTTP handler, outbound fetch, or file-serving endpoint |
+| references/hardening-node.md | Node/Fastify production traps: event-loop blocking, unhandled rejections, Fastify schema/plugin-encapsulation footguns, streams backpressure, npm supply chain, TypeScript strictness, each with a real incident or documented footgun | writing/reviewing Fastify route code, anything CPU-bound in Node, npm dependency changes |
+| references/security-checklist.md | HTTP-server hardening + framework-idiom security footguns (Go net/http, FastAPI, Fastify): timeouts, SSRF/SSTI/path-traversal, mass assignment, excessive data exposure, pprof exposure, prototype pollution — each with detection grep | writing a new HTTP handler, outbound fetch, or file-serving endpoint |
 | references/boundaries.md | data ownership, anti-nanoservice, modular-monolith fallback | drawing or questioning service boundaries |
 | references/testing.md | coverage gate, contract tests, E2E, testcontainers, determinism, unit-test craft, mutation testing | writing or reviewing tests |
-| references/layout.md | Go flat layout, FastAPI layout, interface rules | creating packages/files |
+| references/layout.md | Go flat layout, FastAPI layout, Fastify layout, interface rules | creating packages/files |
 | references/deps.md | blessed stack, new-dep rule, platform-primitive table | adding a dep, picking tech |
 | references/platform-native.md | rung 3/4 lookup beyond deps.md's table: stdlib/platform primitives across Go, Python, JS, Postgres, Redis, Kafka, Traefik | about to write something the platform or stdlib already ships |
 | references/stores-clickhouse.md | which-store decision + arch-decay/AI-bug patterns: telemetry, aggregates, heatmaps | touching ClickHouse |
@@ -131,7 +132,7 @@ Before "done": walk baseline.md done-when + carve-outs — one unticked = not do
 | references/docs.md | docstrings, comments, no-stub invariant, service docs | writing docs or docstrings |
 | references/git.md | Conventional Commits, CHANGELOG for everything | committing |
 | [../../shared/rule-spine.md](../../shared/rule-spine.md) | builder↔review crosswalk: rule ID → detector → review tag | adding/renumbering a baseline item or ladder rung, or asking which review tag catches one |
-| [../../shared/context7.md](../../shared/context7.md) | Gin/Fiber/FastAPI/Kafka-client/gRPC API syntax before writing against it — version drift past training cutoff | picking up an unfamiliar or version-pinned dep |
+| [../../shared/context7.md](../../shared/context7.md) | Gin/Fiber/FastAPI/Fastify/Kafka-client/gRPC API syntax before writing against it — version drift past training cutoff | picking up an unfamiliar or version-pinned dep |
 | [../../shared/completeness.md](../../shared/completeness.md) | banned truncation stubs (`// rest of code`), scope-count lock, PAUSED breakpoint protocol | any code/doc deliverable |
 
 ## Communication
@@ -144,6 +145,5 @@ identifiers = English, full quality. No emoji anywhere.
 
 - Correctness/security review → `/code-review`. impulse-review covers overengineering + baseline violations + seam risks + AI-typical correctness bugs (`bug:`/`arch:`) — not a general audit.
 - ADR lifecycle, spec-driven planning, review-cadence scaling → `impulse-project-management`. Here only: an ADR governs code being touched → check it first.
-- Existing/unfamiliar code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment, before any edit.
-- RAG/embeddings/Qdrant/LLM-gateway/MCP-server specifics → `impulse-ai`. Deep auth/secrets/IDOR/edge security → `impulse-security`. Both build on this skill's baseline, don't replace it.
+- Existing/unfamiliar code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment, before any edit. RAG/embeddings/Qdrant/LLM-gateway/MCP-server specifics → `impulse-ai`. Deep auth/secrets/IDOR/edge security → `impulse-security`. Both build on this skill's baseline, don't replace it.
 - Pairs with /caveman if the user runs it: these rules govern what you build, caveman governs compression. No conflict — both ban filler.

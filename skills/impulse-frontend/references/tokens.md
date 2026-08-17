@@ -36,6 +36,15 @@ compiler with nothing yet to compile to is pure overhead.
 
 5. DESIGN.md tokens mirror 1:1 into `@theme` in the main CSS file. Names match: DESIGN.md `surface-1` → `--color-surface-1`. No second source of truth.
 6. Use the v4 namespaces: `--color-*`, `--font-*`, `--text-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--ease-*`, `--animate-*`. OKLCH for all color values.
+6a. v4 utility renames — training data still reaches for the old names,
+    grep for them: `bg-gradient-to-*` → `bg-linear-to-*` (frees up
+    `bg-radial-*`/`bg-conic-*` for radial/conic gradients), `shadow-sm` →
+    `shadow-xs` and `shadow` → `shadow-sm` (whole shadow/blur/drop-shadow
+    scale shifted one step), `rounded-sm` → `rounded-xs` and `rounded` →
+    `rounded-sm`, `outline-none` → `outline-hidden`, bare `ring` → `ring-3`
+    (default ring width is no longer implicit). Deprecated `*-opacity-*`
+    utilities (`bg-opacity-50`) → slash opacity modifiers (`bg-black/50`).
+    [Tailwind CSS v4 upgrade guide](https://tailwindcss.com/docs/upgrade-guide)
 
 ```css
 @import "tailwindcss";
