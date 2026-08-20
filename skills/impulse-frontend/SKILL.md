@@ -7,6 +7,20 @@ description: "Vue 3 / Nuxt 4 / Tailwind v4 WEB frontend — UI, components, land
 
 ACTIVE EVERY RESPONSE. No drift back to over-building or AI-default design. Still active if unsure. Off only: `stop impulse` / `normal mode`.
 
+## Mandatory anti-AI-tell recheck — every mode, not optional
+
+Before any visual or copy output is delivered — new page, new component,
+edit to an existing one — silently re-run it against ai-tells.md's ban
+catalog + ai-tells-extended.md's larger sweep + ai-code-smells.md's
+architecture checks. This is not a "load when relevant" reference like the
+rest of the table below: it is a standing gate, exactly like preflight.md,
+and blitz mode does not exempt it (blitz drops discussion/alternatives, not
+the ban list). If what's about to ship trips a gradient/glow/particle/blob/
+circle/grid-background/badge-stack/mobile-desktop-fork ban, fix it before
+delivery, don't note it and move on. A screenshot tool available and the
+surface being visually important → run visual-forensics.md's pixel sweep
+too, not just a source read.
+
 ## Register split — declare before building
 
 Every UI task runs in exactly one register. Full split, permissions, bans: [references/registers.md](references/registers.md).
@@ -52,7 +66,7 @@ Design explicitly doesn't matter (internal tool, admin CRUD, throwaway prototype
 
 ## Hard technique rules — every task, every mode
 
-IDs `FE-H01`–`FE-H16` follow this numbering. [`shared/rule-spine.md`](../../shared/rule-spine.md) maps each to its detector and the impulse-review tag that catches it — add a rule here, add its row there, or review never learns about it.
+IDs `FE-H01`–`FE-H18` follow this numbering. [`shared/rule-spine.md`](../../shared/rule-spine.md) maps each to its detector and the impulse-review tag that catches it — add a rule here, add its row there, or review never learns about it.
 
 1. `min-h-[100dvh]`, never `h-screen`.
 2. Animate `transform`/`opacity` only. Never top/left/width/height.
@@ -70,6 +84,8 @@ IDs `FE-H01`–`FE-H16` follow this numbering. [`shared/rule-spine.md`](../../sh
 14. Grid over flex-percentage-math. `w-[calc(33%-1rem)]` banned — `grid grid-cols-*` instead.
 15. New dependency → check `package.json` first, output the install command before importing. Never assume a library exists.
 16. Container width from one token (`max-w-7xl mx-auto` or DESIGN.md's own max-width) — never ad-hoc per page.
+17. One fluid responsive component per surface — never a separate `Mobile*`/`Desktop*` component tree gated by viewport JS. CSS/container queries adapt the one component; detail + exception: ai-code-smells.md §2.
+18. Search `components/` for an existing Button/Card/Modal/Input-style component before writing a new one. Extend or compose it — never hand-roll a visual duplicate: ai-code-smells.md §1.
 
 ## References — read what the task needs
 
@@ -77,6 +93,9 @@ IDs `FE-H01`–`FE-H16` follow this numbering. [`shared/rule-spine.md`](../../sh
 |---|---|
 | [references/registers.md](references/registers.md) | every task — register pick, Design Read, dials, presets × modes |
 | [references/ai-tells.md](references/ai-tells.md) | any visual or copy output — full ban catalog |
+| [references/ai-tells-extended.md](references/ai-tells-extended.md) | ai-tells.md's bans read clean but the page still feels generic — 200-source deep-research sweep, ~350 more tells |
+| [references/ai-code-smells.md](references/ai-code-smells.md) | writing/reviewing component structure — reuse-before-rewrite, mobile/desktop forking ban, logic placement, magic numbers |
+| [references/visual-forensics.md](references/visual-forensics.md) | brand-register work or any pre-ship product surface, screenshot tool available — pixel-level render audit against the full ai-tells.md catalog |
 | [references/typography.md](references/typography.md) | picking a font or headline treatment — serif discipline, pairings, emphasis |
 | [references/images.md](references/images.md) | any visual asset slot — image-gen priority, real logos, no-fake-screenshot recipes |
 | [references/image-pipeline.md](references/image-pipeline.md) | image-gen tool available + visually important task — generate section references BEFORE code, extraction checklists, logo concept methods |

@@ -6,7 +6,17 @@ Three registers. Each has its own rules. Never mix them.
 |---|---|
 | Chat with user | Живая русская речь. Senior-colleague tone. Terse but human. |
 | Thinking / reasoning | Caveman-compressed. Nobody reads thinking — compress hard. |
-| Code, commits, docs, identifiers | Normal, full quality. Never compressed. |
+| Code, commits, docs, identifiers, tool-call arguments | Normal, full quality. Never compressed. |
+
+**Tool-call arguments are not thinking.** A subagent prompt (`Agent`/`Task`),
+a file's contents, a shell command string — anything that becomes an
+argument to a tool call — is read by something other than you (a subagent
+with no access to your reasoning stream, a linter, a shell), so it follows
+the code/docs register: complete sentences, nothing dropped, correct
+language. Compressing it the way thinking gets compressed produces garbled,
+word-dropping output — this is a documented failure mode, not a hypothetical
+one, which is why the boundary is stated explicitly here instead of left to
+inference from "thinking is compressed."
 
 No emoji anywhere: chat, code, logs, commits.
 

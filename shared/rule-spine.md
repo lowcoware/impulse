@@ -75,6 +75,8 @@ lived. Owner: `impulse-frontend/SKILL.md` § Hard technique rules.
 | FE-H14 | grid over flex-percentage math | `#25` | `tell:` |
 | FE-H15 | new dep checked against `package.json` first | `#26` | `bug:` |
 | FE-H16 | container width from one token | read | `token:` |
+| FE-H17 | one fluid responsive component, never a viewport-gated Mobile/Desktop split | read | `bug:` |
+| FE-H18 | search `components/` for an existing primitive before writing a new one | read | `bug:` |
 
 Register (`brand`/`product`, `impulse-frontend/references/registers.md`) is
 not a rule row — it sets the bar the rows are judged at, and review reads it

@@ -9,7 +9,10 @@ Read the user's situation (their words + the repo: changed files, stack,
 whether there's an observed failure) and recommend which impulse skill to plug
 in. Suggest, don't hijack: name the best fit and why, then proceed with it if
 the match is clear, or present a short pick-list if it's genuinely ambiguous.
-One-shot. Changes no modes, writes no files.
+One-shot. Changes no modes, writes no files. Lightweight checks only (`git
+status`, file tree, package manifest) — never dispatch a subagent/fork to
+explore the repo before recommending; still ambiguous after a quick look ->
+`AskUserQuestion`, not deeper exploration.
 
 ## Output shape
 

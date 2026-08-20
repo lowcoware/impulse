@@ -43,7 +43,7 @@ test('invalid mode falls back to medium', () => {
 
 test('coreRuleset carries every check-sync anchor phrase', () => {
   const core = i.coreRuleset().toLowerCase();
-  for (const phrase of ['first rung that holds', 'upgrade trigger', 'escalation', 'tokens-of-answer', '.impulse/memory', 'stop at done', 'drive-by']) {
+  for (const phrase of ['first rung that holds', 'upgrade trigger', 'escalation', 'tokens-of-answer', '.impulse/memory', 'stop at done', 'drive-by', 'the example given', 'guess, not a fact', 'direct question', 'explicitly out of scope', "guess wearing a fact's clothes"]) {
     assert.ok(core.includes(phrase), `missing anchor: ${phrase}`);
   }
 });

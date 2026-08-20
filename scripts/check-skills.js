@@ -134,6 +134,7 @@ const BARE_MD_ALLOWLIST = [
   'HUMANIZE_STYLE.md', 'CLAUDE.md', 'AGENTS.md',
   'banned-antipatterns.md', // impulse-mobile lineage citation of an external repo's `00-` prefixed file
   'IMPULSE-DEBT.md', // impulse-debt generates this at the CONSUMER repo root, not the suite
+  'GEMINI.md', // real repo-root plugin file (Gemini CLI/Qwen Code contextFileName target) — outside the skills/references and shared/ resolution the suite checker walks
   'NN-phase.md',  // impulse-ai/subagents.md — placeholder for a numbered phase output file
   // impulse-goal run artifacts — all generated in the consumer's .impulse-goal/<run>/ dir, not suite files
   'ROADMAP.md', 'STATE.md', 'PROTOCOL.md', 'THINKING.md', 'phase-N.md', 'phase-N.fix.md', 'fix.md',

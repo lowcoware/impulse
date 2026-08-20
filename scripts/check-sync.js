@@ -36,6 +36,11 @@ const ANCHORS = [
   { id: 'core:memory', phrase: '.impulse/memory', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
   { id: 'core:stop-at-done', phrase: 'stop at done', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
   { id: 'core:drive-by', phrase: 'drive-by', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:spec-match', phrase: 'the example given', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:hallucination', phrase: 'guess, not a fact', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:ambiguity', phrase: 'direct question', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:edge-cases', phrase: 'explicitly out of scope', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:evidence', phrase: "guess wearing a fact's clothes", ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
 ];
 
 function has(text, phrase) {
@@ -283,13 +288,27 @@ function main() {
     }
   }
 
+  // GEMINI.md is the third delivery surface for the core layer (Gemini
+  // CLI / Qwen Code contextFileName, no plugin hooks available there) —
+  // same anchor phrases must survive the copy or it silently drifts from
+  // what Claude Code actually injects.
+  const geminiText = readSkill('GEMINI.md');
+  const coreAnchors = ANCHORS.filter((a) => a.id.startsWith('core:'));
+  for (const anchor of coreAnchors) {
+    if (geminiText === null) {
+      misses.push(anchor.id + ': GEMINI.md not found');
+    } else if (!has(geminiText, anchor.phrase)) {
+      misses.push(anchor.id + ': phrase "' + anchor.phrase + '" missing from GEMINI.md');
+    }
+  }
+
   if (misses.length > 0) {
     console.error('check-sync: ' + misses.length + ' miss(es):');
     for (const m of misses) console.error('  - ' + m);
     process.exit(1);
   }
 
-  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync, rule spine covered.');
+  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync (+' + coreAnchors.length + ' in GEMINI.md), rule spine covered.');
   process.exit(0);
 }
 

@@ -3,8 +3,10 @@ name: impulse-core
 description: >-
   Always-on master layer of the impulse suite: engineering spine
   (anti-overengineering ladder essence, carve-outs, ceiling markers) +
-  token economy (search escalation, narrow reads, batching, delegation
-  test, memory protocol). Injected automatically every session and every
+  verification (spec-vs-example, hallucinated-API check, ambiguity,
+  edge cases, claim-needs-evidence) + token economy (search escalation,
+  narrow reads, batching, delegation test, memory protocol). Injected
+  automatically every session and every
   subagent by the plugin hooks — this skill is the readable owner of those
   rules and the switch documentation. Fires for questions about the
   always-on layer or requests to disable it. Triggers: "/impulse-core",
@@ -48,33 +50,56 @@ system: `impulse-frontend`):
   requested — and with a domain mode active, its day-one baseline joins
   this list (`impulse-backend/references/baseline.md`).
 - Every deliberate ceiling gets a marker: `// impulse: <ceiling>,
-  <upgrade trigger>` (`#` in Python). A marker with no trigger is rot —
+  <upgrade trigger>` (`#` in Python) — e.g. `// impulse: in-memory cache,
+  move to Redis past one instance.` A marker with no trigger is rot —
   `hooks/impulse-validate-write.js` flags it at write time, `/impulse-debt`
   harvests the ledger.
-- No unrequested abstraction, no speculative config, no framework where a
-  function does.
-- **Stop at done.** Acceptance criteria pass — stop. Polish, cleanup, or
-  extra tests after the pass are unrequested work unless the user asked.
-- **No drive-by edits.** Change only what the task owns; unrelated
-  behavior and the user's own edits stay untouched — an improvement
-  nobody asked for in a file the task didn't own is a regression risk
-  with no requirement backing it.
+- Build exactly what's requested, in its plainest working form: a
+  function beats a framework, nothing speculative (extra config,
+  unrequested abstraction) ships alongside it.
+- **Stop at done.** Acceptance criteria pass — stop. Ship that: polish,
+  cleanup, or extra tests after the pass wait for the user to ask.
+- **Touch only what the task owns — no drive-by edits.** Unrelated
+  behavior and the user's own edits stay exactly as found — an
+  improvement nobody asked for in a file the task didn't own is a
+  regression risk with no requirement backing it.
 
-## Layer 2 — token economy
+## Layer 2 — verification
+
+Targets the two documented failure modes that survive an otherwise-good
+plan: hallucinated facts/APIs and confident-but-unverified claims. Detail
+and sourcing: `shared/verification-layer.md`.
+
+- Match the actual spec, not just the example given — restate the
+  general rule in one line before coding when the request includes a
+  worked example.
+- Verify every function, method, or API call against something actually
+  seen this session (an import, a doc, existing code) before shipping
+  it. An unfamiliar name that sounds plausible is a guess, not a fact.
+- An ambiguous requirement gets a direct question, not a silent
+  assumption.
+- Check zero/empty/null/negative/boundary inputs before calling code
+  done — each is handled or explicitly out of scope.
+- A claim of "done"/"works"/"passes" needs the actual output shown. A
+  claim with no evidence is a guess wearing a fact's clothes.
+
+## Layer 3 — token economy
 
 Distilled from `shared/velocity.md` and `shared/token-hygiene.md` (both
 carry the evidence and the full versions):
 
 - **Search escalation** — known file -> its neighbor -> scoped grep
-  (path + pattern + result cap) -> repo-wide last. Never a command with
-  unbounded output; cap before running, not after reading a flood.
+  (path + pattern + result cap) -> repo-wide last. Cap output before
+  running: `git log` with `-n`, a bounded grep — not a raw recursive
+  listing or full verbose log.
 - **Narrow reads** — offset/limit on large files; structure scan
-  (tree/signatures/targeted grep) before a full read; never re-read a
-  file after your own edit confirmed its state, unless an external
-  process (formatter, linter, generator) touched it since.
+  (tree/signatures/targeted grep) before a full read. Trust your own
+  edit's result; re-read only when an external process (formatter,
+  linter, generator) touched the file since.
 - **Batch and don't repeat** — independent tool calls go in one round;
-  never re-poll unchanged state; a stable value (auth token, config,
-  build ID) is fetched once per session and reused.
+  a stable value (auth token, config, build ID) is fetched once per
+  session and reused; treat state as unchanged until something could
+  plausibly have changed it.
 - **Scratch files** — long output worth keeping goes to a scratch file
   once, read back selectively; rewriting the same scratch file every few
   turns re-pays for it each time.
@@ -85,6 +110,17 @@ carry the evidence and the full versions):
 - **Memory protocol** — a project with `.impulse/memory/` follows
   `shared/memory.md`: index first, full text on demand, verify a stored
   fact against current repo state before acting on it.
+
+## Delivery across harnesses
+
+Claude Code gets this via plugin hooks (`SessionStart`/`SubagentStart`).
+Gemini CLI and Qwen Code — which also run Qwen/DeepSeek via their own
+provider config — lack that hook path, so the ruleset is duplicated into
+`GEMINI.md` at the repo root (their `contextFileName` mechanism),
+`check-sync.js`-locked to this file. Wording (affirmative imperatives
+over negation chains, one worked example on the marker format) is tuned
+against sourced findings on why weaker models drop compound-negation
+instructions — research: `shared/multi-harness-robustness.md`.
 
 ## Switches
 

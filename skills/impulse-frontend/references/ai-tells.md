@@ -5,7 +5,10 @@ Every rule is binary: banned = count 0. An override exists only when the brief e
 Mechanical grep/count versions live in preflight.md. Register split + dials live in registers.md.
 Positive recipes (what to build instead, not just what's banned) live in
 images.md (visual assets), content.md (long lists/quotes), typography.md
-(type-rule detail), vocabulary.md (pattern names).
+(type-rule detail), vocabulary.md (pattern names). Code/architecture-level
+AI tells (component duplication, mobile/desktop split, magic numbers) live in
+ai-code-smells.md. The pixel-by-pixel screenshot audit that hunts this whole
+file's visual bans on a rendered page lives in visual-forensics.md.
 
 **Why these bans, calibrated against what the research actually supports:**
 automated AI-detection is unreliable — published detector accuracy averages
@@ -63,6 +66,19 @@ scanner mostly won't.
 | 35 | Oversized shadow: blur/spread larger than the element casting it — a small card under a room-sized fog (`0 16px 80px`). Shadow = elevation: tight blur, small offset, low opacity, colorless. Often a hairline separates better than any shadow (ghost-card combo is ban 15) | B+P |
 | 36 | Middle-dot `·` as the default separator ("foo · bar · baz · qux"). Rationed: max 1 per metadata line; a separator family = line breaks, hairlines, or columns | B+P |
 | 37 | `<br>`-broken italic headline as a "design move" ("for thirty`<br>`*years.*"). Headlines read naturally first; a break earns its place only when the brief demands the device | B |
+| 38 | Aurora/mesh-gradient background: a soft animated multi-color wash (Aceternity-style "aurora background", spotlight-cursor glow) as hero/section chrome. It's a named, copy-pasted library primitive — the exact same recipe recurs verbatim across unrelated products. Purposeful, once, executed = allowed; page-wide ambient wash = banned | B |
+| 39 | Particle-effect / floating-dot canvas animation (tsParticles-style) behind content, unconnected to what's on screen. Ship none, or a real data-driven visualization | B+P |
+| 40 | Decorative circle/oval/blob filler shapes: floating dots, background blobs, orbiting rings, pill-shaped smudges scattered with no content or brand link. A round shape earns its place as a real icon, a real avatar, a real chart, or a named brand device — never ambient decoration | B+P |
+| 41 | Sparkle/star/magic-wand/lightning glyph as the generic "AI-powered" signifier on a button, badge, or heading with no literal referent — say what the feature does; an icon matches real content or doesn't ship | B+P |
+| 42 | Badge/pill stacking 2+ of {border + glow + uppercase + icon} on one label ("✨ AI POWERED" bordered-glowing-uppercase). One visual treatment per badge, never all of them at once | B+P |
+| 43 | Forced permanent dark mode when the brief never asked for it, especially at borderline body contrast. Theme is a DESIGN.md decision (tokens.md), not a reflex default | B+P |
+| 44 | Decorative monospace type (JetBrains Mono etc.) for headings/labels/eyebrows with no code or technical content nearby, usually over-tracked ("H O W  I T  W O R K S"). Monospace signals code — reserve it for code | B |
+| 45 | Unstyled default chart-library output (Chart.js/Recharts stock axes/tooltip/palette) shipped as-is, frequently broken on dark surfaces. Restyle to the project's tokens or don't ship the chart yet | B+P |
+| 46 | Neumorphism: same-hue "pressed" paired-shadow surfaces standing in for a whole UI's elevation system. Fails contrast by construction — use the project's real elevation ladder | B+P |
+| 47 | Timid palette: 5+ hues held at roughly equal visual weight, no dominant accent — the inverse failure of the Lila Rule (ban 1). One accent leads; everything else is neutral | B+P |
+| 48 | Fabricated "Trusted by" logo wall: generated or borrowed-without-permission logos standing in for real customers (logo-generator tools exist specifically to manufacture these). Real logos with permission, or no logo wall | B |
+| 49 | Large italic display-serif headline + wide-tracked sans subheading as the reflex "editorial SaaS" hero move — the type-pairing half of ban 28's escape-palette list | B |
+| 50 | Decorative horizontal progress/ticker bar (marquee-style) with no real progress or live data behind it | B+P |
 
 ## 2. Layout anti-repetition counts
 
@@ -98,7 +114,8 @@ scanner mostly won't.
 |---|---|
 | Em-dash and en-dash-as-separator in visible UI copy: zero. Grep `—` and `–` across `.vue` templates and locale files = 0. Hyphen only. (Chat prose = shared/communication.md territory, not this file) | B+P |
 | Hero subtext <= 20 words; section sub-paragraph <= 25 words; section headline <= 8 words | B |
-| Filler verbs: zero. Elevate, Seamless, Unleash, Empower, Supercharge, Revolutionize, Next-Gen: write the concrete verb instead | B+P |
+| Filler verbs: zero. Elevate, Seamless, Unleash, Empower, Supercharge, Revolutionize, Next-Gen, Unlock, Cutting-Edge, Ultimate, Effortless, Intelligent, Revolutionary: write the concrete verb instead | B+P |
+| Fabricated compliance/authority claims: zero. "SOC 2 compliant", "bank-grade security", "industry-leading" stated with no evidence beside them — claim only what's actually true and sourced | B+P |
 | AI-voice sentence shapes: zero. "Not just X — it's Y", "Say goodbye to X", "Meet your new X", "in seconds, not hours", "unlock the power", three-word triads ("Fast. Beautiful. Yours."), and dismissing anything as "X theater" — say plainly what the thing does | B+P |
 | Fake-precise numbers: zero unless from real data or labeled `<!-- mock -->`. Real numbers are odd and specific ("1,847 CI runs yesterday", sourced), never round set dressing (10k+ / 99.9% / 24/7) — one invented figure poisons every true one beside it | B+P |
 | Generic names/brands: zero. No John/Jane Doe, Acme, Nexus, SmartFlow. Locale-appropriate realistic names. Mock data looks organic: `47.2%` not `50%`, `+1 (312) 847-1928` not `123-456-7890` — round-perfect values read as generated | B+P |

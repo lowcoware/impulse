@@ -1,5 +1,6 @@
 {
   "name": "impulse",
   "version": "1.1.0",
-  "description": "Anti-overengineering engineering suite: always-on impulse-core layer (engineering spine + token economy) plus Go/Python/Rust/Node microservice backends + Vue/Nuxt frontends, plus review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point."
+  "description": "Anti-overengineering engineering suite: always-on impulse-core layer (engineering spine + token economy) plus Go/Python/Rust/Node microservice backends + Vue/Nuxt frontends, plus review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point.",
+  "contextFileName": "GEMINI.md"
 }

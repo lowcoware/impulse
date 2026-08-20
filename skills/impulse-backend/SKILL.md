@@ -11,8 +11,11 @@ A greenfield microservice has a non-negotiable floor: the ladder decides HOW MUC
 
 ## Persistence
 
-ACTIVE EVERY RESPONSE. No drift back to over-building. Still active if unsure.
-Off only: "stop impulse" / "normal mode".
+ACTIVE EVERY RESPONSE. No drift back to over-building. Still active if unsure. Off only: "stop impulse" / "normal mode".
+
+## Mandatory AI-tell recheck — every mode, not optional
+
+Before any diff is delivered, silently re-check it against baseline.md's day-one whitelist, the relevant hardening-*.md's incident catalog, and ai-tells-extended.md's larger sourced sweep (goroutine/task leaks, swallowed exceptions, mutable-default args, hallucinated packages, missing cancellation, N+1 queries). Not a "load when relevant" reference — a standing gate like the ladder itself; blitz drops discussion, not this.
 
 ## Modes
 
@@ -42,13 +45,10 @@ The ladder runs AFTER you understand the problem, not instead of it. Bug fix =
 root cause, not symptom: grep every caller before editing; one guard in the
 shared function beats a guard in every caller.
 
-**Verified = shown.** Claiming "tests pass" / "builds" / "works" without the
-actual output is banned — the backend parallel to the frontend's motion-shown
-rule. Ran it → paste the result. Couldn't run it → say "not run" plainly, never
-imply green. A "done" with no evidence is a guess wearing a fact's clothes.
-Claim → required evidence: "regression test works" = seen red THEN green, not
-green once; "bug fixed" = repro re-run clean; "agent finished" = the diff
-exists, not the agent's own report.
+**Verified = shown** (impulse-core's evidence rule, backend-specific claims):
+"regression test works" = seen red THEN green, not green once; "bug fixed" =
+repro re-run clean; "agent finished" = the diff exists, not the agent's own
+report. Couldn't run it → say "not run" plainly, never imply green.
 
 ## Carve-outs — never simplified away
 
@@ -86,14 +86,14 @@ Example: `// impulse: global mutex, switch to per-account locks when p95 > 50ms`
 Every deliberate simplification with a known ceiling gets one. A marker without
 an upgrade trigger is rot — impulse-debt flags it.
 
-Output pattern after shipping code: `[code] → skipped: [X], add when [Y].`
-Before "done": walk baseline.md done-when + carve-outs — one unticked = not done; same rules impulse-review sweeps, self-check beats a review round-trip.
+Output pattern after shipping code: `[code] → skipped: [X], add when [Y].` Before "done": walk baseline.md done-when + carve-outs — one unticked = not done; same rules impulse-review sweeps, self-check beats a review round-trip.
 
 ## References — load on demand
 
 | File | Covers | Load when |
 |---|---|---|
 | references/ladder.md | full ladder, carve-outs, ceiling markers, output pattern | any skip/simplify decision |
+| references/ai-tells-extended.md | baseline.md/hardening-*.md read clean but the diff still feels AI-generated — sourced sweep across Go/Python/Rust/Node, ~370 more tells | before delivering any non-trivial diff |
 | references/capacity-estimation.md | back-of-the-envelope QPS/storage/server sizing, reference throughput numbers | a component choice is genuinely uncertain at the brief's traffic level, or a scaling claim needs to be checkable |
 | references/performance-triage.md | making an already-slow path fast: cold/warm measurement, fix-strategy ladder, regression-guard-that-can-fail | a specific endpoint/page/job is known-slow and needs fixing, not sizing or incident diagnosis |
 | references/baseline.md | day-one whitelist, config validation, shutdown, timeouts, retries | service bring-up, scaffolding, network calls |
@@ -137,13 +137,10 @@ Before "done": walk baseline.md done-when + carve-outs — one unticked = not do
 
 ## Communication
 
-Chat/thinking/code language rules: `../../shared/communication.md`.
-Chat = живая русская речь; thinking = caveman-compressed; code, commits,
-identifiers = English, full quality. No emoji anywhere.
+Chat/thinking/code language rules: `../../shared/communication.md`. Chat = живая русская речь; thinking = caveman-compressed; code, commits, identifiers = English, full quality. No emoji anywhere.
 
 ## Boundaries
 
-- Correctness/security review → `/code-review`. impulse-review covers overengineering + baseline violations + seam risks + AI-typical correctness bugs (`bug:`/`arch:`) — not a general audit.
-- ADR lifecycle, spec-driven planning, review-cadence scaling → `impulse-project-management`. Here only: an ADR governs code being touched → check it first.
+- Correctness/security review → `/code-review`. impulse-review covers overengineering + baseline violations + seam risks + AI-typical correctness bugs (`bug:`/`arch:`) — not a general audit. ADR lifecycle, spec-driven planning, review-cadence scaling → `impulse-project-management`. Here only: an ADR governs code being touched → check it first.
 - Existing/unfamiliar code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment, before any edit. RAG/embeddings/Qdrant/LLM-gateway/MCP-server specifics → `impulse-ai`. Deep auth/secrets/IDOR/edge security → `impulse-security`. Both build on this skill's baseline, don't replace it.
 - Pairs with /caveman if the user runs it: these rules govern what you build, caveman governs compression. No conflict — both ban filler.
