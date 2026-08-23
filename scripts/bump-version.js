@@ -18,20 +18,36 @@ const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
 for (const { file } of MANIFESTS) {
   const abs = path.join(ROOT, file);
-  let manifest;
-  try {
-    manifest = JSON.parse(fs.readFileSync(abs, 'utf8').replace(/^﻿/, ''));
-  } catch (e) {
-    console.error(`bump-version: ${file} unreadable/unparseable: ${e.message}`);
+  const isYaml = file.endsWith('.yaml') || file.endsWith('.yml');
+  const raw = fs.readFileSync(abs, 'utf8').replace(/^﻿/, '');
+
+  let current;
+  if (isYaml) {
+    const m = raw.match(/^version:\s*['"]?(\S+?)['"]?\s*$/m);
+    current = m ? m[1] : undefined;
+  } else {
+    try {
+      current = JSON.parse(raw).version;
+    } catch (e) {
+      console.error(`bump-version: ${file} unreadable/unparseable: ${e.message}`);
+      process.exit(2);
+    }
+  }
+
+  if (!SEMVER_RE.test(current || '')) {
+    console.error(`bump-version: ${file} version ${JSON.stringify(current)} is not a pinned X.Y.Z — fix it before bumping.`);
     process.exit(2);
   }
-  if (!SEMVER_RE.test(manifest.version || '')) {
-    console.error(`bump-version: ${file} version ${JSON.stringify(manifest.version)} is not a pinned X.Y.Z — fix it before bumping.`);
-    process.exit(2);
-  }
-  const [major, minor, patch] = manifest.version.split('.').map(Number);
+  const [major, minor, patch] = current.split('.').map(Number);
   const next = `${major}.${minor}.${patch + 1}`;
-  console.log(`${file}: ${manifest.version} -> ${next}`);
-  manifest.version = next;
-  fs.writeFileSync(abs, JSON.stringify(manifest, null, 2) + '\n');
+  console.log(`${file}: ${current} -> ${next}`);
+
+  if (isYaml) {
+    const updated = raw.replace(/^version:\s*['"]?\S+?['"]?\s*$/m, `version: ${next}`);
+    fs.writeFileSync(abs, updated);
+  } else {
+    const manifest = JSON.parse(raw);
+    manifest.version = next;
+    fs.writeFileSync(abs, JSON.stringify(manifest, null, 2) + '\n');
+  }
 }

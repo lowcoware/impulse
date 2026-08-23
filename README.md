@@ -29,6 +29,7 @@ Code, через инсталлер переносится в Cursor, Codex и A
 | Gemini CLI | расширение: `gemini extensions install https://github.com/lowcoware/impulse` | `INSTALL.md` |
 | Qwen Code | расширение: `qwen extensions install https://github.com/lowcoware/impulse` | `INSTALL.md` |
 | Goose | плагин: `goose plugin install https://github.com/lowcoware/impulse` (или уже видит установку Claude Code/Codex) | `INSTALL.md` |
+| Hermes Agent | мастер-слой: `cp -r hermes-plugin/impulse-core ~/.hermes/plugins/`, скиллы: `cp -r skills/*/ ~/.hermes/skills/impulse/` (нет одной установочной команды на весь репозиторий) | `INSTALL.md` |
 
 `npx skills` работает и для Claude Code / Antigravity, но кладёт голый
 уровень скиллов без плагин-обвязки. Альтернатива без npx — репозиторный

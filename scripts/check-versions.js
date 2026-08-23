@@ -32,6 +32,7 @@ const MANIFESTS = [
   { file: '.claude-plugin/plugin.json', host: 'Claude Code plugin (hooks)' },
   { file: 'plugin.json', host: 'Antigravity plugin bundle / Goose Open Plugin' },
   { file: 'gemini-extension.json', host: 'Gemini CLI extension (also read by Qwen Code)' },
+  { file: 'hermes-plugin/impulse-core/plugin.yaml', host: 'Hermes Agent plugin (pre_llm_call injection)' },
 ];
 
 // Tracked JSON that legitimately carries a `version` key without being a
@@ -67,12 +68,26 @@ Checks:
 Exit codes: 0 = consistent; 1 = usage error; 2 = one or more violations.
 `;
 
+// YAML manifests (plugin.yaml) get a one-line regex extraction instead of a
+// full parse — no yaml dependency in this suite, and a flat `version: x.y.z`
+// line is all any manifest here actually needs.
+function readYamlVersion(text) {
+  const m = text.match(/^version:\s*['"]?(\S+?)['"]?\s*$/m);
+  return m ? m[1] : undefined;
+}
+
 function readManifest(rel) {
   const abs = path.join(ROOT, rel);
   if (!fs.existsSync(abs)) return { error: 'file not found' };
+  const raw = fs.readFileSync(abs, 'utf8').replace(/^﻿/, '');
+  if (rel.endsWith('.yaml') || rel.endsWith('.yml')) {
+    const version = readYamlVersion(raw);
+    if (version === undefined) return { error: 'no "version:" line' };
+    return { version };
+  }
   let parsed;
   try {
-    parsed = JSON.parse(fs.readFileSync(abs, 'utf8').replace(/^﻿/, ''));
+    parsed = JSON.parse(raw);
   } catch (e) {
     return { error: 'unparseable JSON: ' + e.message };
   }
@@ -172,6 +187,7 @@ function main() {
       }
     }
     for (const { file } of MANIFESTS) {
+      if (!file.endsWith('.json')) continue; // discovery only scans *.json — YAML manifests opt out by extension
       if (!discovered.includes(file) && fs.existsSync(path.join(ROOT, file))) {
         violations.push(`${file} is listed in MANIFESTS but is not tracked by git`);
       }

@@ -688,6 +688,87 @@ Codex/Antigravity/OpenCode.)
 `disabledPlugins` выше); голые копии — удалите `impulse-*` из
 соответствующей skills-директории.
 
+## Hermes Agent
+
+**Проверено:** 2026-08-20. Источник: `github.com/NousResearch/hermes-agent`,
+`hermes-agent.nousresearch.com/docs` — конкретно `developer-guide/plugins`
+(схема плагина, `pre_llm_call`), `developer-guide/creating-skills` (схема
+скилла), `user-guide/features/hooks` (gateway-хуки — не то, что нужно
+здесь, см. ниже).
+
+**Требования:** Hermes Agent установлен —
+`curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash` или
+`pip install hermes-agent`.
+
+Hermes — не форк Gemini CLI/Claude Code и не совместим с их форматом
+плагина/расширения напрямую: свой YAML-манифест плагина (`plugin.yaml` +
+`register(ctx)` на Python), своя схема `SKILL.md` (frontmatter с
+`metadata.hermes`, вложенность `category/skill-identifier/`, а не плоская
+`skill-name/`, как у сьюта). Единой команды "поставь весь репозиторий
+одной строкой" под Hermes сьют не даёт — декларативного манифеста уровня
+`gemini-extension.json`/`plugin.json`, который сам Hermes подхватывал бы
+целиком, в его документации не нашлось (проверялось целенаправленно, не
+предполагалось). Установка — два раздельных шага.
+
+**Установка — мастер-слой (always-on `impulse-core`):**
+
+```
+cp -r hermes-plugin/impulse-core ~/.hermes/plugins/impulse-core
+```
+
+Это не голая копия hooks-машинерии Claude Code — `hermes-plugin/impulse-core/`
+это отдельно написанный под Hermes плагин (`plugin.yaml` +
+`__init__.py`), который через `pre_llm_call` (единственный хук Hermes,
+чей возврат реально попадает в контекст — остальные gateway-хуки чисто
+для side-effect'ов вроде логирования) инжектит тот же ruleset, что и
+`hooks/impulse-instructions.js`'s `coreRuleset()`, в **user message
+каждого хода** — даже надёжнее, чем статичный `GEMINI.md` у Gemini
+CLI/Qwen Code, потому что переинжектится каждый раз, а не один раз на
+сессию. `scripts/check-sync.js` держит текст этого файла синхронным с
+остальными тремя поверхностями (hook, `impulse-core/SKILL.md`,
+`GEMINI.md`).
+
+**Установка — скиллы:**
+
+Схема Hermes ждёт `skills/<категория>/<имя-скилла>/SKILL.md` (два
+уровня), а у сьюта плоско — `skills/<имя-скилла>/SKILL.md` (один). Кладём
+всё под одну категорию `impulse`:
+
+```
+mkdir -p ~/.hermes/skills/impulse
+cp -r skills/*/ ~/.hermes/skills/impulse/
+```
+
+Дополнительные Hermes-специфичные поля frontmatter (`version`, `metadata.
+hermes.tags`/`category`) — необязательны для базовой работы (`name` +
+`description` у каждого `SKILL.md` уже есть), это опциональное улучшение
+для лучшей discoverability через `hermes skills browse`, не сделано
+здесь ради контроля объёма изменений.
+
+**Проверка после установки:** `hermes skills list` должен показать все
+скиллы сьюта под категорией `impulse`. Проверить, что мастер-слой реально
+инжектится — задать агенту прямой вопрос вроде "какие правила impulse-core
+сейчас активны" в новой сессии: ответ должен процитировать конкретные
+пункты (ladder, verification, token economy), а не общие слова — если
+цитирует, `pre_llm_call`-хук сработал.
+
+**Удаление:**
+
+```
+rm -rf ~/.hermes/plugins/impulse-core ~/.hermes/skills/impulse
+```
+
+**Что не переносится:** то же самое, что у остальных не-Claude-Code
+таргетов — hooks Claude Code, statusline, `/impulse-core off` как
+durable-команда (это Claude-Code-специфичный конфиг-файл) не работают
+как есть. Плюс специфично для Hermes: только core-слой (`impulse-core`)
+инжектится always-on — mode-aware `impulse-backend`/`impulse-frontend`
+динамика (blitz/hardcore) сюда пока не перенесена, то же ограничение, что
+у `GEMINI.md`-адаптера, и по той же причине (см.
+`shared/multi-harness-robustness.md`) — Hermes теоретически мог бы пойти
+дальше остальных адаптеров благодаря `pre_llm_call`'s per-turn (не
+per-session) вызову, но это отдельная, непроверенная здесь работа.
+
 ## Общие файлы и кросс-ссылки между скиллами
 
 `shared/authoring.md`, `shared/communication.md`, `shared/evals.md` и
@@ -720,12 +801,12 @@ Claude Code эти ссылки резолвятся, потому что вес
 
 ## Матрица совместимости
 
-| | Claude Code | Cursor | Codex | Antigravity | OpenCode | Gemini CLI | Qwen Code | Goose |
-|---|---|---|---|---|---|---|---|---|
-| SKILL.md нативно | да (исходный формат) | да | да | да | да | да | да | да |
-| Целевая директория этого инсталлера | `.claude/skills/` | `.claude/skills/` (алиас) | `.agents/skills/` | `.agents/skills/` (проект, = codex) / `~/.gemini/config/skills/` (пользователь) | `.agents/skills/` (проект, = codex) / `~/.config/opencode/skills/` (пользователь) | своего таргета нет; проект покрывает `--target=codex` | своего таргета нет; `npx skills -a qwen-code` -> `.qwen/skills/` | своего таргета нет; проект покрывает `--target=codex` |
-| Нативная плагин-система | `/plugin install` (marketplace) | нет | нет | `agy plugin install` | нет | `gemini extensions install` | `qwen extensions install` (понимает Claude-плагины и Gemini-расширения) | `goose plugin install` (Open Plugins) |
-| references/*.md как есть | да | да | да | да | да | да | да | да |
-| Hooks / statusline / mode-flag `/impulse-*` | только плагин | нет | нет | нет | нет | нет | нет | нет |
-| Подключение скилла | роутер по description | роутер по description | роутер по description | роутер по description | явный tool call `skill({name})`, агент решает по description | модель вызывает тул `activate_skill` + подтверждение пользователя | роутер по description + явная слэш-команда `/<skill>` | роутер по description |
-| Нативно читает чужие директории других таргетов | — | `.claude/skills/` | — | — | `.claude/skills/` И `.agents/skills/`, project+user | `.agents/skills/` (алиас), project+user | — | `.agents/skills/` И `.claude/skills/` (+ легаси `.goose/skills/`), project+user |
+| | Claude Code | Cursor | Codex | Antigravity | OpenCode | Gemini CLI | Qwen Code | Goose | Hermes Agent |
+|---|---|---|---|---|---|---|---|---|---|
+| SKILL.md нативно | да (исходный формат) | да | да | да | да | да | да | да | да, но своя схема (`metadata.hermes`) и вложенность `category/skill-name/`, не плоская |
+| Целевая директория этого инсталлера | `.claude/skills/` | `.claude/skills/` (алиас) | `.agents/skills/` | `.agents/skills/` (проект, = codex) / `~/.gemini/config/skills/` (пользователь) | `.agents/skills/` (проект, = codex) / `~/.config/opencode/skills/` (пользователь) | своего таргета нет; проект покрывает `--target=codex` | своего таргета нет; `npx skills -a qwen-code` -> `.qwen/skills/` | своего таргета нет; проект покрывает `--target=codex` | своего таргета нет; ручная копия в `~/.hermes/skills/impulse/` (раздел выше) |
+| Нативная плагин-система | `/plugin install` (marketplace) | нет | нет | `agy plugin install` | нет | `gemini extensions install` | `qwen extensions install` (понимает Claude-плагины и Gemini-расширения) | `goose plugin install` (Open Plugins) | `~/.hermes/plugins/<name>/` (`plugin.yaml`+`register(ctx)`), нет команды на весь репозиторий сразу |
+| references/*.md как есть | да | да | да | да | да | да | да | да | да |
+| Hooks / statusline / mode-flag `/impulse-*` | только плагин | нет | нет | нет | нет | нет | нет | нет | только плагин (свой `pre_llm_call`-адаптер, core-only) |
+| Подключение скилла | роутер по description | роутер по description | роутер по description | роутер по description | явный tool call `skill({name})`, агент решает по description | модель вызывает тул `activate_skill` + подтверждение пользователя | роутер по description + явная слэш-команда `/<skill>` | роутер по description | 3-уровневый progressive disclosure: `skills_list()` -> `skill_view(name)` -> `skill_view(name, path)` |
+| Нативно читает чужие директории других таргетов | — | `.claude/skills/` | — | — | `.claude/skills/` И `.agents/skills/`, project+user | `.agents/skills/` (алиас), project+user | — | `.agents/skills/` И `.claude/skills/` (+ легаси `.goose/skills/`), project+user | не проверялось — нет данных |

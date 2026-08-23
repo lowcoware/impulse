@@ -113,14 +113,14 @@ carry the evidence and the full versions):
 
 ## Delivery across harnesses
 
-Claude Code gets this via plugin hooks (`SessionStart`/`SubagentStart`).
-Gemini CLI and Qwen Code — which also run Qwen/DeepSeek via their own
-provider config — lack that hook path, so the ruleset is duplicated into
-`GEMINI.md` at the repo root (their `contextFileName` mechanism),
-`check-sync.js`-locked to this file. Wording (affirmative imperatives
-over negation chains, one worked example on the marker format) is tuned
-against sourced findings on why weaker models drop compound-negation
-instructions — research: `shared/multi-harness-robustness.md`.
+Claude Code gets this via plugin hooks. Gemini CLI/Qwen Code get
+`GEMINI.md` (`contextFileName`). Hermes Agent gets
+`hermes-plugin/impulse-core/` (a real Hermes plugin, re-injects every
+turn via `pre_llm_call`) — install guide: `INSTALL.md` § Hermes Agent.
+All copies are `check-sync.js`-locked to this file. Wording (affirmative
+imperatives over negation chains) is tuned against sourced findings on
+why weaker models drop compound-negation instructions — research:
+`shared/multi-harness-robustness.md`.
 
 ## Switches
 

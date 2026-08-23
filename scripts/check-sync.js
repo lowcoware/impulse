@@ -302,13 +302,25 @@ function main() {
     }
   }
 
+  // hermes-plugin/impulse-core/__init__.py is the fourth delivery surface
+  // (Hermes Agent's pre_llm_call injection, no plugin hooks or
+  // contextFileName equivalent there either) — same check.
+  const hermesText = readSkill('hermes-plugin/impulse-core/__init__.py');
+  for (const anchor of coreAnchors) {
+    if (hermesText === null) {
+      misses.push(anchor.id + ': hermes-plugin/impulse-core/__init__.py not found');
+    } else if (!has(hermesText, anchor.phrase)) {
+      misses.push(anchor.id + ': phrase "' + anchor.phrase + '" missing from hermes-plugin/impulse-core/__init__.py');
+    }
+  }
+
   if (misses.length > 0) {
     console.error('check-sync: ' + misses.length + ' miss(es):');
     for (const m of misses) console.error('  - ' + m);
     process.exit(1);
   }
 
-  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync (+' + coreAnchors.length + ' in GEMINI.md), rule spine covered.');
+  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync (+' + coreAnchors.length + ' in GEMINI.md, +' + coreAnchors.length + ' in hermes-plugin), rule spine covered.');
   process.exit(0);
 }
 

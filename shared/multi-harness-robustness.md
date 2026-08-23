@@ -1,13 +1,22 @@
 # Multi-harness robustness — delivering impulse-core to weaker models
 
-impulse ships to three CLI harnesses (Claude Code plugin hooks, Gemini
-CLI extension, Qwen Code extension — the last two share the same
-extension format; Qwen Code is a Gemini CLI fork that defaults to Qwen
-models and also runs DeepSeek through its provider config). Claude Code
-gets `impulse-core`'s ruleset via `SessionStart`/`SubagentStart` plugin
-hooks; Gemini CLI and Qwen Code don't run those hooks the same way, but
-both support a `contextFileName` manifest field that always-loads a
-markdown file into every session — that's `GEMINI.md` at the repo root,
+impulse ships to four CLI harnesses (Claude Code plugin hooks, Gemini CLI
+extension, Qwen Code extension — the last two share the same extension
+format; Qwen Code is a Gemini CLI fork that defaults to Qwen models and
+also runs DeepSeek through its provider config — plus Hermes Agent,
+NousResearch's general multi-provider agent harness, unrelated to the
+Hermes model fine-tunes beyond sharing an org). Claude Code gets
+`impulse-core`'s ruleset via `SessionStart`/`SubagentStart` plugin hooks;
+Gemini CLI and Qwen Code don't run those hooks the same way, but both
+support a `contextFileName` manifest field that always-loads a markdown
+file into every session — that's `GEMINI.md` at the repo root. Hermes has
+neither mechanism; its own hook system (`~/.hermes/hooks/`, YAML manifest
++ Python handler) is purely observational — return values are ignored —
+so the real injection point is a Hermes *plugin* (`~/.hermes/plugins/`,
+`plugin.yaml` + `register(ctx)`) registering a `pre_llm_call` callback,
+the one hook whose returned `{"context": ...}` dict actually lands in
+that turn's user message. `hermes-plugin/impulse-core/` is that plugin —
+install steps: `INSTALL.md` § Hermes Agent. All three delivery copies are
 kept in sync with the hook output by `scripts/check-sync.js`. Sourced
 from a dedicated research pass (see citations below); this file records
 the findings and the reasoning behind the wording choices in

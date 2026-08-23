@@ -1,0 +1,7 @@
+name: impulse-core
+version: 1.1.0
+description: Always-on engineering spine, verification layer, and token economy — the impulse suite's master layer, injected every turn
+author: Aki
+license: MIT
+provides_hooks:
+  - pre_llm_call
