@@ -221,6 +221,84 @@
     `fetch-depth: 0`, a matrix that grew, a cache that stopped hitting)
     before it shows up as a bill instead of a graph.
 
+## Solo/no-PR variant
+
+Rules 1-2 (trusted/untrusted split), 15 (rulesets/merge queue), and the
+`environment:`-with-reviewers gate in rule 7 assume a PR is where untrusted
+code and review both happen. Solo repos with everything pushed straight to
+`main` have neither — the trust boundary and the review step both disappear,
+so the workflow needs different guardrails, not the same ones with an owner
+missing:
+
+- **Trigger on `push` to `main`, not `pull_request`.** No fork PR ever
+  exists, so rule 2's `pull_request_target` footgun is moot — every run
+  already has full repo context and secrets, which is fine since nothing
+  untrusted ever enters. One workflow: build → test → deploy, gated by job
+  dependency (`needs:`), not by a separate trusted/untrusted split.
+- **The gate moves from "before merge" to "before push" — enforce it
+  locally.** With no PR, a red CI run means broken code already landed on
+  `main`. A pre-push git hook (`lefthook`, `husky`, or plain
+  `.git/hooks/pre-push`) running the same lint/typecheck/fast-test suite
+  CI runs is what used to be the PR gate — it has to run before the push,
+  not after. CI on `push` becomes the confirming run, not the first line
+  of defense.
+- **Auto-revert or auto-rollback on failure, since nothing blocked the bad
+  commit from `main`.** Two independent triggers: (a) CI red on `main` —
+  a workflow watching for failure on the just-pushed commit that opens a
+  revert (`git revert --no-edit <sha>` + auto-push, or at minimum a
+  notification, since there's no reviewer to catch it manually) and (b)
+  rule 3's health gate failing post-deploy — `docker compose` down to the
+  previous known-good tag/image rather than leaving a half-broken
+  container running. Both matter more here than in the PR-gated variant,
+  where a failing check simply blocks merge and `main` never sees it.
+- **Drop rule 7's `environment:` reviewers and rule 15's merge queue —
+  nothing to require a reviewer for or queue against.** Keep the
+  `environment:` block for its secret scoping, just without
+  `required-reviewers`. A required-status-check ruleset on `main` is still
+  worth keeping if commits ever land through a branch + self-merge instead
+  of direct push, but it has nothing to gate when the push goes straight
+  to `main`.
+- **Concurrency group still applies, `cancel-in-progress: true` even on
+  the deploy trigger.** Rule 8's exception (deploy never cancels) assumed
+  concurrent contributors could push a fix mid-deploy; solo, a second push
+  to `main` IS the fix for the first one — let it cancel and redeploy
+  rather than finish shipping a commit already superseded.
+- **Everything else in this file (SHA-pinning, `permissions: {}`,
+  timeout-minutes, caching, monorepo path-filtering, spend alerting) is
+  unchanged** — those defend against a compromised action or a runaway
+  bill, not against untrusted PR authors, and apply identically with zero
+  contributors.
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    # lint/typecheck/test — same checks the pre-push hook already ran locally
+    ...
+  deploy:
+    needs: [build-test]
+    environment: prod   # secret scoping only, no required reviewers
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd /srv/app && git pull && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+      - name: Health gate
+        run: for i in $(seq 1 10); do curl -fsS https://app.example.com/health && exit 0; sleep 5; done; exit 1
+      - name: Rollback on failed health gate
+        if: failure()
+        run: cd /srv/app && git reset --hard HEAD^ && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
 ```yaml
 deploy:
   needs: [build, test]

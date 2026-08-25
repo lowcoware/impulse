@@ -1,9 +1,10 @@
 # Agent-development velocity — what actually shortens time-to-merge
 
-Not about typing faster. The unit is time from task framing to an accepted
-change in main. Read by `impulse-goal` (the execution engine) and
-`impulse-project-management` (spec-driven workflow) — this file is the
-evidence base both stand on.
+**TOP RULE:** rework cost, not generation speed, is the bottleneck —
+every finding below optimizes for a clean first pass, not faster typing.
+The unit is time from task framing to an accepted change in main. Read by
+`impulse-goal` (the execution engine) and `impulse-project-management`
+(spec-driven workflow) — this file is the evidence base both stand on.
 
 ## Rework, not generation, is the bottleneck
 
@@ -68,31 +69,35 @@ meter) — the research validates the existing direction rather than
 prescribing a new one.
 
 Two concrete, still-current-in-2026 failure shapes behind that diagnosis:
-**lost-in-the-middle** — accuracy is highest when the relevant fact sits at
-the start or end of the input and drops by 30%+ when it's buried in the
-middle, confirmed across 17 long-context models in one multi-needle
-benchmark, none of which escaped the pattern — and **context rot** — a
-distinct, separate effect where accuracy declines as input grows even when
-the needed evidence is fixed and favorably placed (one controlled study: 0.92
-→ 0.68 reasoning accuracy as input grew from a few hundred to three thousand
-tokens). Neither is fixed by a bigger window; both are why front-loading the
+- **Lost-in-the-middle:** accuracy is highest when the relevant fact sits
+  at the start or end of the input and drops by 30%+ when it's buried in
+  the middle, confirmed across 17 long-context models in one multi-needle
+  benchmark, none of which escaped the pattern.
+- **Context rot:** a distinct, separate effect where accuracy declines as
+  input grows even when the needed evidence is fixed and favorably
+  placed (one controlled study: 0.92 -> 0.68 reasoning accuracy as input
+  grew from a few hundred to three thousand tokens).
+
+RULE: neither is fixed by a bigger window; both are why front-loading the
 ruleset and keeping the injected payload small (the meter) is the correct
 lever, not context-window size.
+Evidence:
 [Lost-in-the-middle still real in 2026, RULER multi-needle results](https://dev.to/gabrielanhaia/lost-in-the-middle-is-still-real-in-2026-even-on-1m-token-models-2ehj) ·
 [Context rot: why long-context LLMs degrade](https://www.tmls.nyc/research/context-rot-mechanistic)
 
 ## Parallelism — a size-and-separability threshold, not a default
 
-Parallel agents pay off specifically when: each task takes >2 minutes AND
-operates on a clearly separable file set. Below that, coordination overhead
-eats the gain. Two failure modes beyond textual merge conflicts, worth
-naming because they're silent: **duplicated implementations** (parallel
-branches independently build the same helper because they couldn't share the
-decision), and **semantic contradictions** (each branch is locally correct,
-composition breaks at runtime — passes review, fails in integration).
-Standard mitigation: git-worktree isolation per agent + automated
-verification gating the merge, never a manual scan for conflicts after the
-fact.
+- Parallelize only when BOTH hold: each task takes >2 minutes, AND the
+  tasks touch a clearly separable file set. Below that, coordination
+  overhead eats the gain.
+- Watch for two silent failure modes beyond textual merge conflicts:
+  **duplicated implementations** (parallel branches independently build
+  the same helper because they couldn't share the decision), and
+  **semantic contradictions** (each branch is locally correct,
+  composition breaks at runtime — passes review, fails in integration).
+- Mitigate with git-worktree isolation per agent plus automated
+  verification gating the merge — never a manual scan for conflicts
+  after the fact.
 
 **Applies to impulse:** the same threshold now gates `impulse-brainstorm`'s
 subagent fan-out (`references/panel.md`) — that gate was reversal-cost-based
@@ -102,16 +107,19 @@ Full mechanics: `shared/subagents.md`.
 
 ## Prompt caching — real, and time-sensitive to configure right
 
-Confirmed savings: 60-90% lower cost on cache hits, 30-80% lower latency
-(prefill is usually the slow part of a request). The one operational trap:
-providers have moved cache TTLs shorter over time (a 60-minute default
-dropping to 5 minutes was one documented 2026 change) — a session or hook
-built assuming the old TTL silently pays 30-60% more without any code
-change. *Practical rule:* put static content (system prompt, ruleset,
-reference docs) before dynamic content in every prompt — caching matches a
-prefix, and the moment it diverges, everything after stops being cached.
-This is already this suite's own architecture (`hooks/impulse-instructions.js`
-emits static ruleset text) — the finding confirms the shape, not a change.
+Cache hits: 60-90% cheaper, 30-80% faster (prefill is usually the slow
+part of a request). Cache TTLs have gotten shorter over time — a
+60-minute default dropping to 5 minutes was one documented 2026 change —
+check the configured TTL before assuming it's long; a session or hook
+built assuming the old TTL silently pays 30-60% more with no code change.
+
+RULE: put static content (system prompt, ruleset, reference docs) before
+dynamic content in every prompt — caching matches a prefix, and the
+moment it diverges, everything after stops being cached.
+
+Applies to impulse: this is already this suite's own architecture
+(`hooks/impulse-instructions.js` emits static ruleset text) — the finding
+confirms the shape, not a change.
 
 ## Search and read discipline — escalate, never start broad
 
@@ -161,14 +169,15 @@ the moment:
 
 Two TTLs exist across providers and a session runs on whichever is
 configured — a short one (cache write costs more, expires fast) or a long
-one (cache write costs less per read, stays warm longer). Don't assume the
-short one and schedule extra work to "beat" an expiry that isn't actually
-close — on a long-TTL session, pacing wakeups to protect the cache is
-wasted effort; the context is still warm regardless. Match any scheduled
-follow-up to what's actually being waited on, not a guessed cache clock.
-Keep stable content (instructions, references) early in every prompt,
-volatile content late — this is the general form of the caching rule
-above, restated as a session-hygiene habit, not just a hook-authoring one.
+one (cache write costs less per read, stays warm longer). Match wakeup
+pacing to the TTL actually configured for this session: treat the cache
+as unaffected until the TTL is confirmed short, since pacing wakeups to
+"beat" an expiry on a long-TTL session is wasted effort — the context
+stays warm regardless. Match any scheduled follow-up to what's actually
+being waited on, not a guessed cache clock. Keep stable content
+(instructions, references) early in every prompt, volatile content late —
+the general form of the caching rule above, restated as a session-hygiene
+habit, not just a hook-authoring one.
 
 **Where the cost concentrates, when measured.** One real multi-day audit
 attributed spend roughly 54% cache-read (driven by turn count × context
@@ -190,23 +199,30 @@ models. The documented caveat matters more than the headline: a task routed
 to a cheap model that needs 3-4 retry passes plus human cleanup can cost MORE
 than one clean frontier-model pass — and task cost is not reliably
 predictable in advance (one benchmark saw the same nominal task vary up to
-30x in total tokens across agentic runs). *Practical rule:* route by task
-TYPE (file navigation, mechanical edits → cheap; architecture, ambiguous
-specs → frontier), not by a guessed complexity score, and keep a budget
-guard rather than assuming the cheap path stays cheap.
+30x in total tokens across agentic runs).
+
+RULE:
+1. Route by task TYPE: file navigation/mechanical edits -> cheap model;
+   architecture/ambiguous specs -> frontier model.
+2. Do not route by a guessed complexity score — type, not estimated
+   difficulty, decides the model.
+3. Keep a budget guard active regardless of which model is routed to; a
+   cheap-model task can still blow past its expected cost on retries.
 
 ## Feedback loop speed — the thresholds are human, and still apply
 
-The Doherty threshold and its refinements: 1.0 second is the ceiling for
-uninterrupted flow, 10 seconds is the attention limit before context-
-switching cost kicks in, and losing focus past the 10-minute mark costs
-~23 minutes to recover. No agent-specific version of this threshold was
-found — but a human still reviews the agent's output, so a slow test/lint
-loop taxes the human half of the cycle exactly as it always did. Practical
-target teams converge on: seconds to low single-digit minutes for the
-loop an agent iterates against locally; anything crossing into
-coffee-break territory (the old 10-minute mark) breaks the same flow state
-it always broke, agent or not.
+The Doherty threshold and its refinements:
+- 1.0 second: ceiling for uninterrupted flow.
+- 10 seconds: attention limit before context-switching cost kicks in.
+- 10 minutes: focus-loss threshold, ~23 minutes to recover.
+
+No agent-specific version of this threshold was found — but a human
+still reviews the agent's output, so a slow test/lint loop taxes the
+human half of the cycle exactly as it always did.
+
+RULE: keep the agent's local test/lint loop in the seconds-to-low-
+single-digit-minutes range; anything crossing the 10-minute mark breaks
+flow the same way it always did, agent or not.
 
 **Applies to impulse:** `impulse-goal`'s phase loop and any verify step
 should treat its own test/lint runtime as a first-class design constraint,
@@ -220,9 +236,16 @@ checkpoints" on time-to-accepted-result. What the field does say: fully
 autonomous is good for well-scoped, low-error-consequence work; a poorly
 designed human-checkpoint system (too many approvals) can be SLOWER than
 doing the work manually — the win from checkpointing isn't automatic, it
-depends on checkpoint density matching the actual error consequence. This
-isn't resolved by a single number; the honest answer is "depends on the
-task's error cost," not "batching wins" or "checkpoints win."
+depends on checkpoint density matching the actual error consequence.
+
+Decision rule for checkpoint density, picked from the task's actual blast
+radius rather than defaulting to either extreme:
+1. Low consequence (reversible, low-blast-radius change) -> run fully
+   autonomous, no checkpoint.
+2. Medium consequence (touches shared code, hard to review diff) ->
+   checkpoint once before merge.
+3. High consequence (data migration, security, prod config) -> checkpoint
+   at each major step.
 
 ## Tools over reasoning — has a number now
 
@@ -248,26 +271,38 @@ reasoning drift vs. a script's fixed behavior).
 DORA's 2025 report added "rework rate" (unplanned fixes pushed to
 production) as a fifth core metric specifically because AI-authored code
 broke the original four-metric picture — deploy frequency and lead time can
-both improve while quality silently degrades. Do not report impulse's impact
-via output volume or deploy frequency alone; rework rate (or its proxy here:
-`impulse-review` BLOCK count that reaches main anyway, if that's ever
-measurable) is the metric that would actually validate or falsify this
-suite's central claim.
+both improve while quality silently degrades.
 
-**Don't stop at DORA, and don't invent a custom productivity score
-instead.** DORA answers "how well does the team deliver" — it's blind to
-where the actual time goes: one 2026 analysis found DORA metrics miss the
-~47% of developer time spent in communication/coordination entirely, and
-roughly half of developers report losing 10+ hours a week to
-organizational friction DORA has no way to see. SPACE (Satisfaction,
-Performance, Activity, Communication, Efficiency) is the complementary
-lens for exactly that blind spot — reach for it when DORA numbers look
-fine but something still feels wrong, not as a DORA replacement. Neither
-framework is a license to build a bespoke "productivity score" from
-whatever's easy to log (lines of code, commit count, ticket velocity) —
-that's the ladder's over-engineering direction applied to metrics: use
-the two established frameworks together before inventing a third.
+RULE: report impulse's impact using rework rate (or its proxy here:
+`impulse-review` BLOCK count that reaches main anyway, if that's ever
+measurable) as the primary metric, with output volume/deploy frequency
+only as secondary context — that's the metric that would actually
+validate or falsify this suite's central claim.
+
+**Use DORA and SPACE together; build a third metric only if both leave a
+real gap unaddressed.** DORA answers "how well does the team deliver" —
+it's blind to where the actual time goes: one 2026 analysis found DORA
+metrics miss the ~47% of developer time spent in communication/
+coordination entirely, and roughly half of developers report losing 10+
+hours a week to organizational friction DORA has no way to see. SPACE
+(Satisfaction, Performance, Activity, Communication, Efficiency) is the
+complementary lens for exactly that blind spot — reach for it when DORA
+numbers look fine but something still feels wrong. A bespoke
+"productivity score" built from whatever's easy to log (lines of code,
+commit count, ticket velocity) is the ladder's over-engineering direction
+applied to metrics.
+Evidence:
 [Swarmia: comparing DORA, SPACE, and DX Core 4](https://www.swarmia.com/blog/comparing-developer-productivity-frameworks/)
+
+## Before you apply any of this
+
+Re-check against the highest-impact rules in this file: are you
+optimizing for a clean first pass, not faster generation (top rule)? Is
+the spec settled before code exists to be reworked? Does your search
+follow the escalation ladder with an explicit output cap? Are independent
+tool calls batched and stable values cached once per session? Is
+checkpoint density picked from the task's actual blast radius, not a
+default?
 
 ## Sources
 

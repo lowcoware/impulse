@@ -47,8 +47,9 @@ system: `impulse-frontend`):
   that works.
 - Carve-outs never simplified away: trust-boundary input validation,
   error handling that prevents data loss, security, anything explicitly
-  requested — and with a domain mode active, its day-one baseline joins
-  this list (`impulse-backend/references/baseline.md`).
+  requested. With a domain mode active, also preserve its day-one baseline
+  (`impulse-backend/references/baseline.md`) — a separate sentence, not an
+  exception buried inside the base list.
 - Every deliberate ceiling gets a marker: `// impulse: <ceiling>,
   <upgrade trigger>` (`#` in Python) — e.g. `// impulse: in-memory cache,
   move to Redis past one instance.` A marker with no trigger is rot —
@@ -59,10 +60,10 @@ system: `impulse-frontend`):
   unrequested abstraction) ships alongside it.
 - **Stop at done.** Acceptance criteria pass — stop. Ship that: polish,
   cleanup, or extra tests after the pass wait for the user to ask.
-- **Touch only what the task owns — no drive-by edits.** Unrelated
-  behavior and the user's own edits stay exactly as found — an
-  improvement nobody asked for in a file the task didn't own is a
-  regression risk with no requirement backing it.
+- **Touch only files the task owns; treat any drive-by edit as out of
+  scope.** Everything else, including the user's own edits, stays exactly
+  as found — an improvement nobody asked for in a file the task didn't
+  own is a regression risk with no requirement backing it.
 
 ## Layer 2 — verification
 
@@ -89,27 +90,39 @@ Distilled from `shared/velocity.md` and `shared/token-hygiene.md` (both
 carry the evidence and the full versions):
 
 - **Search escalation** — known file -> its neighbor -> scoped grep
-  (path + pattern + result cap) -> repo-wide last. Cap output before
-  running: `git log` with `-n`, a bounded grep — not a raw recursive
-  listing or full verbose log.
+  (path + pattern + result cap) -> repo-wide last.
+- **Output cap** — always pass an explicit bound before running a
+  search or log command: `git log` with `-n`, a bounded grep, never an
+  unbounded recursive listing or full verbose log.
 - **Narrow reads** — offset/limit on large files; structure scan
   (tree/signatures/targeted grep) before a full read. Trust your own
   edit's result; re-read only when an external process (formatter,
   linter, generator) touched the file since.
-- **Batch and don't repeat** — independent tool calls go in one round;
-  a stable value (auth token, config, build ID) is fetched once per
-  session and reused; treat state as unchanged until something could
-  plausibly have changed it.
+- **Batch and cache** — independent tool calls go in one round; a
+  stable value (auth token, config, build ID) is fetched once per
+  session and reused.
+- **Assume state is current** — treat a fetched value as unchanged
+  unless something could plausibly have changed it since.
 - **Scratch files** — long output worth keeping goes to a scratch file
   once, read back selectively; rewriting the same scratch file every few
   turns re-pays for it each time.
-- **Delegation test** — a many-file sweep with a small answer is a
-  subagent job when tokens-to-explore far exceeds tokens-of-answer; the
-  subagent returns a summary, never a raw transcript
+- **Delegation test** — delegate to a subagent when a sweep needs
+  reading more than 5 files or skimming more than 2000 lines to produce
+  an answer under a few hundred words: tokens-to-explore far exceeds
+  tokens-of-answer. The subagent always returns a condensed summary
   (`shared/subagents.md`).
 - **Memory protocol** — a project with `.impulse/memory/` follows
   `shared/memory.md`: index first, full text on demand, verify a stored
   fact against current repo state before acting on it.
+
+## Before you finish
+
+Re-check the draft output against Layer 1/2's own bullets before
+finishing: touched only files this task owns? every non-trivial
+API/function call verified against something seen this session? every
+done/works/passes claim backed by shown output? Fix any "no" before
+finishing — this is the same restatement injected at the end of the
+compact ruleset every turn (`hooks/impulse-instructions.js`).
 
 ## Delivery across harnesses
 

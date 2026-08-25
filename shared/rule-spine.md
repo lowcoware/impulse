@@ -1,8 +1,8 @@
 # Rule spine — builder rule ↔ detector ↔ review tag
 
-The crosswalk `impulse-review` reads before a sweep. It MAPS; it never
-restates — a rule's text lives in its Owner file, its detection in the
-Detector column, and a review finding cites the ID.
+**RULE: a review finding cites the ID, never restates the rule's text.** The
+ID is a citation — a rule's text lives in its Owner file, its detection in
+the Detector column. Restated at the end of this file too.
 
 Why it exists: review's tag tables were a hand-copied subset of the builder
 skills' rules, so a rule added to a builder stayed unreviewed until someone
@@ -11,13 +11,10 @@ were unreachable too: a mobile or infra diff hit no tag set at all.
 `node scripts/check-sync.js` now fails when an enumerated builder rule has no
 row here, or a row cites a tag review doesn't define.
 
-Direction of travel: **builder owns the rule → spine assigns the ID → review
-fires the tag citing the ID → the author retires it** with `impulse-ok <id>`
-(FE, in source) or a `impulse:` marker with an upgrade trigger (BE).
-
-An ID is a citation, not a restatement: cite it, then read the Owner file for
-the actual bar. A review finding that paraphrases a rule from memory instead
-of citing its ID is how the drift started.
+Direction of travel: builder owns the rule -> spine assigns the ID -> review
+fires the tag citing the ID -> the author retires it. Frontend: the author
+retires an ID with `impulse-ok <id>` in source. Backend: the author retires
+an ID with an `impulse:` marker that names an upgrade trigger.
 
 ## Frontend — mechanical
 
@@ -39,12 +36,21 @@ to a tag:
 | `code` | `bug:` |
 
 **Precedence: a judgment row beats the group table.** When a scanner id is the
-Detector of an `FE-H*` row below, the row's tag wins — `#2`/`#3` (h-screen/dvh)
-and `#4`/`#5` (scroll listener, reduced-motion) report as `motion:` per
-`FE-H01`/`FE-H03`/`FE-H04`, `#15` as `token:` per `FE-H10`, `#19` as `a11y:`
-per `FE-H07`, `#26` as `bug:` per `FE-H15` — regardless of the group the
-scanner filed them under. The group table is the default for ids with no row
-(`tN` bans, `#16` and friends). One violation, one tag.
+Detector of an `FE-H*` row below, the row's tag wins, regardless of the group
+the scanner filed it under:
+
+| Scanner id | Overriding row | Tag |
+|---|---|---|
+| `#2` | FE-H01 | `motion:` |
+| `#3` | FE-H01 | `motion:` |
+| `#4` | FE-H03 | `motion:` |
+| `#5` | FE-H04 | `motion:` |
+| `#15` | FE-H10 | `token:` |
+| `#19` | FE-H07 | `a11y:` |
+| `#26` | FE-H15 | `bug:` |
+
+An id not in this table uses the group table above (`tN` bans, `#16` and
+friends). One violation, one tag.
 
 Ids are preflight.md's own numbering — never renumber them here. A finding
 citing `#15` has to be greppable in preflight.md and suppressible in source
@@ -146,6 +152,16 @@ Owner: `impulse-devops/references/compose.md`, `dockerfile.md`, `ci.md`,
 Compose files, Dockerfiles, and workflow/pipeline YAML, which no builder's
 tag set previously reached.
 
+**Check every diff first — the `bug:`-tagged rows below (silent failure or
+secret exposure, not just a missed best practice):** DO-CI2
+(`pull_request_target` running fork code), DO-CI6 (unsanitized event field
+in `run:`), DO-CI10 (action pinned to a tag, not a SHA), DO-CI14
+(self-hosted runner on a public repo), DO-GL8 (deploy secret readable from
+an unprotected branch), DO-GL9 (`CI_JOB_JWT` still referenced), DO-GL10
+(fork MR pipelines running with parent-project variables unreviewed). Every
+other row below is `infra:` — check it when the diff actually touches that
+tool.
+
 | ID | Rule | Detector | Tag |
 |---|---|---|---|
 | DO-CO1 | base + override compose layout, merge verified | `docker compose config` not trusted blind | `infra:` |
@@ -228,6 +244,12 @@ any of it harden into a numbered list, it gets rows here like everything else.
 
 ## Adding a rule
 
+0. Parity only checks an owner that declares an enumerated list: frontend
+   hard rules, BE/MO baselines and ladders, the devops numbered references,
+   legacy's three steps, security's two mistakes. `check-sync.js` counts
+   those and fails on a mismatch. A single standalone rule (`LG-B1`,
+   `LG-S1`) gets a row here but nothing to count it against — CI will not
+   catch a missing one; you are the only check for those two.
 1. Write it in the Owner file — that stays the single source of its text.
 2. Add one row here: ID, ≤8-word summary, detector, tag.
 3. If no existing tag fits, add the tag to `impulse-review/references/tags.md`
@@ -235,9 +257,5 @@ any of it harden into a numbered list, it gets rows here like everything else.
 4. Mechanical and FE? Add the detector to `preflight.mjs` too, so the author
    catches it before review does. Review is the backstop, not the first pass.
 
-Parity is enforced only where the owner declares an enumerated list (the
-frontend hard rules, the BE/MO baselines and ladders, the devops numbered
-references, legacy's three steps, security's two mistakes) — `check-sync.js`
-counts those and fails on a mismatch. A single standalone rule (`LG-B1`,
-`LG-S1`) has a row but nothing to count it against; adding one is a judgment
-call the linter can't make for you.
+Restated: a review finding cites the ID and never restates the rule's text
+from memory — the Owner file is the only place the rule's wording lives.

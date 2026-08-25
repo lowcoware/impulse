@@ -1,5 +1,9 @@
 # Subagents — configuration, scope, orchestration, and when they're worth it
 
+**Load-bearing rule, stated once here and again in the closing checklist:**
+every delegation message states WHY the task matters, in the same message
+as WHAT to do — not as a separate step.
+
 Canonical owner for subagent policy across the suite. Was scattered across
 13 files with no owner (research-checklist finding, 2026-07-24) — this file
 absorbs the general-purpose content that had settled under
@@ -149,15 +153,19 @@ from placeholders. Three things follow, and they're the reason to bother:
    inherits the session's — which is the most expensive one in play. A mechanical
    worker that inherits a frontier model costs frontier money for boilerplate,
    and nothing in the output says so.
-3. **Briefs are built by script, not pasted.** A `task-brief` that extracts one
-   task's text from the plan to a file, and a `review-package` that assembles
-   commit list + stat + net diff with extended context, both exist so the
-   material never transits the orchestrator's context on the way to the worker.
-   The saving is on the ORCHESTRATOR's side — the worker was always going to
-   read it. Build the diff against the task's recorded base commit, not `HEAD~1`,
-   or a multi-commit task gets reviewed as its last commit only; name the output
-   per commit-range so a re-review after fixes gets a fresh file instead of
-   silently reading the stale one.
+3. **Briefs are built by script, not pasted.**
+   a. The orchestrator never retypes task material into a prompt — a
+      script builds the brief instead. The saving is on the
+      ORCHESTRATOR's side; the worker was always going to read it.
+   b. Use a `task-brief` script to extract one task's text from the plan
+      into a file.
+   c. Use a `review-package` script to assemble the commit list, diff
+      stat, and net diff with context into a file.
+   d. Build the diff against the task's recorded base commit, never
+      `HEAD~1` — a multi-commit task diffed against `HEAD~1` only shows
+      its last commit.
+   e. Name each review-package output file by its commit range, so a
+      re-review after fixes reads a fresh file instead of a stale one.
 
 Template placeholders are `[BRACKETED]` and load-bearing: an unfilled one that
 reaches a worker is a defect, and it's greppable before dispatch precisely
@@ -190,10 +198,10 @@ because it's a template.
   across independent looks is evidence, agreement engineered by handing out
   opposing constraints is not. Diverge the brief when producing candidates,
   hold it fixed when verifying one.
-- **No direct subagent-to-subagent messaging.** The orchestrator-worker
-  pattern is the only supported shape: the lead agent plans, delegates in
-  parallel, subagents report back to the lead (not to each other) — avoids
-  the "telephone game" of information degrading across hops.
+- **Subagents report only to the lead agent — every hop direct.** The
+  orchestrator-worker pattern is the only supported shape: the lead agent
+  plans, delegates in parallel, subagents report back to the lead, not to
+  each other.
 
 ## Durable orchestration — surviving compaction and interruption
 
@@ -217,49 +225,48 @@ the first compaction. Mechanics that survive:
 
 ## Handoff discipline — orchestrator ↔ worker
 
-1. **Hand off files, not pasted context.** A worker gets paths to read, not
-   a 5k-token paste that goes stale the moment the file changes.
-2. **Fixed status vocabulary** in worker reports: DONE /
-   DONE_WITH_CONCERNS / BLOCKED / NEEDS_CONTEXT. Free-prose status forces
-   the orchestrator to interpret; a contract doesn't. **Grant permission to
-   use the bad statuses in the same breath as defining them** — say plainly
-   that stopping is allowed, that bad work is worse than no work, and that
-   escalating is not penalized. A vocabulary with no permission clause
-   collapses to DONE, because a worker with no stated licence to stop reads
-   "report status" as "report success". Name the triggers rather than leaving
-   it to judgment: an architectural choice with several valid answers, a task
-   that needs code beyond what was handed over, restructuring the plan didn't
-   anticipate, or reading file after file without converging.
-3. **Never pre-judge a reviewer's findings** — the orchestrator forwards
-   the diff without its own "this looks fine" framing, or the reviewer
-   anchors on it. Mirror rule for the reviewer: a worker's stated rationale
-   is a CLAIM, not a severity discount — "the plan said to do it this way"
-   never downgrades a defect; the plan's author doesn't grade its own work.
-4. **Report file ≠ final message.** Worker writes the full report
-   (evidence, test output, concerns) to a file; the final message is ~15
-   lines pointing at it — keeps orchestrator context lean without losing
-   the evidence trail. On a review round-trip the worker is resumed with the
-   findings and APPENDS a fix report to the same file — what changed, which
-   covering tests ran, the command, its output — then replies with the same
-   short status contract. One file per task accumulates the whole history;
-   a second report file loses the thread. State the division explicitly in
-   the worker's prompt: the reviewer will not re-run tests on the worker's
-   behalf, so the worker's report IS the test evidence, and a claim with no
-   pasted output is an unverified claim no matter how confident it reads.
-5. **Batch fix dispatches.** One worker fixing N related findings beats N
+1. Hand workers file paths to read, never a pasted context block that
+   goes stale the moment the file changes.
+2. Worker replies use exactly one fixed status: DONE / DONE_WITH_CONCERNS
+   / BLOCKED / NEEDS_CONTEXT. Free-prose status forces the orchestrator
+   to interpret; a contract doesn't.
+3. Escalating (BLOCKED/NEEDS_CONTEXT) is expected, not penalized — use it
+   when: the architecture has several valid answers, the task needs code
+   beyond what was handed over, the plan doesn't fit reality once read,
+   or you're reading file after file without converging. A vocabulary
+   with no stated permission to stop collapses to DONE, because a worker
+   with no licence to stop reads "report status" as "report success."
+4. Never let the orchestrator pre-frame a diff as fine before a reviewer
+   sees it — forward it with no "this looks fine" framing attached.
+5. A worker's stated rationale is a claim, not a severity discount —
+   "the plan said to do it this way" never downgrades a defect; the
+   plan's author doesn't grade its own work.
+6. Write the full report (evidence, test output, concerns) to a file;
+   keep the final message to ~15 lines pointing at it — lean orchestrator
+   context without losing the evidence trail.
+7. On a review round-trip, resume the worker and append a fix report to
+   that same file (what changed, which covering tests ran, the command,
+   its output) — a second report file loses the thread. The reviewer
+   will not re-run tests on the worker's behalf, so the worker's report
+   IS the test evidence; a claim with no pasted output is unverified no
+   matter how confident it reads.
+8. Batch fix dispatches: one worker fixing N related findings beats N
    workers fixing one each — shared context loads once.
-6. **Turn count beats token price** when picking a worker model: a stronger
-   model that finishes in 2 turns is usually cheaper than a weak one that
-   thrashes for 8.
-7. **Enforce read-only with hooks, not prompt convention.** An audit/review
-   subagent whose non-destructiveness matters gets a `PreToolUse` hook
-   hard-blocking Write/Edit/Bash — the harness guarantees what the prompt
-   only requests. If Bash stays allowed with a command blocklist, the
-   blocker must UNWRAP interpreters first (`sh -c`, `python -c`, `node -e`,
-   pipe-to-shell, `env X=y sh -c`) and re-check the inner command — the
-   wrapper bypass is the standard hole. Simplest alternative when no Bash is
-   needed at all: a read-only permissions profile (allow Read/Glob/Grep,
-   deny the rest), no hook code.
+9. Pick a worker model by turn count, not sticker price: a stronger
+   model that finishes in 2 turns is usually cheaper than a weak one
+   that thrashes for 8.
+
+**Enforce read-only with hooks, not prompt convention.** An audit/review
+subagent whose non-destructiveness matters gets a `PreToolUse` hook
+hard-blocking Write/Edit/Bash — the harness guarantees what the prompt
+only requests. When Bash stays allowed with a command blocklist, treat
+that blocklist as incomplete until it unwraps interpreters first: check
+inside `sh -c`, `python -c`, `node -e`, piped-to-shell input, and
+`env X=y sh -c` for the real command, then re-apply the blocklist to what's
+inside — the wrapper bypass is the standard hole. Prefer a read-only
+permissions profile (allow Read/Glob/Grep, deny the rest) over a Bash
+blocklist whenever the task doesn't need Bash at all — no hook code
+needed.
 
 ## ReAct / self-reflection — diminishing returns, not free improvement
 
@@ -280,18 +287,20 @@ verifier signal or a different decomposition, not more attempts.
 
 ## Model/effort per subagent
 
-No suite-wide rule to state with confidence — the field data cuts both
-ways. Routing mechanical subagents (file navigation, boilerplate edits) to a
-cheaper/faster model is a real, reported cost win — but a cheap-model
-subagent needing several retry passes plus cleanup can cost more than one
-clean frontier pass, and per-task cost isn't reliably predictable up front
-(agentic runs on nominally the same task have varied by an order of
-magnitude in total tokens in published benchmarks). *Practical stance:*
-route by task TYPE (mechanical → cheap tier is safe), not by a guessed
-complexity score, and don't assume a cheap-tier subagent stays cheap without
-a budget check. Whatever the routing decision, it is DECLARED per role
-(§ Dispatch artifacts) — the uncertainty is about which tier a role deserves,
-never about whether the tier should be written down.
+Pick a worker model by task type, not a complexity guess — per-task cost
+isn't reliably predictable up front (agentic runs on nominally the same
+task have varied by an order of magnitude in total tokens in published
+benchmarks), so type is the more reliable signal:
+
+1. Mechanical work (file navigation, boilerplate edits, format
+   conversion) -> cheapest/fastest tier.
+2. Judgment work (architecture review, ambiguous requirements, synthesis
+   across sources) -> the same tier the orchestrator is running on.
+3. Unsure which bucket -> tier up, not down; a cheap-tier worker that
+   needs a retry pass often costs more than one clean frontier pass.
+
+Whichever tier is picked, write it into the role's frontmatter `model`
+field (§ Dispatch artifacts) — never leave it unset.
 
 ## Evaluating tool-selection behavior, not just tool implementation
 
@@ -327,16 +336,16 @@ into-code-writing-agents). Leaving the default as-is rather than guessing —
 this is exactly the kind of change that should follow a measurement, not
 precede one.
 
-## Never dump a raw transcript into the parent
+## Return a summary, not the transcript
 
-A subagent's full transcript (every tool call, every intermediate read)
-can run tens of thousands of tokens; pulling it into the parent's context
-defeats the isolation this file's § Context isolation section exists to
-provide, and risks forcing a mid-conversation compaction on its own. The
-worker returns a final summary message BY DESIGN (§ Context isolation
-above) — never a mechanism that surfaces its raw transcript to satisfy
-curiosity about what it did. If the summary is insufficient, dispatch a
-narrower follow-up task, don't reach for the transcript.
+Return the worker's final summary message only — that's the design (§
+Context isolation above), not an accident. A subagent's full transcript
+(every tool call, every intermediate read) can run tens of thousands of
+tokens; pulling it into the parent's context defeats the isolation §
+Context isolation exists to provide, and risks forcing a mid-conversation
+compaction on its own. If the summary is insufficient, dispatch a
+narrower follow-up task to get more detail — don't reach for the
+transcript.
 
 ## Delegation as context isolation — a sizing test, not just a scope call
 
@@ -360,6 +369,23 @@ escalate to a full read only if the narrow pass didn't resolve the
 question. Same shape as `impulse-legacy`'s characterize-before-refactor
 gate, applied to file reads specifically: don't pay for the whole body
 when the question only needed the shape.
+
+## Before you finish a dispatch
+
+1. Does the subagent's system prompt contain all four of: Objective,
+   Output format, Tool/source guidance, Task boundaries?
+2. Does the per-dispatch message contain Goal, Context (the why), and
+   Instructions as three separate fields?
+3. Is `model` set explicitly in the role's frontmatter, never left to
+   inherit?
+4. Is the tool list narrowed to only what this task needs?
+5. If this is a review/audit worker, is destructive access blocked by a
+   hook or permissions profile, not just by the prompt asking nicely?
+6. Does the worker's final message point at a report file rather than
+   pasting the transcript inline?
+
+Restated: every delegation message states WHY the task matters, in the
+same message as WHAT to do.
 
 ## Sources
 

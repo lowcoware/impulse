@@ -5,14 +5,14 @@ description: "Universal entry point and router for the impulse suite. Describe a
 
 # impulse — router
 
-Read the user's situation (their words + the repo: changed files, stack,
-whether there's an observed failure) and recommend which impulse skill to plug
-in. Suggest, don't hijack: name the best fit and why, then proceed with it if
-the match is clear, or present a short pick-list if it's genuinely ambiguous.
-One-shot. Changes no modes, writes no files. Lightweight checks only (`git
-status`, file tree, package manifest) — never dispatch a subagent/fork to
-explore the repo before recommending; still ambiguous after a quick look ->
-`AskUserQuestion`, not deeper exploration.
+1. Read the user's words plus a quick repo check: `git status`, file tree,
+   package manifest — those three only.
+2. Match the situation to one row in the routing table below.
+3. Exactly one clear match -> name it, give a one-line reason, proceed with
+   it.
+4. Two or more rows match, or none do -> stop and ask with
+   `AskUserQuestion` instead of exploring further.
+5. One-shot: change no modes, write no files.
 
 ## Output shape
 
@@ -75,13 +75,18 @@ Where two skills look plausible, the fork is the value:
 - **backend/frontend vs legacy.** Greenfield or code written this session ->
   backend/frontend. Existing/unfamiliar code needing characterization tests
   and blast-radius first -> legacy (then it hands back to the builder skill).
-- **humanizer vs md-generator vs artifact vs wiki vs pm.** Voice/AI-tells
-  of prose -> humanizer. Obsidian FORMATTING of one note -> md-generator.
-  Rendering as a standalone shareable HTML file (report/plan/diagram) ->
-  artifact. WHERE a note lives, vault structure/MOCs/health/Canvas/Bases ->
-  wiki. WHAT the doc should say and whether it exists -> pm. They stack: pm
-  decides content, humanizer voices it, md-generator formats the note,
-  wiki places it in the vault and keeps it connected.
+- **humanizer vs md-generator vs artifact vs wiki vs pm.**
+
+  | Signal | Skill |
+  |---|---|
+  | Fix voice / remove AI-tells in existing prose | humanizer |
+  | Format one note as Obsidian markdown | md-generator |
+  | Produce one shareable standalone HTML file (report/plan/diagram) | artifact |
+  | Decide where a note lives in the vault (structure/MOCs/Canvas) | wiki |
+  | Decide what the doc should say, or whether it exists yet | pm |
+
+  They often chain: pm decides content -> humanizer voices it ->
+  md-generator formats it -> wiki places it.
 - **review vs clone.** Judging code you have -> review. Rebuilding a site you
   don't have the source of -> clone.
 - **frontend vs artifact.** App UI that lives in the codebase (routing,
@@ -101,11 +106,14 @@ Where two skills look plausible, the fork is the value:
 - The `impulse-core` layer (engineering spine + token economy) is hook-injected
   every session independently of these modes — `stop impulse` leaves it on;
   `/impulse-core off` disables it durably.
-- Off-charter asks route OUT of the suite, say so plainly: offensive
-  security / pentest / bug bounty -> companion `claude-bughunter`;
-  token-compressed chat mode -> companion `caveman`; deep general web
-  research -> the host's research tooling; a chart/dataviz -> the host's
-  dataviz skill.
+- Off-charter asks route OUT of the suite, say so plainly:
+
+  | Ask type | Route to |
+  |---|---|
+  | Offensive security / pentest / bug bounty | companion `claude-bughunter` |
+  | Token-compressed chat mode | companion `caveman` |
+  | Deep general web research | the host's research tooling |
+  | Chart / dataviz | the host's dataviz skill |
 
 ## Boundaries
 
@@ -114,3 +122,11 @@ skill; that skill does the work. Not the static card — that's `impulse-help`.
 Nothing here changes mode or state.
 "stop impulse" / "normal mode": turn off the domain modes; the always-on
 core layer stays (disable that with `/impulse-core off`).
+
+## Before you answer
+
+Confirm before giving the recommendation: checked the routing table for a
+matching row? if two or more rows matched, used the disambiguation table
+and `AskUserQuestion` if still tied? repo check limited to the three listed
+commands, no subagent, no deeper exploration? changed no modes and wrote
+no files?

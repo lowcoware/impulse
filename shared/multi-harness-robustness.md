@@ -1,29 +1,40 @@
 # Multi-harness robustness — delivering impulse-core to weaker models
 
-impulse ships to four CLI harnesses (Claude Code plugin hooks, Gemini CLI
-extension, Qwen Code extension — the last two share the same extension
-format; Qwen Code is a Gemini CLI fork that defaults to Qwen models and
-also runs DeepSeek through its provider config — plus Hermes Agent,
-NousResearch's general multi-provider agent harness, unrelated to the
-Hermes model fine-tunes beyond sharing an org). Claude Code gets
-`impulse-core`'s ruleset via `SessionStart`/`SubagentStart` plugin hooks;
-Gemini CLI and Qwen Code don't run those hooks the same way, but both
-support a `contextFileName` manifest field that always-loads a markdown
-file into every session — that's `GEMINI.md` at the repo root. Hermes has
-neither mechanism; its own hook system (`~/.hermes/hooks/`, YAML manifest
-+ Python handler) is purely observational — return values are ignored —
-so the real injection point is a Hermes *plugin* (`~/.hermes/plugins/`,
-`plugin.yaml` + `register(ctx)`) registering a `pre_llm_call` callback,
-the one hook whose returned `{"context": ...}` dict actually lands in
-that turn's user message. `hermes-plugin/impulse-core/` is that plugin —
-install steps: `INSTALL.md` § Hermes Agent. All three delivery copies are
-kept in sync with the hook output by `scripts/check-sync.js`. Sourced
-from a dedicated research pass (see citations below); this file records
-the findings and the reasoning behind the wording choices in
+**RULE THIS FILE FOLLOWS:** a shorter, affirmative, lower-instruction-count
+core ruleset helps every model on the roster at once — Claude included —
+so `coreRuleset()` is edited once, not forked per-harness. Everything
+below is the evidence for that rule and the delivery mechanics per
+harness. Restated as this file's last line too.
+
+impulse ships to four CLI harnesses, each with its own injection
+mechanism:
+
+1. **Claude Code** — plugin hooks (`SessionStart`/`SubagentStart`) —
+   code in `hooks/impulse-instructions.js`.
+2. **Gemini CLI** — a `contextFileName` manifest field that always-loads
+   a markdown file into every session — `GEMINI.md` at the repo root.
+3. **Qwen Code** — same mechanism as Gemini CLI, since it's a Gemini CLI
+   fork that defaults to Qwen models (and also runs DeepSeek through its
+   provider config) — same `GEMINI.md`.
+4. **Hermes Agent** — NousResearch's multi-provider agent harness
+   (unrelated to the Hermes model fine-tunes beyond sharing an org name).
+   Its own hook system (`~/.hermes/hooks/`) is purely observational —
+   return values are ignored — so the real injection point is a Hermes
+   *plugin* (`~/.hermes/plugins/`, `plugin.yaml` + `register(ctx)`)
+   registering a `pre_llm_call` callback, the one hook whose returned
+   `{"context": ...}` dict actually lands in that turn's user message.
+   `hermes-plugin/impulse-core/` is that plugin — install steps:
+   `INSTALL.md` § Hermes Agent.
+
+All three delivery copies (Claude Code hook output, `GEMINI.md`, Hermes
+plugin) are kept in sync with `coreRuleset()` by `scripts/check-sync.js`.
+
+Sourced from a dedicated research pass (citations below); this file
+records the findings and the reasoning behind the wording choices in
 `hooks/impulse-instructions.js`'s `coreRuleset()` and
 `skills/impulse-core/SKILL.md`.
 
-## What the research actually supports
+## What the research actually supports <established-fact>
 
 **Compound negation is a real, measured failure mode — worse on open
 models.** Under simple negation ("don't do X"), open-weight models
@@ -76,7 +87,7 @@ instance.`) instead of just the abstract `<ceiling>, <upgrade trigger>`
 placeholder.
 [vllm-qwen2.5-coder-tool-parser](https://github.com/hanXen/vllm-qwen2.5-coder-tool-parser)
 
-## What the research does NOT support (be honest about the gaps)
+## What the research does NOT support (be honest about the gaps) <known-gap>
 
 - No controlled study was found isolating rule-ORDER effects (start vs.
   end placement) specifically for system-prompt-style rules — the
@@ -93,7 +104,7 @@ placeholder.
   synthesis of the findings above, not a citation of an established
   pattern. Treat it as the current best guess, not settled science.
 
-## What changed, concretely
+## What changed, concretely <changelog>
 
 - `coreRuleset()` / `impulse-core/SKILL.md`: the four worst compound-
   negation bullets ("no X, no Y, no Z" chains) rewritten as single
@@ -108,16 +119,38 @@ placeholder.
   none of impulse-core's ruleset, full stop. That was a bigger gap than
   any wording choice.
 
-## What's deliberately NOT done here
+## What's deliberately NOT done here <deferred-todo>
 
-Domain-mode rulesets (`impulse-backend`/`impulse-frontend`, mode-aware)
-are not yet mirrored to Gemini CLI/Qwen Code — both harnesses do support
-a comparable hook-lifecycle system (`SessionStart` with
-`additionalContext`, mirroring Claude Code's own hook), but Qwen Code's
-hook support was documented as still incomplete/behind Gemini CLI's as of
-this research pass (open feature-parity issues). Wiring dynamic
-mode-aware injection there is real, separate work gated on that maturing
-— tracked as an `impulse:` marker in `GEMINI.md` rather than attempted
-half-built here.
+Domain-mode rulesets (`impulse-backend`/`impulse-frontend`, mode-aware) are
+not yet mirrored to Gemini CLI/Qwen Code:
+
+1. Both harnesses support a hook-lifecycle system comparable to Claude
+   Code's (`SessionStart` with `additionalContext`).
+2. Qwen Code's hook support was documented as still incomplete/behind
+   Gemini CLI's as of this research pass (open feature-parity issues) —
+   so wiring dynamic mode-aware injection there is not safe yet.
+3. Action taken: tracked as an `impulse:` marker in `GEMINI.md` instead of
+   attempted half-built. Recheck Qwen Code's hook parity before acting on
+   this marker.
+
 [Gemini CLI hooks reference](https://geminicli.com/docs/hooks/reference/),
 [Support Qwen Code CLI hooks](https://github.com/rtk-ai/rtk/issues/1222)
+
+## To add a new harness or edit `coreRuleset()`
+
+1. Confirm the harness's context-injection mechanism (hook, manifest
+   field, or plugin callback) before writing anything — see the harness
+   list at the top of this file.
+2. Write the injected ruleset as short affirmative imperatives, not
+   compound negations (see "What the research actually supports").
+3. Preserve every anchor phrase listed in `scripts/check-sync.js`'s
+   `ANCHORS` array when editing `coreRuleset()` — the rewrite must stay
+   provably equivalent in coverage, not just similar in tone.
+4. Run `scripts/check-sync.js` and confirm all delivery copies (Claude
+   Code hook output, `GEMINI.md`, Hermes plugin) still match.
+5. Add one worked example for any new rule a weak model will need to
+   format correctly (the Qwen2.5-Coder few-shot finding above).
+
+Restated: a shorter, affirmative, lower-instruction-count core ruleset
+helps every model on the roster at once, including Claude — that is why
+`coreRuleset()` is edited once here, never forked per-harness.
