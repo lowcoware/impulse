@@ -6,11 +6,14 @@ so `coreRuleset()` is edited once, not forked per-harness. Everything
 below is the evidence for that rule and the delivery mechanics per
 harness. Restated as this file's last line too.
 
-impulse ships to four CLI harnesses, each with its own injection
+impulse ships to nine CLI/IDE harnesses, each with its own injection
 mechanism:
 
 1. **Claude Code** — plugin hooks (`SessionStart`/`SubagentStart`) —
-   code in `hooks/impulse-instructions.js`.
+   code in `hooks/impulse-instructions.js`. The only harness with true
+   per-turn re-injection AND mode-aware (blitz/hardcore) dynamic content —
+   every other harness below gets the core layer only, static or
+   per-turn, never the domain-mode machinery.
 2. **Gemini CLI** — a `contextFileName` manifest field that always-loads
    a markdown file into every session — `GEMINI.md` at the repo root.
 3. **Qwen Code** — same mechanism as Gemini CLI, since it's a Gemini CLI
@@ -25,9 +28,50 @@ mechanism:
    `{"context": ...}` dict actually lands in that turn's user message.
    `hermes-plugin/impulse-core/` is that plugin — install steps:
    `INSTALL.md` § Hermes Agent.
+5. **OpenAI Codex** (CLI + IDE extension, shared config system) — a real
+   documented hooks system (`SessionStart`/`UserPromptSubmit`, gated
+   behind the `features.hooks` flag), the closest match to Claude Code's
+   own per-turn injection outside Claude Code itself.
+   `codex-plugin/impulse-core/` (`hooks.json` + `inject-core.js`) — install
+   steps: `INSTALL.md` § Codex. Codex's own `AGENTS.md` mechanism is
+   separate and stays untouched — the hook is additive, not a replacement.
+6. **Cursor** (IDE + CLI, shared rules engine) — primary delivery is a
+   static `.mdc` rule with `alwaysApply: true` (`.cursor/rules/`), the
+   most reliable mechanism confirmed for this harness; a `hooks.json`
+   `sessionStart` hook exists as a secondary, beta reinforcement (Cursor's
+   own staff confirmed the CLI doesn't reliably fire a true per-turn hook
+   in non-interactive mode, so the static rule stays primary, not the
+   hook). `cursor-plugin/` — install steps: `INSTALL.md` § Cursor.
+7. **Google Antigravity** (IDE, "Antigravity 2.0" desktop, and CLI —
+   three surfaces, one engine) — a static rules file
+   (`.agents/rules/`, activation mode set to Always On via the Rules UI
+   post-install; the frontmatter field for that mode isn't confirmed by
+   documentation, so the file ships with none rather than a guess). A
+   real `hooks.json` system is documented but, per an unresolved Aug 2026
+   community report, appears to fire only in the CLI surface — not used
+   as a delivery mechanism here. `rules/impulse-core.md` (repo root, rides
+   along with the existing Antigravity plugin bundle) — install steps:
+   `INSTALL.md` § Antigravity.
+8. **OpenCode** — no reliable per-turn hook (`experimental.chat.system.
+   transform` is reported broken as of this research pass — see
+   anomalyco/opencode#17100/#17637/#27401); delivery is the harness's own
+   `AGENTS.md`/`opencode.json` `instructions` array, read unconditionally
+   at session start. `opencode/IMPULSE-CORE.md` — install steps:
+   `INSTALL.md` § OpenCode.
+9. **Kilo Code** (VS Code extension + `kilo` CLI, built on the OpenCode
+   engine as of its 2026 "v7" rewrite) — same reasoning and same
+   broken-hook caveat as OpenCode (they share the underlying chat-hook
+   layer); delivery is the static `.kilo/rules/` file referenced from
+   `kilo.jsonc`'s `instructions` array. `kilo-plugin/rules/impulse-core.md`
+   — install steps: `INSTALL.md` § Kilo Code.
 
-All three delivery copies (Claude Code hook output, `GEMINI.md`, Hermes
-plugin) are kept in sync with `coreRuleset()` by `scripts/check-sync.js`.
+All delivery copies (Claude Code hook output, `GEMINI.md`, and the six
+harness-specific files/plugins above) are kept in sync with
+`coreRuleset()` by `scripts/check-sync.js` — it failed silent for GEMINI.md
+and hermes-plugin once already (a `coreRuleset()` rewrite drifted from both
+copies with check-sync still green, because it didn't check them yet), so
+every new delivery surface gets a `check-sync.js` entry at the same time
+it's created, not as a follow-up.
 
 Sourced from a dedicated research pass (citations below); this file
 records the findings and the reasoning behind the wording choices in

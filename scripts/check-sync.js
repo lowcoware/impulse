@@ -288,29 +288,33 @@ function main() {
     }
   }
 
-  // GEMINI.md is the third delivery surface for the core layer (Gemini
-  // CLI / Qwen Code contextFileName, no plugin hooks available there) —
-  // same anchor phrases must survive the copy or it silently drifts from
-  // what Claude Code actually injects.
-  const geminiText = readSkill('GEMINI.md');
+  // Every other delivery surface for the core layer (harnesses with no
+  // plugin-hook/contextFileName equivalent to Claude Code's own hooks, or
+  // whose hooks aren't reliable enough yet to be the primary channel — see
+  // shared/multi-harness-robustness.md) ships coreRuleset() as a static
+  // file or an embedded string constant. Same anchor phrases must survive
+  // the copy into each one or it silently drifts from what Claude Code
+  // actually injects — this is the exact failure this loop caught once
+  // already (GEMINI.md and hermes-plugin drifted after a coreRuleset()
+  // rewrite; check-sync stayed green because it didn't check them yet).
   const coreAnchors = ANCHORS.filter((a) => a.id.startsWith('core:'));
-  for (const anchor of coreAnchors) {
-    if (geminiText === null) {
-      misses.push(anchor.id + ': GEMINI.md not found');
-    } else if (!has(geminiText, anchor.phrase)) {
-      misses.push(anchor.id + ': phrase "' + anchor.phrase + '" missing from GEMINI.md');
-    }
-  }
-
-  // hermes-plugin/impulse-core/__init__.py is the fourth delivery surface
-  // (Hermes Agent's pre_llm_call injection, no plugin hooks or
-  // contextFileName equivalent there either) — same check.
-  const hermesText = readSkill('hermes-plugin/impulse-core/__init__.py');
-  for (const anchor of coreAnchors) {
-    if (hermesText === null) {
-      misses.push(anchor.id + ': hermes-plugin/impulse-core/__init__.py not found');
-    } else if (!has(hermesText, anchor.phrase)) {
-      misses.push(anchor.id + ': phrase "' + anchor.phrase + '" missing from hermes-plugin/impulse-core/__init__.py');
+  const DELIVERY_SURFACES = [
+    { name: 'GEMINI.md', path: 'GEMINI.md' },
+    { name: 'hermes-plugin', path: 'hermes-plugin/impulse-core/__init__.py' },
+    { name: 'codex-plugin', path: 'codex-plugin/impulse-core/inject-core.js' },
+    { name: 'cursor-plugin', path: 'cursor-plugin/rules/impulse-core.mdc' },
+    { name: 'antigravity rules', path: 'rules/impulse-core.md' },
+    { name: 'opencode', path: 'opencode/IMPULSE-CORE.md' },
+    { name: 'kilo-plugin', path: 'kilo-plugin/rules/impulse-core.md' },
+  ];
+  for (const surface of DELIVERY_SURFACES) {
+    const text = readSkill(surface.path);
+    for (const anchor of coreAnchors) {
+      if (text === null) {
+        misses.push(anchor.id + ': ' + surface.path + ' not found');
+      } else if (!has(text, anchor.phrase)) {
+        misses.push(anchor.id + ': phrase "' + anchor.phrase + '" missing from ' + surface.path);
+      }
     }
   }
 
@@ -320,7 +324,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync (+' + coreAnchors.length + ' in GEMINI.md, +' + coreAnchors.length + ' in hermes-plugin), rule spine covered.');
+  console.log('check-sync: ' + ANCHORS.length + '/' + ANCHORS.length + ' anchors in sync (+' +
+    DELIVERY_SURFACES.map((s) => coreAnchors.length + ' in ' + s.name).join(', ') +
+    '), rule spine covered.');
   process.exit(0);
 }
 

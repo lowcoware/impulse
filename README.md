@@ -30,15 +30,19 @@ Code, через инсталлер переносится в Cursor, Codex и A
 | Qwen Code | расширение: `qwen extensions install https://github.com/lowcoware/impulse` | `INSTALL.md` |
 | Goose | плагин: `goose plugin install https://github.com/lowcoware/impulse` (или уже видит установку Claude Code/Codex) | `INSTALL.md` |
 | Hermes Agent | мастер-слой: `cp -r hermes-plugin/impulse-core ~/.hermes/plugins/`, скиллы: `cp -r skills/*/ ~/.hermes/skills/impulse/` (нет одной установочной команды на весь репозиторий) | `INSTALL.md` |
+| Kilo Code | мастер-слой: `.kilo/rules/impulse-core.md` через `kilo.jsonc`'s `instructions` (см. раздел ниже — установка ручная, скриптового таргета пока нет) | `INSTALL.md` |
 
 `npx skills` работает и для Claude Code / Antigravity, но кладёт голый
 уровень скиллов без плагин-обвязки. Альтернатива без npx — репозиторный
 установщик, `node scripts/install.js --help`.
 
-Hooks, statusline-бейдж и команды активации `/impulse-*` — только для Claude
-Code: остальные CLI (и голая копия) подхватывают то же содержимое
-скиллов по description. Что именно переносится на каждый таргет, а что
-нет — в `INSTALL.md`.
+Always-on core-слой (`impulse-core`: инженерная дисциплина, verification,
+token economy — не режимы) теперь доставляется на 8 из 9 таргетов через
+собственный нативный механизм каждого: hooks у Claude Code/Codex/Cursor,
+статичный rules-файл/`AGENTS.md` у остальных. Полная mode-машинерия
+(`/impulse-backend [mode]`, statusline-бейдж, hooks на blitz/hardcore) —
+всё ещё только у нативного плагина Claude Code. Что именно переносится на
+каждый таргет, а что нет — в `INSTALL.md`.
 
 ## Быстрый старт (Claude Code)
 

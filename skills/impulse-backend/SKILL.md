@@ -15,12 +15,7 @@ ACTIVE EVERY RESPONSE. No drift back to over-building. Still active if unsure. O
 
 ## Mandatory AI-tell recheck — every mode, not optional
 
-Before any diff is delivered, silently re-check it against:
-- baseline.md's day-one whitelist
-- the relevant hardening-*.md's incident catalog
-- ai-tells-extended.md's larger sourced sweep (goroutine/task leaks, swallowed exceptions, mutable-default args, hallucinated packages, missing cancellation, N+1 queries)
-
-Not a "load when relevant" reference — a standing gate like the ladder itself; blitz drops discussion, not this.
+Before any diff is delivered, silently re-check it against: baseline.md's day-one whitelist; the relevant hardening-*.md's incident catalog; ai-tells-extended.md's larger sourced sweep (goroutine/task leaks, swallowed exceptions, mutable-default args, hallucinated packages, missing cancellation, N+1 queries). Not a "load when relevant" reference — a standing gate like the ladder itself; blitz drops discussion, not this.
 
 ## Modes
 
@@ -46,20 +41,13 @@ Stop at the first rung that holds:
 6. **Can it be one line?** One line.
 7. **Only then:** the minimum code that works.
 
-The ladder runs AFTER you understand the problem, not instead of it. Bug fix =
-root cause, not symptom: grep every caller before editing; one guard in the
-shared function beats a guard in every caller.
+The ladder runs AFTER you understand the problem, not instead of it. Bug fix = root cause, not symptom: grep every caller before editing; one guard in the shared function beats a guard in every caller.
 
-**Verified = shown** (impulse-core's evidence rule, backend-specific claims):
-"regression test works" = seen red THEN green, not green once; "bug fixed" =
-repro re-run clean; "agent finished" = the diff exists, not the agent's own
-report. Couldn't run it → say "not run" plainly, never imply green.
+**Verified = shown** (impulse-core's evidence rule, backend-specific claims): "regression test works" = seen red THEN green, not green once; "bug fixed" = repro re-run clean; "agent finished" = the diff exists, not the agent's own report. Couldn't run it → say "not run" plainly, never imply green.
 
 ## Carve-outs — never simplified away
 
-Trust-boundary input validation. Error handling that prevents data loss.
-Security. The day-one baseline. Anything explicitly requested.
-Full rules: references/ladder.md.
+Trust-boundary input validation. Error handling that prevents data loss. Security. The day-one baseline. Anything explicitly requested. Full rules: references/ladder.md.
 
 <!-- sync: full detail owned by references/baseline.md — change there first, keep names in sync -->
 ## Day-one baseline — exempt from YAGNI
@@ -86,10 +74,7 @@ New-service bring-up: state boundaries, contracts, data ownership, and topics as
 
 ## Ceiling markers — scaling groundwork, not speculative code
 
-`// impulse: <ceiling>, <upgrade trigger>` (Go/TS/Rust) / `# impulse: ...` (Python).
-Example: `// impulse: global mutex, switch to per-account locks when p95 > 50ms`.
-Every deliberate simplification with a known ceiling gets one. A marker without
-an upgrade trigger is rot — impulse-debt flags it.
+`// impulse: <ceiling>, <upgrade trigger>` (Go/TS/Rust) / `# impulse: ...` (Python). Example: `// impulse: global mutex, switch to per-account locks when p95 > 50ms`. Every deliberate simplification with a known ceiling gets one. A marker without an upgrade trigger is rot — impulse-debt flags it.
 
 Output pattern after shipping code: `[code] → skipped: [X], add when [Y].`
 
@@ -154,8 +139,7 @@ Chat/thinking/code language rules: `../../shared/communication.md`. Chat = жи�
 
 ## Before you finish
 
-The ladder decides how much code; the baseline decides what always exists — both are non-negotiable on a greenfield service.
-
+The ladder decides how much code; the baseline decides what always exists — both non-negotiable on a greenfield service.
 - Did you stop at the first ladder rung that held, and name in one line whatever you skipped?
 - Are all carve-outs (trust-boundary validation, data-loss-preventing error handling, security, the day-one baseline, anything explicitly requested) still intact?
 - Does every deliberate simplification carry an `// impulse:` marker with an upgrade trigger?

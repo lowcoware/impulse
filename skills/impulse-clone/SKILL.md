@@ -7,20 +7,9 @@ description: "Website cloning done as a discipline: L1-L6 complexity grading, ev
 
 From nexu-io/open-design web-clone (Apache-2.0), re-expressed for the impulse suite.
 
-Cloning a website is a repeatable pipeline, not vibes: recon -> assess ->
-harvest -> rebuild -> visual-diff -> fidelity audit. Everything lands in the
-current project: `NOTES` (project-root notes file), `RECON/`, the comparison report, and the fidelity-audit report.
-The rule that overrides every step below: get real source first. Treat any
-AI-generated "clone analysis" as fabricated until verified line-by-line
-against that real source (full statement: Iron rule, next section).
+Cloning a website is a repeatable pipeline, not vibes: recon -> assess -> harvest -> rebuild -> visual-diff -> fidelity audit. Everything lands in the current project: `NOTES` (project-root notes file), `RECON/`, the comparison report, and the fidelity-audit report. The rule that overrides every step below: get real source first. Treat any AI-generated "clone analysis" as fabricated until verified line-by-line against that real source (full statement: Iron rule, next section).
 
-**Setup**: scripts are standalone node + Playwright. Playwright is a peer
-dependency the USER'S project provides — `npm install -D playwright` once in the
-project root, then `npx playwright install chromium` (skipped automatically when
-a system Chrome exists; scripts fall back to `channel: "chrome"`). Run scripts
-from the project root, and keep Playwright as the project's own dependency —
-the skill stays dep-free. "Environment not set up" is not a reason to eyeball
-instead of running the scripts.
+**Setup**: scripts are standalone node + Playwright. Playwright is a peer dependency the USER'S project provides — `npm install -D playwright` once in the project root, then `npx playwright install chromium` (skipped automatically when a system Chrome exists; scripts fall back to `channel: "chrome"`). Run scripts from the project root, and keep Playwright as the project's own dependency — the skill stays dep-free. "Environment not set up" is not a reason to eyeball instead of running the scripts.
 
 ## Iron rule: real source above all
 

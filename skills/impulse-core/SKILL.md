@@ -25,23 +25,18 @@ every `SubagentStart`, domain modes on or off — the way the caveman
 plugin's mode survives every turn. What's injected lives in
 `hooks/impulse-instructions.js` (`coreRuleset()`); this file is the full
 readable version and the single place the switch semantics are documented.
-`scripts/check-sync.js` trips if the two drift.
-
-## Why a master layer exists
-
-The suite's two universal disciplines fail exactly when nobody remembered
-to activate a mode: over-engineering happens on the "quick script" nobody
-ran `/impulse-backend` for, and token waste happens in the exploratory
-session before any domain was chosen. Rules that only hold when a flag is
-set aren't a baseline — they're a feature someone has to remember. Core
-is the remembering.
+`scripts/check-sync.js` trips if the two drift. Why a master layer exists
+at all: the suite's two universal disciplines fail exactly when nobody
+remembered to activate a mode — over-engineering on the "quick script"
+nobody ran `/impulse-backend` for, token waste in the exploratory session
+before any domain was chosen. A rule that only holds behind a flag isn't a
+baseline, it's a feature someone has to remember; core is the remembering.
 
 ## Layer 1 — engineering spine
 
 The distilled, domain-neutral form of the ladder (full version with
 blessed-dep lists and the day-one baseline: `impulse-backend`; register
 system: `impulse-frontend`):
-
 - Stop at the first rung that holds: YAGNI-skip -> reuse in-service ->
   stdlib -> platform primitive -> blessed dep -> one line -> minimum code
   that works.
@@ -67,10 +62,9 @@ system: `impulse-frontend`):
 
 ## Layer 2 — verification
 
-Targets the two documented failure modes that survive an otherwise-good
-plan: hallucinated facts/APIs and confident-but-unverified claims. Detail
-and sourcing: `shared/verification-layer.md`.
-
+Targets hallucinated facts/APIs and confident-but-unverified claims, the
+two documented failure modes that survive an otherwise-good plan (detail
+and sourcing: `shared/verification-layer.md`):
 - Match the actual spec, not just the example given — restate the
   general rule in one line before coding when the request includes a
   worked example.
@@ -87,8 +81,7 @@ and sourcing: `shared/verification-layer.md`.
 ## Layer 3 — token economy
 
 Distilled from `shared/velocity.md` and `shared/token-hygiene.md` (both
-carry the evidence and the full versions):
-
+carry the evidence and full versions):
 - **Search escalation** — known file -> its neighbor -> scoped grep
   (path + pattern + result cap) -> repo-wide last.
 - **Output cap** — always pass an explicit bound before running a
@@ -119,23 +112,19 @@ carry the evidence and the full versions):
 
 ## Before you finish
 
-Re-check the draft output against Layer 1/2's own bullets before
-finishing: touched only files this task owns? every non-trivial
-API/function call verified against something seen this session? every
-done/works/passes claim backed by shown output? Fix any "no" before
-finishing — this is the same restatement injected at the end of the
-compact ruleset every turn (`hooks/impulse-instructions.js`).
+Re-check the draft against Layer 1/2's own bullets: touched only files
+this task owns? every non-trivial API/function call verified against
+something seen this session? every done/works/passes claim backed by
+shown output? Fix any "no" before finishing — the same restatement
+injected at the end of the compact ruleset every turn
+(`hooks/impulse-instructions.js`).
 
 ## Delivery across harnesses
-
-Claude Code gets this via plugin hooks. Gemini CLI/Qwen Code get
-`GEMINI.md` (`contextFileName`). Hermes Agent gets
-`hermes-plugin/impulse-core/` (a real Hermes plugin, re-injects every
-turn via `pre_llm_call`) — install guide: `INSTALL.md` § Hermes Agent.
-All copies are `check-sync.js`-locked to this file. Wording (affirmative
-imperatives over negation chains) is tuned against sourced findings on
-why weaker models drop compound-negation instructions — research:
-`shared/multi-harness-robustness.md`.
+Nine harnesses, each via its own native mechanism (Claude Code hooks,
+Codex hooks, Cursor `.mdc`, Gemini CLI/Qwen Code `GEMINI.md`, Antigravity
+`rules/`, OpenCode/Kilo Code `AGENTS.md`/`instructions`, Hermes Agent
+`pre_llm_call`), every copy `check-sync.js`-locked to this file. Full
+list and install steps: `shared/multi-harness-robustness.md`, `INSTALL.md`.
 
 ## Switches
 
@@ -146,18 +135,15 @@ why weaker models drop compound-negation instructions — research:
 | Session/env off | `IMPULSE_CORE=0` | That environment only |
 | Domain modes off | `stop impulse` / `normal mode` | Domain flags only — core stays on |
 
-Core-only sessions show `[IMPULSE:CORE]` in the statusline; with a domain
-mode active the domain badge wins and the injection header carries
-`core: on`.
+Core-only sessions show `[IMPULSE:CORE]` in the statusline; a domain
+mode active wins the badge, header carries `core: on`.
 
 ## Boundaries
-
-- Core carries the essence, never the detail: mode blocks
-  (blitz/hardcore), blessed-dep lists, register rules, and review tags
-  stay in their domain skills. If a rule needs more than two lines here,
-  it belongs in a domain skill or `shared/` with a pointer.
-- This skill changes no files and runs no commands — it is documentation
-  plus the switch protocol; the hooks do the injecting.
-- Additions to `coreRuleset()` are paid on EVERY session and EVERY
-  subagent spawn — the injection meter prices it. New line: justify
-  against `shared/token-hygiene.md`'s always-paid-surface rule first.
+- Core carries the essence, never the detail: mode blocks, blessed-dep
+  lists, register rules, and review tags stay in domain skills — a rule
+  needing more than two lines here belongs there or in `shared/` instead.
+- This skill changes no files and runs no commands — documentation plus
+  the switch protocol; the hooks do the injecting. Additions to
+  `coreRuleset()` are paid on EVERY session and subagent spawn — justify
+  a new line against `shared/token-hygiene.md`'s always-paid-surface rule
+  first.

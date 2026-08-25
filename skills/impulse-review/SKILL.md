@@ -3,51 +3,23 @@ name: impulse-review
 description: "Review a diff/PR against the impulse ruleset: overengineering, day-one baseline violations, seam risks, AI-typical bugs (concurrency, error handling, reactivity), architecture-decay signals, frontend AI-tells, unevidenced green claims. Not a general correctness/security audit (that stays /code-review or /security-review), and not bug hunting — an observed failure (\"не работает\", failing test, wrong output) routes to impulse-systematic-debug. Triggers: \"/impulse-review\", \"review the diff\", \"review this PR\", \"сделай ревью\", \"ревью\", \"проверь дифф\", \"проверь код\", \"подгони под стандарты\", \"приведи к стандартам\", \"align with the standards\", \"оверинжиниринг\", \"что можно удалить\", \"AI-tells check\", \"проверь на слоп\"."
 ---
 
-Review diffs against the impulse ruleset. One line per finding, severity
-BLOCK/WARN/INFO. The diff's best outcome is getting shorter. A confident,
-well-formatted diff is not evidence it's correct — review it like a fluent
-author who is occasionally wrong, and hold this skill's own findings to the
-same bar: a finding with no locatable failure scenario is a false positive,
-not a WARN (`references/review-process.md`). Scope: BE, FE, mobile, infra
-diffs, tags per the domain table below. `bug:`/`arch:`/`perf:` catch
-AI-typical failure patterns, not a general audit — end every review with:
-`Correctness/security/perf beyond AI-typical patterns: out of scope, run /code-review.`
+Review diffs against the impulse ruleset. One line per finding, severity BLOCK/WARN/INFO. The diff's best outcome is getting shorter. A confident, well-formatted diff is not evidence it's correct — review it like a fluent author who is occasionally wrong, and hold this skill's own findings to the same bar: a finding with no locatable failure scenario is a false positive, not a WARN (`references/review-process.md`). Scope: BE, FE, mobile, infra diffs, tags per the domain table below. `bug:`/`arch:`/`perf:` catch AI-typical failure patterns, not a general audit — end every review with: `Correctness/security/perf beyond AI-typical patterns: out of scope, run /code-review.`
 
 ## Load two files before the sweep — this one is not the rulebook
 
-1. [`../../shared/rule-spine.md`](../../shared/rule-spine.md) — the builder-rule
-   → detector → tag crosswalk. Cite spine IDs instead of paraphrasing a rule
-   from memory; a rule a builder added and this skill never learned is the
-   drift the spine exists to stop.
-2. `references/tags.md` — what each tag finds; the quick lists are the hot
-   subset, the bar is every spine row the diff's domains touch.
+1. [`../../shared/rule-spine.md`](../../shared/rule-spine.md) — the builder-rule → detector → tag crosswalk. Cite spine IDs instead of paraphrasing a rule from memory; a rule a builder added and this skill never learned is the drift the spine exists to stop.
+2. `references/tags.md` — what each tag finds; the quick lists are the hot subset, the bar is every spine row the diff's domains touch.
 
-FE diff: run the scanner first — `node <impulse-frontend>/scripts/preflight.mjs
-<root> --json` (`--rules=<...>/scripts/rules.ru.mjs` adds RU copy tells). It
-emits `#N`/`tN` ids with fixes; map each hit's group to a tag via the spine,
-filter through preflight.md's "How a grep lies" table before promoting a hit
-to a finding. Couldn't run it → say so plainly, and describe the mechanical
-layer as not covered. BE/mobile/infra have no scanner: the spine's Detector
-column is the checklist; open the owner file for any row cited.
+FE diff: run the scanner first — `node <impulse-frontend>/scripts/preflight.mjs <root> --json` (`--rules=<...>/scripts/rules.ru.mjs` adds RU copy tells). It emits `#N`/`tN` ids with fixes; map each hit's group to a tag via the spine, filter through preflight.md's "How a grep lies" table before promoting a hit to a finding. Couldn't run it → say so plainly, and describe the mechanical layer as not covered. BE/mobile/infra have no scanner: the spine's Detector column is the checklist; open the owner file for any row cited.
 
 ## Context the diff was written in
 
 Reviewing without the author's declared context invents findings the author
 was instructed to produce.
 
-- **Mode** from `~/.claude/.impulse-active`, fallback `medium`. `blitz` =
-  ladder applied aggressively, plan prose skipped deliberately — neither is a
-  finding. `hardcore` raises the bar (BE seam failure-modes, FE full
-  state/edge/i18n harden). Baseline, carve-outs, and tests apply in every mode.
-- **Register** (FE) from the project DESIGN.md or the author's Design Read:
-  `brand` is judged on distinctiveness, `product` on earned familiarity —
-  product-UI rules applied to a landing hero are a false positive. Neither
-  readable → say so once, review at `medium`/`product`.
-- **Design authority** (FE): DESIGN.md carrying `authority: external` = the
-  design is a customer contract (Figma port) — judge by FIDELITY, not taste.
-  `tell:`/`token:` against the customer's authored choices are false
-  positives; `a11y:`/`bug:`/`perf:` stand, phrased against the deviations
-  ledger (`impulse-frontend/references/design-contract.md` § Design-as-authority).
+- **Mode** from `~/.claude/.impulse-active`, fallback `medium`. `blitz` = ladder applied aggressively, plan prose skipped deliberately — neither is a finding. `hardcore` raises the bar (BE seam failure-modes, FE full state/edge/i18n harden). Baseline, carve-outs, and tests apply in every mode.
+- **Register** (FE) from the project DESIGN.md or the author's Design Read: `brand` is judged on distinctiveness, `product` on earned familiarity — product-UI rules applied to a landing hero are a false positive. Neither readable → say so once, review at `medium`/`product`.
+- **Design authority** (FE): DESIGN.md carrying `authority: external` = the design is a customer contract (Figma port) — judge by FIDELITY, not taste. `tell:`/`token:` against the customer's authored choices are false positives; `a11y:`/`bug:`/`perf:` stand, phrased against the deviations ledger (`impulse-frontend/references/design-contract.md` § Design-as-authority).
 
 ## Domain auto-detect
 
