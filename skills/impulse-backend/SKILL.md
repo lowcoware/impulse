@@ -15,7 +15,12 @@ ACTIVE EVERY RESPONSE. No drift back to over-building. Still active if unsure. O
 
 ## Mandatory AI-tell recheck — every mode, not optional
 
-Before any diff is delivered, silently re-check it against baseline.md's day-one whitelist, the relevant hardening-*.md's incident catalog, and ai-tells-extended.md's larger sourced sweep (goroutine/task leaks, swallowed exceptions, mutable-default args, hallucinated packages, missing cancellation, N+1 queries). Not a "load when relevant" reference — a standing gate like the ladder itself; blitz drops discussion, not this.
+Before any diff is delivered, silently re-check it against:
+- baseline.md's day-one whitelist
+- the relevant hardening-*.md's incident catalog
+- ai-tells-extended.md's larger sourced sweep (goroutine/task leaks, swallowed exceptions, mutable-default args, hallucinated packages, missing cancellation, N+1 queries)
+
+Not a "load when relevant" reference — a standing gate like the ladder itself; blitz drops discussion, not this.
 
 ## Modes
 
@@ -34,10 +39,10 @@ Resolution: `IMPULSE_DEFAULT_MODE` env > `~/.config/impulse/config.json` `defaul
 Stop at the first rung that holds:
 
 1. **YAGNI-skip.** Speculative need = skip it, say so in one line — unless baseline or carve-out.
-2. **Reuse — WITHIN this service.** Cross-service reuse = contracts/schemas ONLY (proto, OpenAPI, AsyncAPI). Never import another service's internals. Shared lib only after 3rd duplication AND leaf-stable code. Copy-paste between services is often correct — name it, don't hide it.
+2. **Reuse — WITHIN this service.** Cross-service reuse stays contracts/schemas ONLY (proto, OpenAPI, AsyncAPI) — internals stay in-service. Shared lib only after 3rd duplication AND leaf-stable code. Copy-paste between services is often correct — name it openly.
 3. **Stdlib does it?** Use it.
 4. **Platform primitive.** Postgres constraint over app-level check, Redis primitive over hand-rolled cache, Traefik middleware over app middleware, Kafka semantics (keys, offsets, consumer groups) over custom dedup.
-5. **Blessed dep** (references/deps.md). New dep outside the list = justify in one line or don't add it.
+5. **Blessed dep** (references/deps.md). A new dep outside the list needs a one-line justification to be added.
 6. **Can it be one line?** One line.
 7. **Only then:** the minimum code that works.
 
@@ -86,7 +91,9 @@ Example: `// impulse: global mutex, switch to per-account locks when p95 > 50ms`
 Every deliberate simplification with a known ceiling gets one. A marker without
 an upgrade trigger is rot — impulse-debt flags it.
 
-Output pattern after shipping code: `[code] → skipped: [X], add when [Y].` Before "done": walk baseline.md done-when + carve-outs — one unticked = not done; same rules impulse-review sweeps, self-check beats a review round-trip.
+Output pattern after shipping code: `[code] → skipped: [X], add when [Y].`
+
+Before "done": walk baseline.md done-when + carve-outs — one unticked = not done. Same rules impulse-review sweeps; self-check beats a review round-trip.
 
 ## References — load on demand
 
@@ -142,5 +149,17 @@ Chat/thinking/code language rules: `../../shared/communication.md`. Chat = жи�
 ## Boundaries
 
 - Correctness/security review → `/code-review`. impulse-review covers overengineering + baseline violations + seam risks + AI-typical correctness bugs (`bug:`/`arch:`) — not a general audit. ADR lifecycle, spec-driven planning, review-cadence scaling → `impulse-project-management`. Here only: an ADR governs code being touched → check it first.
-- Existing/unfamiliar code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment, before any edit. RAG/embeddings/Qdrant/LLM-gateway/MCP-server specifics → `impulse-ai`. Deep auth/secrets/IDOR/edge security → `impulse-security`. Both build on this skill's baseline, don't replace it.
+- Existing/unfamiliar code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment, before any edit. RAG/embeddings/Qdrant/LLM-gateway/MCP-server specifics → `impulse-ai`. Deep auth/secrets/IDOR/edge security → `impulse-security`. Both extend this skill's baseline rather than replace it.
 - Pairs with /caveman if the user runs it: these rules govern what you build, caveman governs compression. No conflict — both ban filler.
+
+## Before you finish
+
+The ladder decides how much code; the baseline decides what always exists — both are non-negotiable on a greenfield service.
+
+- Did you stop at the first ladder rung that held, and name in one line whatever you skipped?
+- Are all carve-outs (trust-boundary validation, data-loss-preventing error handling, security, the day-one baseline, anything explicitly requested) still intact?
+- Does every deliberate simplification carry an `// impulse:` marker with an upgrade trigger?
+- Did you re-run the AI-tell recheck against baseline.md/hardening-*.md/ai-tells-extended.md before calling the diff done?
+- Is every "works"/"passes"/"fixed" claim backed by shown output, not assumed?
+
+If any answer is no, fix it before finishing.

@@ -7,8 +7,8 @@ description: >
   "что умеет impulse", "как включить impulse", "impulse commands".
 ---
 
-Display this card when invoked. One-shot: do NOT change mode, write flag
-files, or persist anything.
+Display this card when invoked. Treat it as read-only: show it, then leave
+mode, flag files, and all other state exactly as found.
 
 # impulse — reference card
 
@@ -76,3 +76,7 @@ Severity: BLOCK / WARN / INFO. Clean verdict: `Lean. Ship.`
 
 Resolution: `IMPULSE_DEFAULT_MODE` env > config file > medium.
 Flag file: `~/.claude/.impulse-active` — `{"backend":true,"frontend":false,"mode":"medium"}`.
+
+## Recap
+
+This card is read-only: display it and leave mode, flag files, and all other state exactly as found.

@@ -22,8 +22,8 @@ at all) — this skill answers *is this specific one safe*.
 Run before the first `import`. Any red = justify loudly or pick another.
 
 1. **Name is exact.** Typosquat check — `reqeusts`, `python-sqlite`,
-   `crossenv`, `electorn`. Copy the name from official docs, never type it from
-   memory. (PyPI/npm typosquatting is a routine attack vector.)
+   `crossenv`, `electorn`. Copy the name from official docs — that's the only
+   safe source. (PyPI/npm typosquatting is a routine attack vector.)
 2. **It's the real package.** Right repo, right author, matches the docs link.
    Dependency-confusion: an internal name published to a public registry gets
    pulled preferentially — scope/namespace internal packages.
@@ -35,7 +35,7 @@ Run before the first `import`. Any red = justify loudly or pick another.
 5. **No unexplained install hooks.** `postinstall`/`preinstall` scripts, build
    steps that fetch remote code — the classic malware delivery path. Read them.
 6. **Known-vuln scan.** `npm audit` / `pip-audit` / `govulncheck` / `osv-scanner`
-   against the exact version. Advisory open + no fix → don't adopt.
+   against the exact version. Advisory open with no fix → skip it.
 7. **License fits.** Copyleft (GPL/AGPL) in a proprietary service is a legal
    CVE. Check before, not after.
 
@@ -45,20 +45,21 @@ incidents.
 
 ## Hard rules
 
-1. **Lock, don't hard-pin direct deps.** Commit the lockfile always — it
-   freezes the WHOLE graph (direct + transitive), which is the actual
-   defense against a silently-hijacked patch. Hard-pinning the direct
-   dependency itself in the manifest (exact version instead of `^`/`~`) is
-   a separate move, and a CMU empirical study found it backfires: pinning
-   direct deps measurably increases the cost of carrying vulnerable/outdated
-   versions and can even increase exposure to malicious updates, because the
-   deliberate manual bump (when it finally happens) isn't graph-verified any
-   more carefully than an automated one would have been. Prefer a narrow
-   floating range (`^`/`~`, patch-or-minor) on direct deps + the committed
-   lockfile for reproducibility + Renovate/Dependabot proposing bumps as
-   reviewable PRs, not auto-merge. Containers/OCI images are the exception —
-   pin those to a digest; the CMU finding is about language-ecosystem
-   package managers with lockfiles, not image references.
+1. **Lock the whole graph; keep direct deps on a floating range.** Commit
+   the lockfile always — it freezes direct + transitive deps, the actual
+   defense against a silently-hijacked patch. Hard-pinning a direct
+   dependency in the manifest (exact version instead of `^`/`~`) is a
+   separate move, and a CMU empirical study found it backfires: pinned
+   direct deps measurably carry vulnerable/outdated versions longer, and
+   the eventual manual bump isn't graph-verified any more carefully than
+   an automated one would have been. Prefer:
+   - a narrow floating range (`^`/`~`, patch-or-minor) on direct deps
+   - the committed lockfile for reproducibility
+   - Renovate/Dependabot proposing bumps as reviewable PRs, not auto-merge
+
+   Exception: pin container/OCI images to a digest — the CMU finding is
+   about language-ecosystem package managers with lockfiles, not image
+   references.
    [Pinning Is Futile, arXiv:2502.06662 (FSE'25)](https://arxiv.org/pdf/2502.06662)
 2. **Read install scripts of anything new.** One `postinstall` audit is cheaper
    than one credential exfil.
@@ -75,3 +76,13 @@ incidents.
 - Runtime secrets/authz/edge hardening → `impulse-security`.
 - Wiring the scan into the pipeline → `impulse-devops/references/ci.md`.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Every dep added or reviewed this session ran through the vet-before-add checklist?
+- Any red flag from that checklist either fixed, or justified loudly in the output?
+- Lockfile committed, with direct deps left on a floating range (not hard-pinned)?
+- Any new install script (`postinstall`/`preinstall`) actually read, not skipped?
+
+Bottom line: every dep is code you didn't write running with your privileges —
+if this session didn't check that before it entered the tree, it isn't done.

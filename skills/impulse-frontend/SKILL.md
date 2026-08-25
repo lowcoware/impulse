@@ -5,21 +5,16 @@ description: "Vue 3 / Nuxt 4 / Tailwind v4 WEB frontend — UI, components, land
 
 # impulse-frontend
 
-ACTIVE EVERY RESPONSE. No drift back to over-building or AI-default design. Still active if unsure. Off only: `stop impulse` / `normal mode`.
+ACTIVE EVERY RESPONSE. Most load-bearing rule in this file: every visual or copy output gets silently rechecked against the ban catalog before delivery — this is a standing gate, not a suggestion. Stay clear of over-building and AI-default design; when unsure, keep this active. Off only: `stop impulse` / `normal mode`.
 
 ## Mandatory anti-AI-tell recheck — every mode, not optional
 
-Before any visual or copy output is delivered — new page, new component,
-edit to an existing one — silently re-run it against ai-tells.md's ban
-catalog + ai-tells-extended.md's larger sweep + ai-code-smells.md's
-architecture checks. This is not a "load when relevant" reference like the
-rest of the table below: it is a standing gate, exactly like preflight.md,
-and blitz mode does not exempt it (blitz drops discussion/alternatives, not
-the ban list). If what's about to ship trips a gradient/glow/particle/blob/
-circle/grid-background/badge-stack/mobile-desktop-fork ban, fix it before
-delivery, don't note it and move on. A screenshot tool available and the
-surface being visually important → run visual-forensics.md's pixel sweep
-too, not just a source read.
+Before any visual or copy output is delivered — new page, new component, edit to an existing one — silently re-run it against the ban catalog below. This is not a "load when relevant" reference like the rest of the table further down: it is a standing gate, exactly like preflight.md.
+
+1. Check it against ai-tells.md's ban catalog, ai-tells-extended.md's larger sweep, and ai-code-smells.md's architecture checks.
+2. Blitz mode does not exempt this gate — blitz drops discussion/alternatives, not the ban list.
+3. A tripped gradient/glow/particle/blob/circle/grid-background/badge-stack/mobile-desktop-fork ban gets fixed before delivery — noting it and shipping anyway doesn't count.
+4. A screenshot tool available and the surface being visually important → also run visual-forensics.md's pixel sweep, not just a source read.
 
 ## Register split — declare before building
 
@@ -34,18 +29,19 @@ Before any code, output one line — the Design Read:
 
 `Design Read: <page kind> for <audience>, <vibe>, register: <brand|product>[, source: external-authority (<origin>)]`
 
-Ambiguous brief → exactly ONE clarifying question, never a dump. Can infer → don't ask, declare and build.
+Ambiguous brief → ask exactly one clarifying question. Can infer → declare and build without asking.
 
 **External design authority.** When the brief explicitly names an outside
 design as the spec — the customer's Figma, provided mockups, "переезд дизайна",
-"по макету", pixel-perfect port — the design is a CONTRACT, not a reference:
-reproduce it, don't improve it. The aesthetic bans (ai-tells, token taste
-rules) yield to the authored design; the hard floors (a11y contrast, reduced
-motion, perf, security) do NOT yield — but a conflict between a floor and the
-mockup is surfaced to the user as a named question BEFORE the change, never
-applied silently. Every deviation from the source, floor-driven or technical,
-goes into a deviations ledger the user signs off. DESIGN.md records
-`authority: external` so review judges the diff by fidelity, not taste.
+"по макету", pixel-perfect port — the design is a CONTRACT, not a reference.
+
+1. Reproduce the source design; improving on it is out of scope.
+2. Aesthetic bans (ai-tells, token taste rules) yield to the authored design.
+3. Hard floors (a11y contrast, reduced motion, perf, security) always hold.
+4. A conflict between a floor and the mockup is surfaced to the user as a named question BEFORE the change — applying it silently is not an option.
+5. Every deviation from the source, floor-driven or technical, goes into a deviations ledger the user signs off.
+6. DESIGN.md records `authority: external` so review judges the diff by fidelity, not taste.
+
 Full protocol: `references/design-contract.md` § Design-as-authority.
 
 ## Modes
@@ -62,7 +58,7 @@ Active mode from `~/.claude/.impulse-active`, fallback `medium`. Presets are the
 
 Nuxt 4 · Vue 3 Composition · Tailwind v4 (`@theme` tokens) · Pinia (client state) · `useFetch`/`useAsyncData` (server state) · VueUse · shadcn-vue · Phosphor icons (`@phosphor-icons/vue`, one family per project, lucide dropped) · GSAP + ScrollTrigger + Lenis for pin/scrub/scroll choreography · motion-v for simple reveals. GSAP lives in composables: `gsap.context` + `onUnmounted` cleanup — skeletons in motion.md.
 
-Design explicitly doesn't matter (internal tool, admin CRUD, throwaway prototype) → Frappe UI instead of shadcn-vue, batteries-included. Never mixed with shadcn-vue on the same surface: components.md §0.
+Design explicitly doesn't matter (internal tool, admin CRUD, throwaway prototype) → Frappe UI instead of shadcn-vue, batteries-included. Keep Frappe UI and shadcn-vue confined to separate surfaces: components.md §0.
 
 ## Hard technique rules — every task, every mode
 
@@ -140,5 +136,13 @@ Generate the project's `DESIGN.md` at bring-up (Stitch 9-section format — toke
 - Em-dash ban covers visible UI copy only. Chat prose = shared/communication.md territory (pairs with /caveman: tone here, compression there).
 - Diff review → `/impulse-review`. Correctness/security → `/code-review`.
 - Existing/unfamiliar frontend code (not this skill's greenfield assumption) → `impulse-legacy` — characterization tests, blast-radius assessment first. That's code safety; `references/redesign.md` here is the brand/design-preservation layer of the same redesign task — use both.
-- Testing floor, never mode-gated: component tests with `getByRole`, Playwright E2E on critical flows, visual states exercised.
-- No emoji in code, copy, commits, logs. No secrets in examples.
+- Testing floor applies in every mode: component tests with `getByRole`, Playwright E2E on critical flows, visual states exercised.
+- Keep code, copy, commits, and logs emoji-free. Keep examples free of secrets.
+
+## Before you finish
+
+- Did the visual/copy output get rechecked against the ai-tells ban catalog before delivery, even in blitz mode?
+- Is the Design Read line declared with the correct register (`brand`/`product`)?
+- If an external design authority applies, does every deviation sit in the deviations ledger for sign-off?
+- Do all 18 hard technique rules (FE-H01–FE-H18) hold for what's about to ship?
+- Does the testing floor (component tests, Playwright E2E, visual states) hold regardless of mode?

@@ -15,10 +15,15 @@ description: >
 # impulse-security
 
 Same day-one-baseline stance as `impulse-backend`, applied to auth/authz/
-secrets/edge — build it in when the code is written, don't wait for a
-security pass to bolt it on. Every rule below traces to a real,
-documented incident or a current (2025-2026) spec/RFC, not a generic
-OWASP paraphrase.
+secrets/edge — build it in when the code is written, as the first pass,
+not a later bolt-on. Every rule below traces to a real, documented
+incident or a current (2025-2026) spec/RFC, not a generic OWASP
+paraphrase.
+
+**Most load-bearing rule in this file:** authenticating a request and
+authorizing what it can touch are two different checks — a valid,
+verified, unexpired token still leaks data if the query isn't scoped by
+the authenticated principal (`SE-M1` below).
 
 ## Scope split — read this first
 
@@ -79,3 +84,18 @@ Both are diff-visible, so both carry a impulse-review tag via
   agentic-loop cost guardrails) → `impulse-ai/references/mcp-security.md` —
   different trust-boundary shape, doesn't belong here.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Does every resource lookup by user-supplied ID scope the query to the
+  authenticated principal, not just check that the token is valid
+  (`SE-M1`)?
+- Does token verification hardcode the expected `alg`, secret, `aud`, and
+  `iss` instead of trusting the token to say what it is (`SE-M2`)?
+- Is the security pattern built into the code being written now, not
+  deferred to a later audit pass?
+- If this is an AI-typical bug already covered by `impulse-review`'s
+  `bug:` tag, does the fix match the deeper pattern in the relevant
+  `references/*.md` file rather than a shallow patch?
+
+If any answer is no, fix it before finishing.

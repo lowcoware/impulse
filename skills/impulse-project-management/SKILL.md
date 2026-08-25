@@ -9,7 +9,9 @@ PM for a world where implementation is cheap and review is the bottleneck.
 Built by generalizing a real project's PM skill — the mechanisms below are
 proven, not theoretical: layer-sharded review, severity-gated debt
 aggregation, triage-as-front-door routing all shipped and worked before
-being generalized here.
+being generalized here. The rule that governs every artifact this skill
+writes: state only facts you can cite (file:line, an existing ADR number,
+a real service name) and ask when you can't — never invent one.
 
 ## Repo scope — auto-detect
 
@@ -19,7 +21,7 @@ being generalized here.
 | A workspace/monorepo file (`pnpm-workspace.yaml`, `go.work`, `nx.json`) | Monorepo — one PM surface, many packages |
 | A parent folder holding several sibling `.git` repos, no single workspace file | Polyrepo — shared `services-catalog`, cross-repo ADRs/tasks |
 
-Ambiguous → ask once, don't guess (`conventions.md`'s interactive protocol).
+Ambiguous → ask once instead of guessing (`conventions.md`'s interactive protocol).
 
 ## The unit of work is a spec, not a sprint
 
@@ -34,15 +36,19 @@ WIP-limited flow that replaces sprint cadence: `references/spec-driven.md`.
 Real 2025-2026 data: AI-assisted teams ship far more PRs but review time
 per PR rose ~91%, and AI-generated code carries materially more defects
 (~45% of samples introduced an OWASP Top-10 issue in one security
-benchmark). This skill's
-whole review-scaling apparatus — diff-size gates, Ship-Show-Ask tiering,
-intent reconstruction over line-by-line diffing, layer-sharded whole-service
-review — exists because of this, not as ceremony. Detail:
-`references/review.md`. Diff-level correctness/security review itself stays
-`/code-review`'s job; this skill decides *when* and *how much* review a
-change needs, and owns the whole-service spec/architecture review mode
-impulse-review explicitly excludes from its own one-shot-per-diff scope.
-A repo-wide over-engineering cut-list (delete/stdlib/native, no spec
+benchmark). This skill's whole review-scaling apparatus exists because of
+that data, not as ceremony:
+
+- Diff-size gates
+- Ship-Show-Ask tiering
+- Intent reconstruction over line-by-line diffing
+- Layer-sharded whole-service review
+
+Detail: `references/review.md`. Diff-level correctness/security review
+itself stays `/code-review`'s job; this skill decides *when* and *how much*
+review a change needs, and owns the whole-service spec/architecture review
+mode impulse-review explicitly excludes from its own one-shot-per-diff
+scope. A repo-wide over-engineering cut-list (delete/stdlib/native, no spec
 questions) is impulse-shrink's job, not a review cadence decision.
 
 ## ADRs — decision authority stays human, research can be agent's
@@ -59,14 +65,14 @@ checklist: `references/adr.md`.
 Task creation, changelog updates, weekly checkpoints, retrospectives,
 incoming-request triage, post-launch roadmap — each a fixed, small
 "when X happens, do Y" procedure. Full playbooks: `references/playbooks.md`.
-Template schemas (headers only, fill don't invent): `references/templates.md`.
+Template schemas (headers only, fill from real data): `references/templates.md`.
 
 ## Cross-cutting conventions — apply everywhere in this skill
 
 Config resolution (env > config file > default), stdout-by-default with
 `--apply`-gated writes, ask-vs-don't-ask tables, BLOCK/WARN/INFO severity
-triage, and the citation discipline (never invent an ID/ADR number/service
-name — cite file:line or ask) all live in `references/conventions.md` and
+triage, and the citation discipline (cite file:line or ask, rather than
+inventing an ID/ADR number/service name) all live in `references/conventions.md` and
 apply to every playbook and command below, not repeated per-file.
 
 ## References — load on demand
@@ -102,4 +108,11 @@ Planning is here; the execution engine is there.
 - Maintaining the Obsidian vault this skill's specs/ADRs/playbooks live in — folder taxonomy, MOCs, vault health, Canvas/Bases → `impulse-wiki`. This skill decides what gets written; impulse-wiki decides where it lives and keeps the vault navigable.
 - Prose voice on any generated doc → `impulse-humanizer`'s automatic doc-generation trigger — reports/ADRs/retros read like a person wrote them.
 - Architecture-decay patterns *inside a diff* (hot partition keys, sync chains, nanoservices) → `impulse-review`'s `arch:` tag; this skill's ADR practice governs the *decision record*, not the pattern-catching.
-- Never invents facts. Ask or cite. `--apply` required before any file write; stdout is the default.
+- States only facts it can cite (file:line, ADR number, service name) and asks when it can't — this skill's one hard rule. `--apply` is required before any file write; stdout is the default.
+
+## Before you finish
+
+- Did every fact you wrote down — ID, ADR number, service name, file:line — come from something you actually read, or did you ask instead of guessing?
+- If you wrote to a file, did the user pass `--apply` (stdout-only otherwise)?
+- If a decision has real blast radius (cross-service contract, data ownership, dependency swap), does it have an ADR awaiting human sign-off rather than an assumed acceptance?
+- Did you route diff-level correctness/security findings to `/impulse-review` instead of judging them yourself here?

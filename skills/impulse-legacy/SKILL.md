@@ -50,8 +50,9 @@ Full detail on each step: `references/characterization.md` (tests/seams),
 golden-master) → refactor in small steps with the test as tripwire.`
 
 The reliably wrong order — refactor first, "test" only by manual poking
-afterward — is rewriting with extra steps, not refactoring. If you catch
-yourself about to change structure before a test exists, stop.
+afterward — is rewriting with extra steps, not refactoring. Confirm a test
+is in place before changing structure; treat that check as the last gate
+before any edit.
 
 ## Boy Scout Rule — bounded, not open season (`LG-B1`)
 
@@ -88,12 +89,26 @@ what the successful rewrites did differently): `references/strangler-fig.md`.
 - Once characterized and tested, `impulse-backend`/`impulse-frontend`'s ladder
   and baseline apply normally to the new code — this skill governs the
   transition, not a permanent different ruleset.
-- Correctness bugs found while characterizing → note them, don't silently
-  fix them mid-characterization (a characterization test documents CURRENT
-  behavior, bugs included; fixing during pinning defeats the point).
-  Separate task for the actual bug fix.
+- Correctness bugs found while characterizing → note them and defer the fix
+  to a separate task (a characterization test documents CURRENT behavior,
+  bugs included; fixing during pinning defeats the point).
 - Architecture-decay findings (`impulse-review`'s `arch:` tag) apply the same
   way here as in greenfield code — legacy status doesn't exempt a hot
   partition key from being flagged. Violations of the rules on THIS page get
   their own tag in review: `legacy:`, fired only on pre-existing code.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Did you read the function/module fully before editing it, not skim it?
+- Did you state what you believe it does, its callers, and what it might
+  break — in chat, before the diff?
+- Is there a characterization test pinning current behavior before any
+  refactor step?
+- Did any Boy Scout cleanup stay inside the file/function already being
+  touched, instead of expanding into files not yet characterized?
+- If migrating a whole module, is deleting the old path tracked as its own
+  task?
+
+Recap: understand before you touch, prove you understood before you
+refactor — everything above is that rule applied.

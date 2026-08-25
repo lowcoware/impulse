@@ -10,13 +10,17 @@ From nexu-io/open-design web-clone (Apache-2.0), re-expressed for the impulse su
 Cloning a website is a repeatable pipeline, not vibes: recon -> assess ->
 harvest -> rebuild -> visual-diff -> fidelity audit. Everything lands in the
 current project: `NOTES` (project-root notes file), `RECON/`, the comparison report, and the fidelity-audit report.
+The rule that overrides every step below: get real source first. Treat any
+AI-generated "clone analysis" as fabricated until verified line-by-line
+against that real source (full statement: Iron rule, next section).
 
 **Setup**: scripts are standalone node + Playwright. Playwright is a peer
 dependency the USER'S project provides — `npm install -D playwright` once in the
 project root, then `npx playwright install chromium` (skipped automatically when
 a system Chrome exists; scripts fall back to `channel: "chrome"`). Run scripts
-from the project root; never vendor deps into the skill. "Environment not set
-up" is not a reason to eyeball instead of running the scripts.
+from the project root, and keep Playwright as the project's own dependency —
+the skill stays dep-free. "Environment not set up" is not a reason to eyeball
+instead of running the scripts.
 
 ## Iron rule: real source above all
 
@@ -30,10 +34,10 @@ failed slowly. First action is always: get real source.
 
 1. **Recon — source-available check first.** Search GitHub by site/product name
    (deploy slugs on vercel.app/github.io are often the repo name). Single-file
-   sites: curl the raw HTML. Source found + license allows = skip straight to
-   rebuilding from it. Then check license: MIT/Apache/BSD = usable with credit;
-   NO LICENSE = all rights reserved, local study only; "it's public on GitHub"
-   is not a license.
+   sites: curl the raw HTML. Then check license:
+   - MIT/Apache/BSD = usable with credit; skip straight to rebuilding from it.
+   - NO LICENSE = all rights reserved, local study only.
+   - "It's public on GitHub" is not a license.
 2. **Recon — framework detect.** `recon-site.mjs` collects frameworks
    (three/gsap/lenis), canvas counts, computed palette, font-face rules, DOM
    structure, console errors, screenshots at 1440/768/390. Add
@@ -64,12 +68,18 @@ failed slowly. First action is always: get real source.
 ## Evidence grading — how a claim was obtained is its rank
 
 Computed style read from the browser outranks a screenshot eyeball; captured
-shader text outranks a plausible reconstruction. Tags: `SOURCE` (real
-source/runtime dump/frame capture) > `PARTIAL` (names, minified slices) >
-`GUESS` (visual fitting, magic numbers). Untagged = GUESS; GUESS is never copied
-into the clone. No compensation: never tune brightness/speed/position to mask a
-wiring error. Full discipline + baseline-first gate:
-`references/effect-extraction.md`.
+shader text outranks a plausible reconstruction. Rank, highest first:
+
+| Tag | Obtained from |
+|---|---|
+| `SOURCE` | real source, runtime dump, or frame capture |
+| `PARTIAL` | names, minified slices |
+| `GUESS` | visual fitting, magic numbers |
+
+Untagged evidence counts as `GUESS`, and only `SOURCE`/`PARTIAL` evidence gets
+copied into the clone. If a value looks off, treat it as a wiring bug to find
+and fix — not a brightness/speed/position knob to tune until it looks right.
+Full discipline + baseline-first gate: `references/effect-extraction.md`.
 
 ## Fidelity hard gates (machine-checked by audit-clone.mjs --recon --strict)
 
@@ -118,8 +128,8 @@ wiring error. Full discipline + baseline-first gate:
 - Clone only with a legitimate basis: your own property, explicit permission
   from the owner, or internal study of publicly-served pages. This skill exists
   for your own redesign baselines, migration snapshots, and design study.
-- Never harvest content behind auth or a paywall. Login-gated, paid, or private
-  pages are out — full stop.
+- Harvest only publicly-served pages. Login-gated, paid, or private pages are
+  out — full stop.
 - Assets and brand remain the owner's. A clone built to reuse someone else's
   brand, copy, or photography in production is out of scope; the strict audit's
   brand-residue check exists to strip it, not to ship it.
@@ -133,3 +143,15 @@ wiring error. Full discipline + baseline-first gate:
   `impulse-frontend/references/redesign.md`; the clone's code still passes
   impulse-review like any other diff.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Did every code block come from verified real source, not an AI-generated
+  "clone analysis" taken on faith?
+- Is any `GUESS`-tagged or untagged evidence kept out of the shipped clone?
+- Did `audit-clone.mjs --recon --strict` pass (no exit 2 fidelity failure)?
+- Is the legitimate basis (own property, permission, or public-page study)
+  still true, with no auth-gated or paywalled content harvested?
+
+Closing recap of the one rule everything above serves: real source above all
+— get it first, verify it line-by-line, and never ship a guess in its place.

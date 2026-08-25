@@ -12,51 +12,53 @@ description: >
 
 # impulse-ai
 
-Same lazy-senior-engineer stance as `impulse-backend` — the ladder, the
-day-one baseline, ceiling markers — applied to AI-specific infrastructure:
-RAG/embeddings/vector search, an LLM gateway, and MCP servers/tools. This
-skill doesn't re-derive the general microservice rules; it adds what's
-specific to this domain on top of them.
+The load-bearing rule: `impulse-backend/SKILL.md` applies first, unconditionally
+— an embedding service or MCP server is still a service. This skill adds only
+the AI-specific layer on top: RAG/embeddings/vector search, an LLM gateway,
+and MCP servers/tools. It doesn't re-derive the general microservice rules.
 
 ## Inherits from impulse-backend, unconditionally
 
-Day-one baseline (health/metrics/graceful-shutdown/timeouts/config
-validation), the ladder, blessed-stack discipline, event/outbox rules when
-an AI service crosses a boundary via Kafka. An embedding service or MCP
-server is still a service — `impulse-backend/SKILL.md` applies first, this
-skill adds the domain-specific layer. The inheritance is literal in review
-too: an AI-infra diff is judged against the `BE-*` rows of
-[`shared/rule-spine.md`](../../shared/rule-spine.md), since this skill
-declares no enumerated ruleset of its own.
+- Day-one baseline: health/metrics/graceful-shutdown/timeouts/config validation.
+- The ladder and blessed-stack discipline.
+- Event/outbox rules when an AI service crosses a boundary via Kafka.
+- Review inheritance is literal too: an AI-infra diff is judged against the
+  `BE-*` rows of [`shared/rule-spine.md`](../../shared/rule-spine.md), since
+  this skill declares no enumerated ruleset of its own.
 
 ## RAG / embeddings / Qdrant
 
-Chunking strategy, retrieval eval without building an over-engineered
-harness, embedding-model versioning (the "compare vectors across model
-versions" trap), Qdrant collection/index/HNSW hardening, and vector-DB
-decay patterns that compound over months (orphaned vectors, no TTL, drift
-with no alert) — parallel to `impulse-review`'s `arch:` tag philosophy for
-regular services. Detail: `references/rag.md`, `references/qdrant.md`. For
-a corpus small enough that a dedicated vector DB is the overengineered
-choice: `references/pgvector.md`.
+- Chunking strategy and retrieval eval without building an over-engineered harness.
+- Embedding-model versioning — watch for the "compare vectors across model versions" trap.
+- Qdrant collection/index/HNSW hardening.
+- Vector-DB decay patterns that compound over months: orphaned vectors, no TTL, drift with no alert.
+- Parallel to `impulse-review`'s `arch:` tag philosophy for regular services.
+
+Detail: `references/rag.md`, `references/qdrant.md`. For a corpus small
+enough that a dedicated vector DB is the overengineered choice:
+`references/pgvector.md`.
 
 ## LLM gateway
 
-Claude-primary + OpenAI-compatible-fallback pattern: per-provider
-timeout/retry/circuit-breaker (not blanket retry-storm risk), untrusted
-content isolation (tool results/fetched docs go in `tool_result` blocks,
-never system prompt), output validation before trusting LLM output
-downstream, and the explicit caveat that the OpenAI-compat shim is a
-fallback path, not a primary one. Detail: `references/llm-gateway.md`.
+- Claude-primary + OpenAI-compatible-fallback pattern.
+- Per-provider timeout/retry/circuit-breaker, not a blanket retry-storm risk.
+- Untrusted content isolation: tool results and fetched docs belong in
+  `tool_result` blocks, never the system prompt.
+- Output validation before trusting LLM output downstream.
+- The OpenAI-compat shim is a fallback path, not a primary one.
+
+Detail: `references/llm-gateway.md`.
 
 ## MCP servers and tools
 
-Tool granularity is a real tradeoff (consolidate around workflows, not
-thin per-endpoint wrappers — but too few, too broad tools also fail);
-naming/description as the model's primary decision surface; the
-2025-11-25 spec's error-classification rule (validation errors are Tool
-Execution Errors so the model can self-correct, never Protocol Errors);
-context-window budget discipline. Detail: `references/mcp-server.md`.
+- Tool granularity is a real tradeoff: consolidate around workflows, not thin
+  per-endpoint wrappers — but too few, too broad tools also fail.
+- Naming/description is the model's primary decision surface.
+- The 2025-11-25 spec's error-classification rule: validation errors are Tool
+  Execution Errors so the model can self-correct, never Protocol Errors.
+- Context-window budget discipline.
+
+Detail: `references/mcp-server.md`.
 
 **Security is not optional for an MCP server** — it's a trust boundary on
 three sides (LLM↔client, client↔server, server↔downstream) with
@@ -98,3 +100,11 @@ addendum (RAG-subagent citation discipline, MCP-tool-scoped subagents).
   nodes) — n8n itself isn't a service this skill builds, just a system it
   needs to interoperate securely with.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Does `impulse-backend/SKILL.md`'s day-one baseline apply here, and is it satisfied — this is the load-bearing rule the whole skill sits on?
+- If this touches RAG/Qdrant, is chunking/retrieval eval covered without an over-engineered harness?
+- If this touches the LLM gateway, is untrusted content (tool results, fetched docs) kept out of the system prompt?
+- If this is an MCP server, are validation errors classified as Tool Execution Errors, not Protocol Errors, and is `references/mcp-security.md` addressed?
+- Would this diff be judged clean against the `BE-*` rows of `shared/rule-spine.md`?

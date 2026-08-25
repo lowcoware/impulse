@@ -9,6 +9,9 @@ Beat the first-idea trap. When a decision is hard to reverse (schema, service
 boundary, protocol, data flow), one attempt-then-iterate loses to a short
 panel of independent approaches scored against the actual constraints. This is
 a thinking discipline, not a code skill — output is a decision, not a diff.
+The one rule that carries the rest: three genuinely different approaches,
+scored against named constraints, land as ONE recommendation — never a
+survey with no pick.
 
 ## When it fires
 
@@ -16,8 +19,9 @@ a thinking discipline, not a code skill — output is a decision, not a diff.
   transport (REST/gRPC/events), storage engine, auth model.
 - The obvious first answer is one of several and you can't yet say why it wins.
 
-NOT for reversible one-liners, or when the ladder already answers it (YAGNI →
-reuse → stdlib → platform-primitive → dep). Cheap-to-change → just build it.
+Skip the panel for reversible one-liners, or forks the ladder already answers
+(YAGNI → reuse → stdlib → platform-primitive → dep) — cheap-to-change → just
+build it.
 
 ## The loop
 
@@ -53,7 +57,8 @@ for the hype-vs-nostalgia bias this exact fork shape tends to carry.
 4. **Recommend, don't survey.** End with ONE choice and the trip-wire that
    flips it. A menu with no pick is a dodge.
 5. **Match effort to reversal cost.** Two-way-door decision → one line, move
-   on. One-way-door → full panel. Don't panel a `git revert`.
+   on. One-way-door → full panel. Reserve the full panel for decisions a
+   `git revert` can't undo.
 6. **The panel runs in ONE context.** Three approaches are three paragraphs,
    not three agents. Spawn a subagent per approach only on a genuine one-way
    door where the inline attempts keep converging on the option you already
@@ -66,5 +71,16 @@ for the hype-vs-nostalgia bias this exact fork shape tends to carry.
 - The decision's *implementation* → the relevant build skill (impulse-backend /
   impulse-frontend / impulse-ai / impulse-mobile).
 - Architectural output → ADR via `impulse-project-management`.
-- This skill never writes production code — it picks what to write.
+- This skill picks what to write; code stays with the build skills.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Are there three genuinely different approaches, not one idea dressed three ways?
+- Is each approach scored against named constraints, not adjectives?
+- Does every approach carry a stated failure mode and `impulse:` ceiling?
+- Does the output end with ONE recommendation and a trip-wire, not a menu?
+- Was the effort matched to reversal cost (no full panel for a two-way door)?
+
+The load-bearing rule, once more: three real alternatives, scored against
+named constraints, landing as one recommendation — never a survey.

@@ -5,10 +5,12 @@ description: "Maintain a whole Obsidian vault as a project wiki — structure/ta
 
 # impulse-wiki
 
-The vault-lifecycle counterpart to `impulse-md-generator`: that skill formats
-ONE note's syntax; this skill maintains the WHOLE vault as a connected,
-navigable project wiki — structure, cross-linking, health, and Obsidian's
-richer file types (Canvas, Bases).
+This skill decides WHERE content lives and keeps the vault connected and
+healthy — it never decides WHAT gets written or WHEN. The vault-lifecycle
+counterpart to `impulse-md-generator`: that skill formats ONE note's syntax;
+this skill maintains the WHOLE vault as a connected, navigable project wiki —
+structure, cross-linking, health, and Obsidian's richer file types (Canvas,
+Bases).
 
 ## Division of labor (read before doing anything)
 
@@ -18,10 +20,10 @@ richer file types (Canvas, Bases).
 | How is this note's Markdown formatted (wikilinks, callouts, properties)? | `impulse-md-generator` |
 | Where does it live? How does it connect to the rest of the vault? Is the vault healthy? | **this skill** |
 
-Never invents content — same non-negotiable impulse-md-generator holds. A
-canvas or a Base is the one exception: the diagram or the query IS the
-deliverable this skill originates, not a record of something decided
-elsewhere.
+Only organizes and records content already decided elsewhere — same
+non-negotiable impulse-md-generator holds. A canvas or a Base is the one
+exception: the diagram or the query IS the deliverable this skill
+originates, not a record of something decided elsewhere.
 
 ## Workflow
 
@@ -95,3 +97,17 @@ in its owning reference file above.
 - A diagram meant to ship as a standalone shareable HTML file (not a vault
   artifact) → `impulse-artifact`'s diagram genre, not `canvas.md`.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+Recap: this skill decides WHERE things live and keeps the vault connected
+and healthy — it never decides WHAT gets written.
+
+- Does the change answer "where does it live / is it connected," not "what
+  should be written"?
+- Did a canvas or Base stay the one case where this skill originates
+  content, with everything else left to `impulse-project-management`?
+- Did structure or health changes go through the matching reference file
+  or script instead of an ad hoc edit?
+- If the request was personal-PKM or Obsidian plugin/theme work, was it
+  flagged out of scope instead of attempted?

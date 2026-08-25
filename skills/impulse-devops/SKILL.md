@@ -20,16 +20,18 @@ description: >
 # impulse-devops
 
 Deploy and infra for the blessed stack: Docker Compose multi-env + Traefik +
-GitHub Actions. **Kubernetes is not banned — it's gated by a threshold.**
-Below it (single prod machine, ≤10 services/env, less-than-daily deploys
-without a hard zero-downtime requirement) Compose is canon and this skill
-is the whole answer. Past it, **k3s** is canon for prod (`deploy.md` —
-"Compose default, k3s past the threshold"); this skill still owns dev
-Compose and the Traefik/CI knowledge that carries over, and `k3s.md`
-covers the manifest/Helm/kubectl mechanics for the far side of the
-threshold. Same anti-overengineering, incident-cited style as impulse-backend.
-This skill is the "how to ship it" layer under `impulse-backend`'s baseline
-and `observability.md`.
+GitHub Actions. The load-bearing rule, stated in full below: config that
+isn't in git, and infra that isn't pruned, both rot silently until they're
+an incident. This skill is the "how to ship it" layer under
+`impulse-backend`'s baseline and `observability.md`, in the same
+anti-overengineering, incident-cited style.
+
+**Kubernetes is not banned — it's gated by a threshold:**
+
+| Scale signal | Canon plan |
+|---|---|
+| Single prod machine, ≤10 services/env, less-than-daily deploys, no hard zero-downtime requirement | Docker Compose is canon — this skill is the whole answer |
+| Past that threshold | `k3s` is canon for prod (`deploy.md` — "Compose default, k3s past the threshold"); this skill still owns dev Compose + the Traefik/CI knowledge that carries over; `k3s.md` owns the manifest/Helm/kubectl mechanics |
 
 ## The one principle
 
@@ -70,3 +72,15 @@ and makes drift/decay visible before it bites.
 - Zero-downtime DB migration mechanics → `impulse-backend/references/hardening-go.md`
   (expand-contract); this skill owns the deploy-ordering around it.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Is every piece of config this change touches committed to version control,
+  not left in an untracked `.env` or a manually-run shell command?
+- Does anything this change adds or changes get pruned/rotated automatically,
+  rather than left to decay silently (orphaned volumes, expiring certs,
+  stale images)?
+- If Kubernetes came up: did you check the scale-signal table above before
+  reaching for k3s, or did Compose already cover it?
+- Recap: config not in git and infra not pruned both rot silently into an
+  incident — this rule outranks any other convenience in this skill.

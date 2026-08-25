@@ -12,6 +12,10 @@ a report, plan, comparison, prototype, or diagram — not a production Vue
 app. If the deliverable needs routing, state management, or a build step,
 it's impulse-frontend's job, not this skill's.
 
+The single rule everything else here serves: calibrate against
+`references/self-reference.html` first, ship the result as one
+self-contained file, dark mode always on.
+
 ## Workflow
 
 1. **Pick a genre** — general / plan / diagram. `references/genres.md`.
@@ -19,14 +23,14 @@ it's impulse-frontend's job, not this skill's.
    first** — it is the canonical baseline for every artifact this skill
    ships: Apple restraint + lowcoware DNA (warm near-black canvas, one red
    accent, thin borders, bold display headline with italic accent word,
-   glow-blob card detail; dark is the canonical mode). Inherit its tokens
-   and hierarchy — do NOT start from the vendored gallery's palette.
-   The gallery (`references/gallery.md`, 21 files in `examples/`) is the
-   secondary reference: use it for structure, density, and tone of the
-   chosen genre — not for colors or type. `references/palette.md`
-   documents the Anthropic-corpus tokens the gallery converges on — a
-   fallback for component patterns (dot/pill/delta) where
-   self-reference.html is silent, never an override of it.
+   glow-blob card detail; dark is the canonical mode). Start from its
+   tokens and hierarchy. Treat the gallery (`references/gallery.md`, 21
+   files in `examples/`) as secondary: use it for structure, density, and
+   tone of the chosen genre, and keep colors and type from
+   self-reference.html. `references/palette.md` documents the
+   Anthropic-corpus tokens the gallery converges on — a fallback for
+   component patterns (dot/pill/delta) where self-reference.html is
+   silent, always subordinate to it.
 3. **Content already decided elsewhere?** A calling skill (impulse-pm,
    impulse-review, impulse-debt, impulse-goal) usually supplies WHAT the artifact
    says — this skill only decides HOW it renders. `references/handoff.md`.
@@ -37,19 +41,20 @@ it's impulse-frontend's job, not this skill's.
    standalone single-file documents only, never for product UI.
 5. **Diagram genre only** — pan/zoom technique, dismissible overlays,
    motivated interactivity. `references/pan-zoom.md`.
-6. **Ship as one file.** No build step, no external dependencies beyond
-   what the browser ships natively — the whole point is "open this file
-   and it works." The one narrow exception: `export-toolbar.md`'s
-   pinned+SRI CDN scripts, and only when the user actually wants
-   export-outside-the-chat — never bring in a CDN dependency for anything
-   else (charting libraries included: hand-build the SVG per this skill's
-   own techniques rather than reaching for D3/Chart.js/etc.). A
-   ` ```mermaid ` fence (or `<pre class="mermaid">` in HTML) is not a CDN
-   dependency — Artifacts renders it natively, no script tag involved —
-   but reach for it only on a simple static structural diagram; the
-   diagram genre's pan/zoom, clickable nodes, and animated request paths
-   (`pan-zoom.md`, `animated-connectors.md`) need hand-built SVG, which
-   mermaid's output can't give you.
+6. **Ship as one file.** Pure browser-native code — no build step, no
+   external dependencies — the whole point is "open this file and it
+   works."
+   - Exception: `export-toolbar.md`'s pinned+SRI CDN scripts, and only
+     when the user actually wants export-outside-the-chat.
+   - Everything else, charting libraries included: hand-build the SVG
+     per this skill's own techniques instead of reaching for
+     D3/Chart.js/etc.
+   - A ` ```mermaid ` fence (or `<pre class="mermaid">` in HTML) is not a
+     CDN dependency — Artifacts renders it natively, no script tag
+     involved — but reserve it for a simple static structural diagram;
+     the diagram genre's pan/zoom, clickable nodes, and animated request
+     paths (`pan-zoom.md`, `animated-connectors.md`) need hand-built SVG,
+     which mermaid's output can't give you.
 
 ## What this is not
 
@@ -102,6 +107,21 @@ text, means the wrong genre was picked in step 1.
   `iframe`) outside this skill's scope — flag it, don't silently assume
   the artifact will just run wherever it's opened.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Did you calibrate against `references/self-reference.html` first, keeping
+  its colors and type rather than the vendored gallery's?
+- Does the artifact ship as one self-contained file, with dark mode wired
+  through CSS variables, a toggle, `localStorage`, and an
+  apply-before-paint script?
+- If it's the diagram genre, does it use hand-built SVG (pan/zoom,
+  clickable nodes) rather than a charting library or a plain mermaid
+  fence for anything interactive?
+- Did content decisions (should this document exist, what it says) stay
+  with the calling skill, with this skill only owning HOW it renders?
+- If the artifact might be served behind a strict CSP, did you flag that
+  instead of assuming it will just run?
 
 ## Lineage
 

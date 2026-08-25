@@ -19,7 +19,7 @@ Two entry points:
 The impulse suite is the quality bar INSIDE each phase: phases invoke
 impulse-backend / impulse-frontend / impulse-review / impulse-security / etc., and the
 final Polish-and-Harden phase runs impulse-review + preflight as its enforced
-gate. "Perfect" is never a stopping condition — falsifiable criteria are.
+gate. Falsifiable criteria are the stopping condition — always, not "perfect."
 
 ## Pipeline
 
@@ -39,15 +39,20 @@ Everything between and after runs autonomously.
 
 ## The single-`/goal` shape
 
-`/goal` on Claude Code and Codex takes a short END-STATE condition, not a
-task body. A per-turn evaluator checks it against the transcript and
-auto-continues until it holds. One `/goal` covers the whole run: phase work
-lives in files the executor reads from disk; the condition is "all phases
-done, audit clean, `IMPULSEGOAL_RUN_COMPLETE` printed." Slash commands fire
-only from USER input, so Stage 7 is an honest one-paste handoff, never an
-auto-dispatch. The execution loop, final audit, and 3-strike recovery that
-run inside that `/goal` session are in `references/execution.md` (canonical
-copy: the run's `PROTOCOL.md`).
+- `/goal` on Claude Code and Codex takes a short END-STATE condition, not a
+  task body.
+- A per-turn evaluator checks that condition against the transcript and
+  auto-continues until it holds.
+- One `/goal` covers the whole run: phase work lives in files the executor
+  reads from disk.
+- The condition itself is "all phases done, audit clean,
+  `IMPULSEGOAL_RUN_COMPLETE` printed."
+- Slash commands fire only from USER input, so Stage 7 hands off one
+  honest, user-pasted line — the run itself never auto-dispatches.
+
+The execution loop, final audit, and 3-strike recovery that run inside that
+`/goal` session are in `references/execution.md` (canonical copy: the run's
+`PROTOCOL.md`).
 
 ## Locate the skill + claim the run
 
@@ -70,22 +75,18 @@ under `$IMPULSEGOAL_DIR`; all run artifacts under `$IMPULSEGOAL_ROOT`.
 ## Operating principles (read every run)
 
 - One `/goal`, short condition. Long content lives in files on disk.
-- Frictionless: memory + prompt + recon + any impulse-pm plan answer most
-  questions. Zero clarifying questions on a well-described task is a win.
-- Adapt to available tools. Detect Context7 / WebSearch / MCPs / impulse
-  skills; degrade gracefully; never hard-require a tool that may be absent.
-- Memory is load-bearing (impulse memory system): preload Stage 0, surface as
-  "Applied from memory:" in Stage 1, write back at every phase boundary.
-- "Perfect" is not a stopping condition — criteria are. Translate every
-  "perfect" into observable, falsifiable checks.
+- Stop only on falsifiable criteria: translate every "perfect" into
+  observable, falsifiable checks.
 - The loop self-heals: auto-retry once, then a fix spec inline, then
-  escalate. Don't stop on first failure.
+  escalate — keep going past a single failure.
 - The evaluator only sees the transcript — phase specs require the agent to
   surface START, commands, evidence, VERIFY, DONE into the conversation.
-- Each phase is independently shippable in spirit; Polish-and-Harden is
-  mandatory (that is where impulse-review + preflight enforce "every aspect").
 - The final audit re-verifies against the ORIGINAL ROADMAP, not the run's
   own self-reports.
+
+Detail on the rest of the operating model — frictionless intake, tool
+adaptation, memory writeback, and phase shippability — lives in
+`references/workflow.md` and `references/phase-design.md`.
 
 ## References
 
@@ -116,9 +117,25 @@ Stage 7).
 
 ## Boundaries
 
-Planning artifacts (spec, ADR, playbooks, review cadence) are
-impulse-project-management's job — impulse-goal consumes a impulse-pm plan or makes
-its own, then DRIVES it; it does not replace the PM skill. Deploy/release is
-impulse-devops. Diff review inside a phase is impulse-review. Very small tasks
-(under an hour, single file) do not need the machinery — say so.
+impulse-goal consumes an impulse-pm plan or makes its own, then DRIVES it —
+it complements the PM skill rather than replacing it.
+
+| Scope | Owner |
+|---|---|
+| Planning artifacts (spec, ADR, playbooks, review cadence) | impulse-project-management |
+| Deploy/release | impulse-devops |
+| Diff review inside a phase | impulse-review |
+| Very small tasks (under an hour, single file) | skip the machinery — say so |
+
 "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Does the stopping condition rest on falsifiable, observable checks rather
+  than "perfect"?
+- Did the final audit compare against the ORIGINAL ROADMAP, not just the
+  run's own self-reports?
+- Do the phase specs surface START, commands, evidence, VERIFY, DONE into
+  the transcript, so the evaluator can actually see them?
+- Does Stage 7 hand off exactly one ready-to-paste `/goal` line, with no
+  auto-dispatch?

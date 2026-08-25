@@ -15,7 +15,8 @@ upgrade trigger:
 (example: impulse-backend references/ladder.md)
 
 This skill collects all markers into one ledger so a deferral can't quietly
-become permanent.
+become permanent. The rule that matters most: a marker with no trigger isn't
+tracked debt, it's rot — flag it.
 
 ## Run
 
@@ -42,15 +43,13 @@ One row per marker (columns as the script prints them):
    debt, it's decay. Fix: add a trigger or delete the shortcut's excuse.
 2. git-age > 6 months → flag `STALE`. Check whether the trigger already fired.
 
-An `impulse:` marker is a deliberate carve-out by construction — it always
-lands in Fowler's technical debt quadrant's Deliberate column, never
-Inadvertent. The column that matters for triage is Prudent vs Reckless: a
-marker with a real ceiling and trigger is Deliberate-Prudent ("we know the
-limit, we'll act when it's hit"); a marker with no trigger (already flagged
-`ROT` above) has degraded into Deliberate-Reckless — the "we know this is
-bad and left no way to know when to fix it" case, which is exactly why a
-trigger-less marker is decay rather than tracked debt, not just a formatting
-gap.
+An `impulse:` marker is always Deliberate in Fowler's technical debt
+quadrant, never Inadvertent — the triage question is Prudent vs Reckless:
+
+- Ceiling + trigger present → Deliberate-Prudent: the limit is known, the
+  team acts when it's hit.
+- Trigger absent (already flagged `ROT` above) → Deliberate-Reckless: the
+  limit is known but nothing signals when to act — decay, not tracked debt.
 
 Research on self-admitted technical debt (SATD) comments — the academic
 name for exactly this marker pattern — found roughly 46.7% of TODO-style
@@ -76,5 +75,13 @@ Nothing found: `No impulse: markers found. Clean.`
 
 ## Boundaries
 
-Reads and reports only, changes nothing. Persist only when asked → write
-`IMPULSE-DEBT.md` at repo root. One-shot: no mode change, no flag files.
+Stay read-only: report findings, leave code untouched. Persist only when
+asked → write `IMPULSE-DEBT.md` at repo root. Stay one-shot: skip mode
+changes and flag files.
+
+## Before you finish
+
+- Does the ledger include every marker in the repo, not a sample?
+- Is every trigger-less marker flagged `ROT` rather than listed as clean debt?
+- Does AGE come from actual git history, not a guess?
+- Was `IMPULSE-DEBT.md` written only if the user asked to persist?

@@ -32,21 +32,19 @@ Stop at the first that holds:
 4. **Full native (SwiftUI/Kotlin)** only when most of the app is that one
    feature.
 
-Not a rung, a separate axis: once the same **nontrivial** logic must run
-identically on 3+ platforms (mobile + desktop + web/CLI), put it in a shared
-Rust core and give each platform a thin UI layer instead of N reimplementations
-— bindings via `flutter_rust_bridge` (Dart), `uniffi` (Swift/Kotlin), `napi`
-(Electron/Node), `wasm-pack` (web). Crypto is almost always over this
-threshold — divergent implementations cost user data, not just dev time.
-Below the threshold (2 platforms, or logic that's genuinely simple), separate
-codebases are fine — don't reach for a Rust core to serve one extra platform.
+Not a rung, a separate axis — shared-core threshold:
+- Trigger: the same **nontrivial** logic must run identically on 3+ platforms (mobile + desktop + web/CLI).
+- Action: put it in a shared Rust core, give each platform a thin UI layer instead of N reimplementations.
+- Bindings: `flutter_rust_bridge` (Dart), `uniffi` (Swift/Kotlin), `napi` (Electron/Node), `wasm-pack` (web).
+- Crypto is almost always over this threshold — divergent implementations cost user data, not just dev time.
+- Below the threshold (2 platforms, or logic that's genuinely simple): keep separate codebases; reach for a Rust core only once the trigger above is met.
 
 ## Day-one mobile baseline — never skipped
 
 IDs `MO-BL01`–`MO-BL08` in listed order; [`shared/rule-spine.md`](../../shared/rule-spine.md) maps each to the impulse-review tag that catches it.
 
 - Crash reporting wired (Sentry/Crashlytics) from build #1
-- Release signing + auto-incremented build number in CI (never by hand)
+- Release signing + auto-incremented build number, both done by CI only
 - Timeout on every network call (same rule as impulse-backend baseline)
 - **Dispose discipline:** every subscription/controller/listener/observer
   opened has a paired teardown — the #1 mobile leak (`hardening-mobile.md`)
@@ -85,3 +83,14 @@ IDs `MO-BL01`–`MO-BL08` in listed order; [`shared/rule-spine.md`](../../shared
 - Web frontend → impulse-frontend (no ai-tells/register model transfers to
   mobile — different paradigm).
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Does every `MO-BL01`–`MO-BL08` baseline item still hold for what you shipped, not just the feature the user asked for?
+- Did you stop at the first platform-choice rung that holds, instead of defaulting to native or a bridge?
+- Is dispose discipline (paired teardown for every subscription/controller/listener/observer) actually in the diff?
+- If you crossed the shared-core threshold, did you use the Rust-core path instead of a fourth reimplementation?
+
+## Recap
+
+The day-one mobile baseline is never skipped — it is the one rule everything else in this file defers to.

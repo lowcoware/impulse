@@ -6,9 +6,9 @@ description: "Disciplined bug hunting instead of changing code at random — use
 # impulse-systematic-debug
 
 Random edits until it works is not debugging — it's gambling that leaves the
-real cause live. This skill enforces a loop: no fix until you can reproduce and
-have named the cause. Output is a fix + a proof it fixed the named cause, not
-"seems fine now."
+real cause live. **The one rule that matters: fix only after you can
+reproduce the bug and name its cause in one sentence.** Output is a fix plus
+proof it fixed the named cause — not "seems fine now."
 
 ## The loop — do not skip steps
 
@@ -37,10 +37,10 @@ machine, prod-only): `references/techniques.md`.
 
 ## Hard rules
 
-1. **No fix before repro.** If you can't trigger it on demand, you can't know
-   you fixed it. Building the repro IS the work. The repro's bar: one command,
-   deterministic, fast, agent-runnable, ALREADY RUN at least once — until that
-   exists, hypothesis work hasn't started.
+1. **Reproduce before you fix.** If you can't trigger it on demand, you can't
+   know you fixed it. Building the repro IS the work. The repro's bar: one
+   command, deterministic, fast, agent-runnable, ALREADY RUN at least once —
+   until that exists, hypothesis work hasn't started.
 2. **Read the error before touching code.** Quote it exact. Guessing past the
    stack trace wastes the cheapest clue you have.
 3. **One change at a time.** Batch edits hide which one worked and add new
@@ -58,8 +58,8 @@ machine, prod-only): `references/techniques.md`.
    fourth patch.
 8. **Debug spiral (conversation-level, distinct from rule 7's fix-level
    trigger — from ayghri/i-have-adhd, MIT):** if the last three turns were
-   all "still broken," stop iterating on code entirely. Don't try a fourth
-   variation — name the assumption most likely wrong, out loud, and ask the
+   all "still broken," stop iterating on code entirely. In place of a fourth
+   variation, name the assumption most likely wrong, out loud, and ask the
    user ONE diagnostic question. Guessing faster is not the fix for
    guessing wrong; rule 7 fires on failed fixes to the same bug, this one
    fires on the conversation pattern regardless of whether each attempt
@@ -74,3 +74,16 @@ machine, prod-only): `references/techniques.md`.
 - Test-writing craft (flakiness roots, RED phase) →
   `impulse-backend/references/testing.md`.
 - "stop impulse" / "normal mode": revert to default behavior.
+
+## Before you finish
+
+- Can you reproduce the bug on demand, right now, with one command?
+- Can you name the cause in one sentence, backed by an actual error/log/stack
+  trace you quoted?
+- Did you change one thing at a time, not a batch of edits?
+- Does a new regression test fail without your fix and pass with it?
+- Is all debug scaffolding (temp logs/prints/sleeps) removed or tagged for
+  cleanup?
+
+If any answer is no: the core rule still stands — no fix ships until you can
+reproduce and name the cause.
