@@ -11,7 +11,9 @@ devops, mobile, brainstorming, systematic debugging, and dependency
 auditing. For engineers who want a ladder against speculative complexity,
 not a framework: a non-negotiable day-one baseline, `impulse:` ceiling markers
 in place of speculative code, and one-line diff review. Native to Claude
-Code; portable to Cursor, Codex, and Antigravity CLI via the installer.
+Code; ships to nine more harnesses (Cursor, Codex, Antigravity, OpenCode,
+Kilo Code, Gemini CLI, Qwen Code, Goose, Hermes Agent) via each one's own
+native mechanism — see `INSTALL.en.md`.
 
 ## Install
 
@@ -29,15 +31,20 @@ installer, vercel-labs/skills).
 | Gemini CLI | extension: `gemini extensions install https://github.com/lowcoware/impulse` | `INSTALL.en.md` |
 | Qwen Code | extension: `qwen extensions install https://github.com/lowcoware/impulse` | `INSTALL.en.md` |
 | Goose | plugin: `goose plugin install https://github.com/lowcoware/impulse` (or it already sees a Claude Code/Codex install) | `INSTALL.en.md` |
+| Hermes Agent | master layer: `cp -r hermes-plugin/impulse-core ~/.hermes/plugins/`, skills: `cp -r skills/*/ ~/.hermes/skills/impulse/` (no single whole-repo install command) | `INSTALL.en.md` |
+| Kilo Code | master layer: `.kilo/rules/impulse-core.md` via `kilo.jsonc`'s `instructions` (see the section below — manual install, no scripted target yet) | `INSTALL.en.md` |
 
 `npx skills` also works for Claude Code / Antigravity, but drops the bare
 skill level without the plugin wiring. No-npx alternative — the repo
 installer, `node scripts/install.js --help`.
 
-Hooks, the statusline badge, and `/impulse-*` activation commands are
-Claude-Code-only — the other CLIs (and a bare copy) auto-attach the
-same skill content by description; see `INSTALL.en.md` for what does and
-doesn't port per target.
+The always-on core layer (`impulse-core`: engineering discipline,
+verification, token economy — not the modes) now ships to 8 of 9 targets
+through each one's own native mechanism: hooks on Claude Code/Codex/
+Cursor, a static rules file/`AGENTS.md` on the rest. Full mode machinery
+(`/impulse-backend [mode]`, the statusline badge, hooks for blitz/
+hardcore) is still Claude Code's native plugin only. See `INSTALL.en.md`
+for exactly what does and doesn't port per target.
 
 ## Quickstart (Claude Code)
 
