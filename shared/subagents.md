@@ -319,22 +319,10 @@ Practical technique: have the agent emit its reasoning before each tool call
 where it got "stumped or confused" — that's where a tool description or
 granularity choice needs revision, found empirically rather than guessed.
 
-## Observability
-
-No specific measured methodology found for "did this subagent spend its
-context well." Qualitatively: ties to the injection-size meter already
-built into `hooks/impulse-config.js` — every subagent spawn pays the
-ruleset injection cost, now visible per spawn. Extending observability past
-that is unresolved — flagged, not solved.
-
-## `IMPULSE_SUBAGENT_MATCHER` default — still unresolved
-
-The hook's default is inject-into-every-subagent; scoping to specific agent
-types is opt-in via an env var. No data surfaced in this research pass that
-directly measures the cost/benefit of flipping that default (inject-only-
-into-code-writing-agents). Leaving the default as-is rather than guessing —
-this is exactly the kind of change that should follow a measurement, not
-precede one.
+Two open, unresolved questions (subagent observability methodology, the
+`IMPULSE_SUBAGENT_MATCHER` default) live in `shared/subagents-notes.md` —
+neither has an actionable directive, so they're kept out of this file's
+always-relevant path.
 
 ## Return a summary, not the transcript
 

@@ -110,7 +110,9 @@ carry the evidence and the full versions):
   reading more than 5 files or skimming more than 2000 lines to produce
   an answer under a few hundred words: tokens-to-explore far exceeds
   tokens-of-answer. The subagent always returns a condensed summary
-  (`shared/subagents.md`).
+  (`shared/subagents.md`). `impulse: the 5-file/2000-line threshold is a
+  reasoned placeholder, not measured — revisit once real over/under-
+  delegation cases are observed in practice.`
 - **Memory protocol** — a project with `.impulse/memory/` follows
   `shared/memory.md`: index first, full text on demand, verify a stored
   fact against current repo state before acting on it.

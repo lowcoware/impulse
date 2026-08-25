@@ -247,6 +247,11 @@ radius rather than defaulting to either extreme:
 3. High consequence (data migration, security, prod config) -> checkpoint
    at each major step.
 
+`impulse: these three tiers are a reasoned placeholder derived from "no
+single number resolves this," not independently measured — revisit once
+real checkpoint-density outcomes are observed across enough tasks to
+compare.`
+
 ## Tools over reasoning — has a number now
 
 Deterministic tools (calculators, schema validators, code-execution

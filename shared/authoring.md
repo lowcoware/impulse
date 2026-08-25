@@ -89,6 +89,22 @@ generalizes the reason to cases the directive didn't enumerate.
 Environment-specific gotchas (facts that defy assumption) stay INLINE in
 SKILL.md, not in a reference — they're exactly what won't be looked up.
 
+**Rule-count ceiling: ~6 live musts per decision point.** Compositional
+constraint-following measurably collapses past 5-6 simultaneous
+directives at one decision point, worse on weaker models but real for
+every model — a bundled list past that count gets partially dropped, not
+fully applied. A "decision point" is one place the model has to hold
+several constraints in mind at once to act correctly (one always-on
+ruleset layer, one checklist, one dispatch-time gate) — a file can have
+several decision points side by side, each its own ≤6 budget, as long as
+nothing signals the model to merge them into one stack.
+Fix when a list exceeds it: split into an always-live core (≤6, one
+atomic decision per line) plus a conditionally-loaded reference file for
+the rest — never widen the always-loaded list past the ceiling. Also
+de-bundle: a single bullet cramming 2-3 independent rules into one line
+counts as multiple rules against this ceiling even though it's one list
+item — write one imperative sentence per constraint, not a run-on.
+
 ## Test wording before trusting it
 
 Changed a rule's wording? Cheap check before shipping: run the scenario on
