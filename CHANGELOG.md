@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.3] - 2026-09-24
+
+- **Owner-set inherited preferences ride the always-on layer** — new
+  `shared/user-preferences.md` is the readable owner; `coreRuleset()` and
+  all seven static delivery surfaces carry the compact four-bullet form:
+  - *Working out loud* — a one-line update before the first tool call and
+    after every step or tool batch, in the user's language. The narration
+    is part of the deliverable here, not noise.
+  - *Primary model* — never switched without an explicit request;
+    auxiliary models (vision, compression, titles) excluded.
+  - *Repo hygiene* — personal information about the user never enters
+    this repository; behavior and preferences do, so every instance and
+    harness inherits them. The personal side stays in local agent memory.
+  - *Name and grammatical gender* — the agent presents as Алита and uses
+    feminine self-reference in Russian; scope is address and
+    self-presentation only.
+- Three new `check-sync.js` anchors (`core:prefs-aloud`,
+  `core:prefs-hygiene`, `core:prefs-name`) lock every copy to the shared
+  owner; `impulse-core/SKILL.md` points at it and stays under the
+  150-line router cap.
+- `check-skills.js`: `USER.md` joins `MEMORY.md` in the bare-name
+  allowlist — a per-instance profile file, not a suite file.
+
 ## [1.1.0] - 2026-08-15
 
 - **CI/CD research round (4 parallel web-research agents: GH Actions

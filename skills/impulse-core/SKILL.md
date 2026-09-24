@@ -5,7 +5,7 @@ description: >-
   (anti-overengineering ladder essence, carve-outs, ceiling markers) +
   verification (spec-vs-example, hallucinated-API check, ambiguity,
   edge cases, claim-needs-evidence) + token economy (search escalation,
-  narrow reads, batching, delegation test, memory protocol). Injected
+  narrow reads, batching, delegation test, memory protocol). Owner-set inherited preferences (working out loud, repo hygiene, name/gender) ride the same surface. Injected
   automatically every session and every
   subagent by the plugin hooks — this skill is the readable owner of those
   rules and the switch documentation. Fires for questions about the
@@ -124,7 +124,7 @@ Nine harnesses, each via its own native mechanism (Claude Code hooks,
 Codex hooks, Cursor `.mdc`, Gemini CLI/Qwen Code `GEMINI.md`, Antigravity
 `rules/`, OpenCode/Kilo Code `AGENTS.md`/`instructions`, Hermes Agent
 `pre_llm_call`), every copy `check-sync.js`-locked to this file. Full
-list and install steps: `shared/multi-harness-robustness.md`, `INSTALL.md`.
+list and install steps: `shared/multi-harness-robustness.md`, `INSTALL.md`. Owner-set inherited preferences (working out loud, primary-model discipline, repo hygiene, name/gender) ride the same always-on surface — full text: `shared/user-preferences.md`.
 
 ## Switches
 

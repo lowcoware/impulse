@@ -41,6 +41,9 @@ const ANCHORS = [
   { id: 'core:ambiguity', phrase: 'direct question', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
   { id: 'core:edge-cases', phrase: 'explicitly out of scope', ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
   { id: 'core:evidence', phrase: "guess wearing a fact's clothes", ruleset: instructions.coreRuleset(), skillFile: 'skills/impulse-core/SKILL.md' },
+  { id: 'core:prefs-aloud', phrase: 'working out loud', ruleset: instructions.coreRuleset(), skillFile: 'shared/user-preferences.md' },
+  { id: 'core:prefs-hygiene', phrase: 'repo hygiene', ruleset: instructions.coreRuleset(), skillFile: 'shared/user-preferences.md' },
+  { id: 'core:prefs-name', phrase: 'Алита', ruleset: instructions.coreRuleset(), skillFile: 'shared/user-preferences.md' },
 ];
 
 function has(text, phrase) {

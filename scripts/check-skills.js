@@ -141,6 +141,7 @@ const BARE_MD_ALLOWLIST = [
   'ROADMAP.md', 'STATE.md', 'PROTOCOL.md', 'THINKING.md', 'phase-N.md', 'phase-N.fix.md', 'fix.md',
   'context.md', 'repo-map.md', 'applied-memories.md', 'applied-skills.md', 'tools.md',
   'MEMORY.md', // impulse memory index — generated in the consumer's memory dir, not a suite file
+  'USER.md', // per-instance user-profile file (Hermes local memory) — same class as MEMORY.md, outside the suite
   // shared/memory.md tiered memory convention — generated in the CONSUMER
   // project's .impulse/memory/ dir, not suite files
   'index.md', 'YYYY-MM-DD-slug.md',

@@ -1,6 +1,6 @@
 {
   "name": "impulse",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Anti-overengineering engineering suite: always-on impulse-core layer (engineering spine + token economy) plus Go/Python/Rust/Node microservice backends, Vue/Nuxt frontends, review, debt, humanizer, md-generator, project-management, legacy, ai, security, devops, mobile, brainstorm, systematic-debug, dependency-audit, shrink, clone, goal, artifact, wiki; impulse router entry point. /impulse-help lists all.",
   "author": {
     "name": "Aki"
